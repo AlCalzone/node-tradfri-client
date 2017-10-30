@@ -4,12 +4,17 @@
         "declaration": true,
         "module": "commonjs",
         "moduleResolution": "node",
-        "noEmitOnError": false,
+        "noEmitOnError": true,
         "noImplicitAny": false,
         "outDir": "build/",
         "removeComments": false,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,        
         "sourceMap": false,
         "inlineSourceMap": false,
         "target": "es2015"
-    }
+    },
+    "exclude": [
+        "src/**/*.test.ts"
+    ]
 }

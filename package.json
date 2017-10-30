@@ -31,8 +31,10 @@
   },
   "devDependencies": {
     "@types/chai": "^4.0.4",
+    "@types/debug": "0.0.30",
     "@types/mocha": "^2.2.44",
     "@types/node": "^6.0.90",
+    "@types/reflect-metadata": "0.0.5",
     "@types/sinon": "^2.3.7",
     "chai": "^4.1.2",
     "mocha": "^4.0.1",
@@ -45,9 +47,11 @@
   },
   "dependencies": {
     "debug": "^3.1.0",
-    "node-coap-client": "^0.4.8"
+    "node-coap-client": "^0.4.8",
+    "reflect-metadata": "^0.1.10"
   },
   "scripts": {
+    "watch": "tsc --watch",
     "test:ts": "nyc mocha --recursive --compilers ts-node/register --require source-map-support/register --full-trace src/**/*.test.ts",
     "test": "npm run test:ts",
     "lint:ts": "tslint",
@@ -70,5 +74,5 @@
     "sourceMap": true,
     "instrument": true
   },
-  "readme": "README.md"  
+  "readme": "README.md"
 }
