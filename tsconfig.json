@@ -1,0 +1,15 @@
+{
+    "compileOnSave": true,
+    "compilerOptions": {
+        "declaration": true,
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "noEmitOnError": false,
+        "noImplicitAny": false,
+        "outDir": "build/",
+        "removeComments": false,
+        "sourceMap": false,
+        "inlineSourceMap": false,
+        "target": "es2015"
+    }
+}

@@ -1,0 +1,74 @@
+{
+  "name": "node-tradfri-client",
+  "version": "0.0.1",
+  "description": "Library to talk to IKEA Trådfri Gateways without external binaries",
+  "keywords": [
+    "coap",
+    "coaps",
+    "dtls",
+    "iot",
+    "tradfri",
+    "ikea",
+    "lighting"
+  ],
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "author": {
+    "name": "AlCalzone",
+    "email": "d.griesel@gmx.net"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/AlCalzone/node-tradfri-client",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AlCalzone/node-tradfri-client.git"
+  },
+  "bugs": {
+    "url": "https://github.com/AlCalzone/node-tradfri-client/issues"
+  },
+  "engines": {
+    "node": ">= 6.0.0"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.0.4",
+    "@types/mocha": "^2.2.44",
+    "@types/node": "^6.0.90",
+    "@types/sinon": "^2.3.7",
+    "chai": "^4.1.2",
+    "mocha": "^4.0.1",
+    "nyc": "^11.2.1",
+    "sinon": "^4.0.2",
+    "source-map-support": "^0.5.0",
+    "ts-node": "^3.3.0",
+    "tslint": "^5.8.0",
+    "typescript": "^2.5.3"
+  },
+  "dependencies": {
+    "debug": "^3.1.0",
+    "node-coap-client": "^0.4.8"
+  },
+  "scripts": {
+    "test:ts": "nyc mocha --recursive --compilers ts-node/register --require source-map-support/register --full-trace src/**/*.test.ts",
+    "test": "npm run test:ts",
+    "lint:ts": "tslint",
+    "lint": "npm run lint:ts \"src/**/*.ts\""
+  },
+  "nyc": {
+    "include": [
+      "src/**/*.ts"
+    ],
+    "extension": [
+      ".ts"
+    ],
+    "require": [
+      "ts-node/register"
+    ],
+    "reporter": [
+      "text-summary",
+      "html"
+    ],
+    "sourceMap": true,
+    "instrument": true
+  },
+  "readme": "README.md"  
+}

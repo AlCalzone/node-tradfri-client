@@ -1,0 +1,14 @@
+.git*
+*.njsproj
+*.sln
+tsconfig.json
+tslint.json
+tests/
+src/
+build/**/*.map
+node-tradfri-client-*.tgz
+.vs*/
+.nyc_output/
+bin/
+obj/
+coverage/
