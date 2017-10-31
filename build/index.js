@@ -327,6 +327,13 @@ class TradfriClient extends events_1.EventEmitter {
         // and notify all listeners about the update
         this.observer.raise("scene updated", groupId, scene);
     }
+    /**
+     * Pings the gateway to check if it is alive
+     * @param timeout - (optional) Timeout in ms, after which the ping is deemed unanswered. Default: 5000ms
+     */
+    ping(timeout) {
+        return node_coap_client_1.CoapClient.ping(this.requestBase, timeout);
+    }
 }
 exports.TradfriClient = TradfriClient;
 /** Normalizes the path to a resource, so it can be used for storing the observer */

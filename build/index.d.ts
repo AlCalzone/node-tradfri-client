@@ -63,4 +63,9 @@ export declare class TradfriClient extends EventEmitter {
     private observeGroup_callback(instanceId, response);
     private observeScenes_callback(groupId, response);
     private observeScene_callback(groupId, instanceId, response);
+    /**
+     * Pings the gateway to check if it is alive
+     * @param timeout - (optional) Timeout in ms, after which the ping is deemed unanswered. Default: 5000ms
+     */
+    ping(timeout?: number): Promise<boolean>;
 }
