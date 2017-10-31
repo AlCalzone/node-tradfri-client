@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const debug_1 = require("./debug");
+const logger_1 = require("./logger");
 const object_polyfill_1 = require("./object-polyfill");
 // ===========================================================
 // define decorators so we can define all properties type-safe
@@ -70,7 +70,7 @@ exports.required = required;
 function isRequired(target, property) {
     // get the class constructor
     const constr = target.constructor;
-    debug_1.default(`${constr.name}: checking if ${property} is required...`, "silly");
+    logger_1.log(`${constr.name}: checking if ${property} is required...`, "silly");
     // retrieve the current metadata
     const metadata = Reflect.getMetadata(METADATA_required, constr) || {};
     if (metadata.hasOwnProperty(property))
@@ -243,8 +243,8 @@ class IPSOObject {
                 // deserializers are defined by property name, so key is actually the key
                 propName = lookupKeyOrProperty(this, key);
                 if (!propName) {
-                    debug_1.default(`found unknown property with key ${key}`, "warn");
-                    debug_1.default(`object was: ${JSON.stringify(obj)}`, "warn");
+                    logger_1.log(`found unknown property with key ${key}`, "warn");
+                    logger_1.log(`object was: ${JSON.stringify(obj)}`, "warn");
                     continue;
                 }
                 deserializers = getDeserializers(this, propName);
@@ -273,7 +273,7 @@ class IPSOObject {
                 return applyDeserializers(deserializers, value, this);
             }
             else {
-                debug_1.default(`could not find deserializer for key ${propKey}`, "warn");
+                logger_1.log(`could not find deserializer for key ${propKey}`, "warn");
             }
         }
         else if (deserializers) {

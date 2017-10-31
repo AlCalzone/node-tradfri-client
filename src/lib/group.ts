@@ -1,6 +1,13 @@
 import { deserializers, serializers } from "./conversions";
 import { IPSODevice } from "./ipsoDevice";
 import { deserializeWith, ipsoKey, IPSOObject, PropertyTransform, required, serializeWith } from "./ipsoObject";
+import { DictionaryLike } from "./object-polyfill";
+import { Scene } from "./scene";
+
+export interface GroupInfo {
+	group: Group;
+	scenes: DictionaryLike<Scene>;
+}
 
 export class Group extends IPSODevice {
 

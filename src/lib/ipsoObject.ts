@@ -1,4 +1,4 @@
-import debug from "./debug";
+import { log } from "./logger";
 import { DictionaryLike, entries } from "./object-polyfill";
 
 // ===========================================================
@@ -63,7 +63,7 @@ export function required(target: object, property: string | symbol): void {
 function isRequired(target: object, property: string | symbol): boolean {
 	// get the class constructor
 	const constr = target.constructor;
-	debug(`${constr.name}: checking if ${property} is required...`, "silly");
+	log(`${constr.name}: checking if ${property} is required...`, "silly");
 	// retrieve the current metadata
 	const metadata = Reflect.getMetadata(METADATA_required, constr) || {};
 	if (metadata.hasOwnProperty(property)) return metadata[property];
@@ -261,8 +261,8 @@ export class IPSOObject {
 				// deserializers are defined by property name, so key is actually the key
 				propName = lookupKeyOrProperty(this, key);
 				if (!propName) {
-					debug(`found unknown property with key ${key}`, "warn");
-					debug(`object was: ${JSON.stringify(obj)}`, "warn");
+					log(`found unknown property with key ${key}`, "warn");
+					log(`object was: ${JSON.stringify(obj)}`, "warn");
 					continue;
 				}
 				deserializers = getDeserializers(this, propName);
@@ -289,7 +289,7 @@ export class IPSOObject {
 			if (deserializers) {
 				return applyDeserializers(deserializers, value, this);
 			} else {
-				debug(`could not find deserializer for key ${propKey}`, "warn");
+				log(`could not find deserializer for key ${propKey}`, "warn");
 			}
 		} else if (deserializers) {
 			// if this property needs a parser, parse the value
