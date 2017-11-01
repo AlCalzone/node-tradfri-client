@@ -7,6 +7,7 @@ export declare const endpoints: {
     smartTasks: string;
     gateway: string;
     gatewayDetails: string;
+    authentication: string;
 };
 export declare const gatewayEndpoints: {
     alexaCertificate: string;

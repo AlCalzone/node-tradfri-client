@@ -33,44 +33,116 @@ export class TradfriClient {
 
 	constructor(
 		public readonly hostname: string,
-		public readonly securityCode: string,
 		customLogger: LoggerFunction,
 	) {
-		// prepare connection
 		this.requestBase = `coaps://${hostname}:5684/`;
-		coap.setSecurityParams(hostname, {
-			psk: { Client_identity: securityCode },
-		});
-
 		if (customLogger != null) setCustomLogger(customLogger);
 	}
 
 	/**
-	 * Try to establish a connection to the configured gateway.
-	 * Throws if the connection could not be established.
-	 * @param maxAttempts Number of connection attempts before giving up
-	 * @param attemptInterval Milliseconds to wait between connection attempts
+	 * Connect to the gateway
+	 * @param securityCode The security code that is printed on the gateway
+	 * @param identity (optional) A previously negotiated identity. If none is given, a new one is returned on success.
+	 * @param psk (optional) The pre-shared key belonging to the identity. If none is given, a new one is returned on success.
 	 */
-	public async connect(maxAttempts: number = 3, attemptInterval: number = 1000): Promise<void> {
-		if (maxAttempts < 1) throw new Error("At least one connection attempt must be made");
-		if (attemptInterval < 0) throw new Error("The interval between two connection attempts must be positive");
+	public async connect(
+		securityCode: string,
+		identity?: string,
+		psk?: string,
+	): Promise<{
+		success: boolean,
+		usedIdentity?: string,
+		usedPSK?: string,
+	}> {
 
-		// Try a few times to setup a working connection
-		for (let i = 1; i <= maxAttempts; i++) {
-			if (await coap.tryToConnect(this.requestBase)) {
-				break; // it worked
-			} else if (i < maxAttempts) {
-				log(`Could not connect to gateway, try #${i}`, "warn");
-				if (attemptInterval > 0) await wait(attemptInterval);
-			} else if (i === maxAttempts) {
-				// no working connection
-				throw new TradfriError(
-					`Could not connect to the gateway ${this.requestBase} after ${maxAttempts} tries!`,
-					TradfriErrorCodes.ConnectionFailed,
-				);
-			}
+		// TODO: make this more elegant when I have the time
+		// we're reconnecting a bit too much
+
+		// first, check try to connect with the security code
+		log("trying to connect with the security code", "debug");
+		if (!await this.tryToConnect("Client_identity", securityCode)) {
+			// that didn't work, so the code is wrong
+			throw new TradfriError("The security code is wrong", TradfriErrorCodes.ConnectionFailed);
 		}
-		// Done!
+		// now, if we have a stored identity, try to connect with that one
+		let needsAuthentication: boolean;
+		if (identity == null || psk == null) {
+			log("no identity stored, creating a new one", "debug");
+			needsAuthentication = true;
+		} else if (!await this.tryToConnect(identity, psk)) {
+			log("stored identity has expired, creating a new one", "debug");
+			// either there was no stored identity, or the current one is expired,
+			// so we need to get a new one
+			needsAuthentication = true;
+			// therefore, reconnect with the working security code
+			await this.tryToConnect("Client_identity", securityCode);
+		}
+		if (needsAuthentication) {
+			const authResult = await this.authenticate();
+			if (authResult == null) {
+				throw new TradfriError("The authentication failed", TradfriErrorCodes.AuthenticationFailed);
+			}
+			log(`reconnecting with the new identity`, "debug");
+			if (!await this.tryToConnect(authResult.identity, authResult.psk)) {
+				throw new TradfriError("The connection with the fresh identity failed", TradfriErrorCodes.AuthenticationFailed);
+			}
+			return {
+				success: true,
+				usedIdentity: authResult.identity,
+				usedPSK: authResult.psk,
+			};
+		}
+
+		return {
+			success: true,
+		};
+	}
+
+	/**
+	 * Try to establish a connection to the configured gateway.
+	 * @param identity The DTLS identity to use
+	 * @param psk The pre-shared key to use
+	 * @returns true if the connection attempt was successful, otherwise false.
+	 */
+	private async tryToConnect(identity: string, psk: string): Promise<boolean> {
+
+		// initialize CoAP client
+		coap.reset();
+		coap.setSecurityParams(this.hostname, {
+			psk: { [identity]: psk },
+		});
+
+		log(`Attempting connection. Identity = ${identity}, psk = ${psk}`, "debug");
+		const result = await coap.tryToConnect(this.requestBase);
+		log(`Connection ${result ? "" : "un"}successful`, "debug");
+		return result;
+	}
+
+	private async authenticate(): Promise<{identity: string, psk: string}> {
+		// generate a new identity
+		const identity = `tradfri_${Date.now()}`;
+
+		log(`authenticating with identity "${identity}"`, "debug");
+
+		// request creation of new PSK
+		let payload: string | Buffer = JSON.stringify({ 9090: identity });
+		payload = Buffer.from(payload);
+		const response = await coap.request(
+			`${this.requestBase}${coapEndpoints.authentication}`,
+			"post",
+			payload,
+		);
+
+		// check the response
+		if (response.code.toString() !== "2.01") {
+			log(`unexpected response (${response.code.toString()}) to getPSK().`, "error");
+			return null;
+		}
+		// the response is a buffer containing a JSON object as a string
+		const pskResponse = JSON.parse(response.payload.toString("utf8"));
+		const psk = pskResponse["9091"];
+
+		return {identity, psk};
 	}
 
 	/**

@@ -10,6 +10,7 @@ exports.endpoints = {
     smartTasks: "15010",
     gateway: "15011",
     gatewayDetails: "15012",
+    authentication: "15011/9063",
 };
 exports.gatewayEndpoints = {
     alexaCertificate: "9094",

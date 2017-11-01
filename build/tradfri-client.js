@@ -16,56 +16,109 @@ const array_extensions_1 = require("./lib/array-extensions");
 const endpoints_1 = require("./lib/endpoints");
 const group_1 = require("./lib/group");
 const logger_1 = require("./lib/logger");
-const promises_1 = require("./lib/promises");
 const scene_1 = require("./lib/scene");
 const tradfri_error_1 = require("./lib/tradfri-error");
 const tradfri_observer_1 = require("./lib/tradfri-observer");
 class TradfriClient {
-    constructor(hostname, securityCode, customLogger) {
+    constructor(hostname, customLogger) {
         this.hostname = hostname;
-        this.securityCode = securityCode;
         /** dictionary of CoAP observers */
         this.observedPaths = [];
         /** dictionary of known devices */
         this.devices = {};
         /** dictionary of known groups */
         this.groups = {};
-        // prepare connection
         this.requestBase = `coaps://${hostname}:5684/`;
-        node_coap_client_1.CoapClient.setSecurityParams(hostname, {
-            psk: { Client_identity: securityCode },
-        });
         if (customLogger != null)
             logger_1.setCustomLogger(customLogger);
     }
     /**
-     * Try to establish a connection to the configured gateway.
-     * Throws if the connection could not be established.
-     * @param maxAttempts Number of connection attempts before giving up
-     * @param attemptInterval Milliseconds to wait between connection attempts
+     * Connect to the gateway
+     * @param securityCode The security code that is printed on the gateway
+     * @param identity (optional) A previously negotiated identity. If none is given, a new one is returned on success.
+     * @param psk (optional) The pre-shared key belonging to the identity. If none is given, a new one is returned on success.
      */
-    connect(maxAttempts = 3, attemptInterval = 1000) {
+    connect(securityCode, identity, psk) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (maxAttempts < 1)
-                throw new Error("At least one connection attempt must be made");
-            if (attemptInterval < 0)
-                throw new Error("The interval between two connection attempts must be positive");
-            // Try a few times to setup a working connection
-            for (let i = 1; i <= maxAttempts; i++) {
-                if (yield node_coap_client_1.CoapClient.tryToConnect(this.requestBase)) {
-                    break; // it worked
-                }
-                else if (i < maxAttempts) {
-                    logger_1.log(`Could not connect to gateway, try #${i}`, "warn");
-                    if (attemptInterval > 0)
-                        yield promises_1.wait(attemptInterval);
-                }
-                else if (i === maxAttempts) {
-                    // no working connection
-                    throw new tradfri_error_1.TradfriError(`Could not connect to the gateway ${this.requestBase} after ${maxAttempts} tries!`, tradfri_error_1.TradfriErrorCodes.ConnectionFailed);
-                }
+            // TODO: make this more elegant when I have the time
+            // we're reconnecting a bit too much
+            // first, check try to connect with the security code
+            logger_1.log("trying to connect with the security code", "debug");
+            if (!(yield this.tryToConnect("Client_identity", securityCode))) {
+                // that didn't work, so the code is wrong
+                throw new tradfri_error_1.TradfriError("The security code is wrong", tradfri_error_1.TradfriErrorCodes.ConnectionFailed);
             }
-            // Done!
+            // now, if we have a stored identity, try to connect with that one
+            let needsAuthentication;
+            if (identity == null || psk == null) {
+                logger_1.log("no identity stored, creating a new one", "debug");
+                needsAuthentication = true;
+            }
+            else if (!(yield this.tryToConnect(identity, psk))) {
+                logger_1.log("stored identity has expired, creating a new one", "debug");
+                // either there was no stored identity, or the current one is expired,
+                // so we need to get a new one
+                needsAuthentication = true;
+                // therefore, reconnect with the working security code
+                yield this.tryToConnect("Client_identity", securityCode);
+            }
+            if (needsAuthentication) {
+                const authResult = yield this.authenticate();
+                if (authResult == null) {
+                    throw new tradfri_error_1.TradfriError("The authentication failed", tradfri_error_1.TradfriErrorCodes.AuthenticationFailed);
+                }
+                logger_1.log(`reconnecting with the new identity`, "debug");
+                if (!(yield this.tryToConnect(authResult.identity, authResult.psk))) {
+                    throw new tradfri_error_1.TradfriError("The connection with the fresh identity failed", tradfri_error_1.TradfriErrorCodes.AuthenticationFailed);
+                }
+                return {
+                    success: true,
+                    usedIdentity: authResult.identity,
+                    usedPSK: authResult.psk,
+                };
+            }
+            return {
+                success: true,
+            };
+        });
+    }
+    /**
+     * Try to establish a connection to the configured gateway.
+     * @param identity The DTLS identity to use
+     * @param psk The pre-shared key to use
+     * @returns true if the connection attempt was successful, otherwise false.
+     */
+    tryToConnect(identity, psk) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // initialize CoAP client
+            node_coap_client_1.CoapClient.reset();
+            node_coap_client_1.CoapClient.setSecurityParams(this.hostname, {
+                psk: { [identity]: psk },
+            });
+            logger_1.log(`Attempting connection. Identity = ${identity}, psk = ${psk}`, "debug");
+            const result = yield node_coap_client_1.CoapClient.tryToConnect(this.requestBase);
+            logger_1.log(`Connection ${result ? "" : "un"}successful`, "debug");
+            return result;
+        });
+    }
+    authenticate() {
+        return __awaiter(this, void 0, void 0, function* () {
+            // generate a new identity
+            const identity = `tradfri_${Date.now()}`;
+            logger_1.log(`authenticating with identity "${identity}"`, "debug");
+            // request creation of new PSK
+            let payload = JSON.stringify({ 9090: identity });
+            payload = Buffer.from(payload);
+            const response = yield node_coap_client_1.CoapClient.request(`${this.requestBase}${endpoints_1.endpoints.authentication}`, "post", payload);
+            // check the response
+            if (response.code.toString() !== "2.01") {
+                logger_1.log(`unexpected response (${response.code.toString()}) to getPSK().`, "error");
+                return null;
+            }
+            // the response is a buffer containing a JSON object as a string
+            const pskResponse = JSON.parse(response.payload.toString("utf8"));
+            const psk = pskResponse["9091"];
+            return { identity, psk };
         });
     }
     /**

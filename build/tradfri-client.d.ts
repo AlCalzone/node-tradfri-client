@@ -9,7 +9,6 @@ export declare type ObserveResourceCallback = (resp: CoapResponse) => void;
 export declare type ObserveDevicesCallback = (addedDevices: Accessory[], removedDevices: Accessory[]) => void;
 export declare class TradfriClient {
     readonly hostname: string;
-    readonly securityCode: string;
     /** dictionary of CoAP observers */
     observedPaths: string[];
     private observer;
@@ -19,14 +18,26 @@ export declare class TradfriClient {
     groups: DictionaryLike<GroupInfo>;
     /** Base URL for all CoAP requests */
     private requestBase;
-    constructor(hostname: string, securityCode: string, customLogger: LoggerFunction);
+    constructor(hostname: string, customLogger: LoggerFunction);
+    /**
+     * Connect to the gateway
+     * @param securityCode The security code that is printed on the gateway
+     * @param identity (optional) A previously negotiated identity. If none is given, a new one is returned on success.
+     * @param psk (optional) The pre-shared key belonging to the identity. If none is given, a new one is returned on success.
+     */
+    connect(securityCode: string, identity?: string, psk?: string): Promise<{
+        success: boolean;
+        usedIdentity?: string;
+        usedPSK?: string;
+    }>;
     /**
      * Try to establish a connection to the configured gateway.
-     * Throws if the connection could not be established.
-     * @param maxAttempts Number of connection attempts before giving up
-     * @param attemptInterval Milliseconds to wait between connection attempts
+     * @param identity The DTLS identity to use
+     * @param psk The pre-shared key to use
+     * @returns true if the connection attempt was successful, otherwise false.
      */
-    connect(maxAttempts?: number, attemptInterval?: number): Promise<void>;
+    private tryToConnect(identity, psk);
+    private authenticate();
     /**
      * Observes a resource at the given url and calls the callback when the information is updated.
      * Prefer the specialized versions if possible.
