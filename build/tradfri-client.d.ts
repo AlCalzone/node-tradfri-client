@@ -1,4 +1,4 @@
-import { CoapResponse } from "node-coap-client";
+import { CoapResponse, RequestMethod } from "node-coap-client";
 import { Accessory } from "./lib/accessory";
 import { Group, GroupInfo, GroupOperation } from "./lib/group";
 import { LightOperation } from "./lib/light";
@@ -106,4 +106,14 @@ export declare class TradfriClient {
      * @returns true if a request was sent, false otherwise
      */
     operateLight(accessory: Accessory, operation: LightOperation): Promise<boolean>;
+    /**
+     * Sends a custom request to a resource
+     * @param path The path of the resource
+     * @param method The method of the request
+     * @param payload The optional payload as a JSON object
+     */
+    request(path: string, method: RequestMethod, payload?: object): Promise<{
+        code: string;
+        payload: any;
+    }>;
 }

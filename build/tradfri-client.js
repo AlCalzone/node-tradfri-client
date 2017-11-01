@@ -422,6 +422,29 @@ class TradfriClient {
             return this.updateDevice(accessory);
         });
     }
+    /**
+     * Sends a custom request to a resource
+     * @param path The path of the resource
+     * @param method The method of the request
+     * @param payload The optional payload as a JSON object
+     */
+    request(path, method, payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // create actual payload
+            let jsonPayload;
+            if (payload != null) {
+                jsonPayload = JSON.stringify(payload);
+                logger_1.log("sending custom payload: " + jsonPayload, "debug");
+                jsonPayload = Buffer.from(jsonPayload);
+            }
+            // wait for the CoAP response and respond to the message
+            const resp = yield node_coap_client_1.CoapClient.request(`${this.requestBase}${path}`, method, jsonPayload);
+            return {
+                code: resp.code.toString(),
+                payload: parsePayload(resp),
+            };
+        });
+    }
 }
 exports.TradfriClient = TradfriClient;
 /** Normalizes the path to a resource, so it can be used for storing the observer */

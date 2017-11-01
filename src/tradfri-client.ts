@@ -1,5 +1,5 @@
 // load external modules
-import { CoapClient as coap, CoapResponse } from "node-coap-client";
+import { CoapClient as coap, CoapResponse, RequestMethod } from "node-coap-client";
 
 // load internal modules
 import { Accessory, AccessoryTypes } from "./lib/accessory";
@@ -476,6 +476,41 @@ export class TradfriClient {
 		}
 		accessory.lightList[0].merge(operation);
 		return this.updateDevice(accessory);
+	}
+
+	/**
+	 * Sends a custom request to a resource
+	 * @param path The path of the resource
+	 * @param method The method of the request
+	 * @param payload The optional payload as a JSON object
+	 */
+	public async request(
+		path: string,
+		method: RequestMethod,
+		payload?: object,
+	): Promise<{
+		code: string,
+		payload: any,
+	}> {
+
+		// create actual payload
+		let jsonPayload: string | Buffer;
+		if (payload != null) {
+			jsonPayload = JSON.stringify(payload);
+			log("sending custom payload: " + jsonPayload, "debug");
+			jsonPayload = Buffer.from(jsonPayload);
+		}
+
+		// wait for the CoAP response and respond to the message
+		const resp = await coap.request(
+			`${this.requestBase}${path}`,
+			method,
+			jsonPayload as Buffer,
+		);
+		return {
+			code: resp.code.toString(),
+			payload: parsePayload(resp),
+		};
 	}
 }
 
