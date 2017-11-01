@@ -181,7 +181,7 @@ class TradfriClient {
     observeDevices() {
         return __awaiter(this, void 0, void 0, function* () {
             const ret = this.getObserver();
-            yield this.observeResource(endpoints_1.endpoints.devices, this.observeDevices_callback);
+            yield this.observeResource(endpoints_1.endpoints.devices, this.observeDevices_callback.bind(this));
             return ret;
         });
     }
@@ -242,7 +242,7 @@ class TradfriClient {
     observeGroupsAndScenes() {
         return __awaiter(this, void 0, void 0, function* () {
             const ret = this.getObserver();
-            yield this.observeResource(endpoints_1.endpoints.groups, this.observeGroups_callback);
+            yield this.observeResource(endpoints_1.endpoints.groups, this.observeGroups_callback.bind(this));
             return ret;
         });
     }

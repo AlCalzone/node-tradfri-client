@@ -212,7 +212,7 @@ export class TradfriClient {
 		const ret = this.getObserver();
 		await this.observeResource(
 			coapEndpoints.devices,
-			this.observeDevices_callback,
+			this.observeDevices_callback.bind(this),
 		);
 		return ret;
 	}
@@ -282,7 +282,7 @@ export class TradfriClient {
 		const ret = this.getObserver();
 		await this.observeResource(
 			coapEndpoints.groups,
-			this.observeGroups_callback,
+			this.observeGroups_callback.bind(this),
 		);
 		return ret;
 	}
