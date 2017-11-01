@@ -1,6 +1,7 @@
 import { CoapResponse } from "node-coap-client";
 import { Accessory } from "./lib/accessory";
-import { GroupInfo } from "./lib/group";
+import { Group, GroupInfo, GroupOperation } from "./lib/group";
+import { LightOperation } from "./lib/light";
 import { LoggerFunction } from "./lib/logger";
 import { DictionaryLike } from "./lib/object-polyfill";
 import { TradfriObserverAPI } from "./lib/tradfri-observer";
@@ -71,4 +72,38 @@ export declare class TradfriClient {
      * @param timeout - (optional) Timeout in ms, after which the ping is deemed unanswered. Default: 5000ms
      */
     ping(timeout?: number): Promise<boolean>;
+    /**
+     * Updates a device object on the gateway
+     * @param accessory The device to be changed
+     * @returns true if a request was sent, false otherwise
+     */
+    updateDevice(accessory: Accessory): Promise<boolean>;
+    /**
+     * Updates a group object on the gateway
+     * @param group The group to be changed
+     * @returns true if a request was sent, false otherwise
+     */
+    updateGroup(group: Group): Promise<boolean>;
+    /**
+     * Updates a generic resource on the gateway
+     * @param path The path where the resource is located
+     * @param newObj The new object for the resource
+     * @param reference The reference value to calculate the diff
+     * @returns true if a request was sent, false otherwise
+     */
+    private updateResource(path, newObj, reference);
+    /**
+     * Sets some properties on a group
+     * @param group The group to be updated
+     * @param operation The properties to be set
+     * @returns true if a request was sent, false otherwise
+     */
+    operateGroup(group: Group, operation: GroupOperation): Promise<boolean>;
+    /**
+     * Sets some properties on a lightbulb
+     * @param accessory The parent accessory of the lightbulb
+     * @param operation The properties to be set
+     * @returns true if a request was sent, false otherwise
+     */
+    operateLight(accessory: Accessory, operation: LightOperation): Promise<boolean>;
 }

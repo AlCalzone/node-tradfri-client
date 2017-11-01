@@ -2,10 +2,12 @@
 import { CoapClient as coap, CoapResponse } from "node-coap-client";
 
 // load internal modules
-import { Accessory } from "./lib/accessory";
+import { Accessory, AccessoryTypes } from "./lib/accessory";
 import { except } from "./lib/array-extensions";
 import { endpoints as coapEndpoints } from "./lib/endpoints";
-import { Group, GroupInfo } from "./lib/group";
+import { Group, GroupInfo, GroupOperation } from "./lib/group";
+import { IPSOObject } from "./lib/ipsoObject";
+import { Light, LightOperation, Spectrum } from "./lib/light";
 import { log, LoggerFunction, setCustomLogger } from "./lib/logger";
 import { DictionaryLike } from "./lib/object-polyfill";
 import { wait } from "./lib/promises";
@@ -201,7 +203,8 @@ export class TradfriClient {
 		// parse device info
 		const accessory = new Accessory().parse(result).createProxy();
 		// remember the device object, so we can later use it as a reference for updates
-		this.devices[instanceId] = accessory;
+		// store a clone, so we don't have to care what the calling library does
+		this.devices[instanceId] = accessory.clone();
 		// and notify all listeners about the update
 		this.observer.raise("device updated", accessory);
 	}
@@ -299,7 +302,9 @@ export class TradfriClient {
 			};
 		}
 		groupInfo = this.groups[instanceId];
-		groupInfo.group = group;
+		// remember the group object, so we can later use it as a reference for updates
+		// store a clone, so we don't have to care what the calling library does
+		groupInfo.group = group.clone();
 
 		// notify all listeners about the update
 		this.observer.raise("group updated", group);
@@ -371,7 +376,8 @@ export class TradfriClient {
 		// parse scene info
 		const scene = (new Scene()).parse(result).createProxy();
 		// remember the scene object, so we can later use it as a reference for updates
-		this.groups[groupId].scenes[instanceId] = scene;
+		// store a clone, so we don't have to care what the calling library does
+		this.groups[groupId].scenes[instanceId] = scene.clone();
 		// and notify all listeners about the update
 		this.observer.raise("scene updated", groupId, scene);
 	}
@@ -384,6 +390,93 @@ export class TradfriClient {
 		return coap.ping(this.requestBase, timeout);
 	}
 
+	/**
+	 * Updates a device object on the gateway
+	 * @param accessory The device to be changed
+	 * @returns true if a request was sent, false otherwise
+	 */
+	public async updateDevice(accessory: Accessory): Promise<boolean> {
+		// retrieve the original as a reference for serialization
+		if (!(accessory.instanceId in this.devices)) {
+			throw new Error(`The device with id ${accessory.instanceId} is not known and cannot be update!`);
+		}
+		const original = this.devices[accessory.instanceId];
+
+		return this.updateResource(
+			`${coapEndpoints.devices}/${accessory.instanceId}`,
+			accessory, original,
+		);
+	}
+
+	/**
+	 * Updates a group object on the gateway
+	 * @param group The group to be changed
+	 * @returns true if a request was sent, false otherwise
+	 */
+	public async updateGroup(group: Group): Promise<boolean> {
+		// retrieve the original as a reference for serialization
+		if (!(group.instanceId in this.groups)) {
+			throw new Error(`The group with id ${group.instanceId} is not known and cannot be update!`);
+		}
+		const original = this.groups[group.instanceId].group;
+
+		return this.updateResource(
+			`${coapEndpoints.groups}/${group.instanceId}`,
+			group, original,
+		);
+	}
+
+	/**
+	 * Updates a generic resource on the gateway
+	 * @param path The path where the resource is located
+	 * @param newObj The new object for the resource
+	 * @param reference The reference value to calculate the diff
+	 * @returns true if a request was sent, false otherwise
+	 */
+	private async updateResource(path: string, newObj: IPSOObject, reference: IPSOObject): Promise<boolean> {
+
+		const serializedObj = newObj.serialize(reference);
+
+		// If the serialized object contains no properties, we don't need to send anything
+		if (!serializedObj || Object.keys(serializedObj).length === 0) {
+			log(`updateResource(${path}) > empty object, not sending any payload`, "debug");
+			return false;
+		}
+
+		// get the payload
+		let payload: string | Buffer = JSON.stringify(serializedObj);
+		log(`updateResource(${path}) > sending payload: ${payload}`, "debug");
+		payload = Buffer.from(payload);
+
+		await coap.request(
+			`${this.requestBase}${path}`, "put", payload,
+		);
+		return true;
+	}
+
+	/**
+	 * Sets some properties on a group
+	 * @param group The group to be updated
+	 * @param operation The properties to be set
+	 * @returns true if a request was sent, false otherwise
+	 */
+	public async operateGroup(group: Group, operation: GroupOperation): Promise<boolean> {
+		return this.updateGroup( group.merge(operation) );
+	}
+
+	/**
+	 * Sets some properties on a lightbulb
+	 * @param accessory The parent accessory of the lightbulb
+	 * @param operation The properties to be set
+	 * @returns true if a request was sent, false otherwise
+	 */
+	public async operateLight(accessory: Accessory, operation: LightOperation): Promise<boolean> {
+		if (accessory.type !== AccessoryTypes.lightbulb) {
+			throw new Error("The parameter accessory must be a lightbulb!");
+		}
+		accessory.lightList[0].merge(operation);
+		return this.updateDevice(accessory);
+	}
 }
 
 /** Normalizes the path to a resource, so it can be used for storing the observer */
