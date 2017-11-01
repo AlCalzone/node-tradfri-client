@@ -26,7 +26,6 @@ export declare class TradfriClient {
      * @param psk (optional) The pre-shared key belonging to the identity. If none is given, a new one is returned on success.
      */
     connect(securityCode: string, identity?: string, psk?: string): Promise<{
-        success: boolean;
         usedIdentity?: string;
         usedPSK?: string;
     }>;

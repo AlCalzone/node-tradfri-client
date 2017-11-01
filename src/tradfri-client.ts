@@ -50,7 +50,6 @@ export class TradfriClient {
 		identity?: string,
 		psk?: string,
 	): Promise<{
-		success: boolean,
 		usedIdentity?: string,
 		usedPSK?: string,
 	}> {
@@ -87,15 +86,12 @@ export class TradfriClient {
 				throw new TradfriError("The connection with the fresh identity failed", TradfriErrorCodes.AuthenticationFailed);
 			}
 			return {
-				success: true,
 				usedIdentity: authResult.identity,
 				usedPSK: authResult.psk,
 			};
 		}
 
-		return {
-			success: true,
-		};
+		return {};
 	}
 
 	/**

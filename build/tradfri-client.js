@@ -72,14 +72,11 @@ class TradfriClient {
                     throw new tradfri_error_1.TradfriError("The connection with the fresh identity failed", tradfri_error_1.TradfriErrorCodes.AuthenticationFailed);
                 }
                 return {
-                    success: true,
                     usedIdentity: authResult.identity,
                     usedPSK: authResult.psk,
                 };
             }
-            return {
-                success: true,
-            };
+            return {};
         });
     }
     /**
