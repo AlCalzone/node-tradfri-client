@@ -16,6 +16,8 @@ class Group extends ipsoDevice_1.IPSODevice {
 }
 __decorate([
     ipsoObject_1.ipsoKey("5850"),
+    ipsoObject_1.required((me, ref) => ref != null && me.sceneId !== ref.sceneId) // force on/off to be present if sceneId is
+    ,
     __metadata("design:type", Boolean)
 ], Group.prototype, "onOff", void 0);
 __decorate([
@@ -35,8 +37,11 @@ __decorate([
     __metadata("design:type", Array)
 ], Group.prototype, "deviceIDs", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5712"),
-    ipsoObject_1.required,
+    ipsoObject_1.ipsoKey("5712")
+    // force transition time to be present if brightness is
+    // all other properties don't support the transition time
+    ,
+    ipsoObject_1.required((me, ref) => ref != null && me.dimmer !== ref.dimmer),
     ipsoObject_1.serializeWith(conversions_1.serializers.transitionTime),
     ipsoObject_1.deserializeWith(conversions_1.deserializers.transitionTime),
     __metadata("design:type", Number)

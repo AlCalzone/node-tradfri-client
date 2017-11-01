@@ -52,29 +52,35 @@ function lookupKeyOrProperty(target, keyOrProperty) {
 /**
  * Declares that a property is required to be present in a serialized CoAP object
  */
-function required(target, property) {
-    // get the class constructor
-    const constr = target.constructor;
-    // retrieve the current metadata
-    const metadata = Reflect.getMetadata(METADATA_required, constr) || {};
-    // and enhance it (both ways)
-    metadata[property] = true;
-    // store back to the object
-    Reflect.defineMetadata(METADATA_required, metadata, constr);
-}
-exports.required = required;
+exports.required = (predicate = true) => {
+    return (target, property) => {
+        // get the class constructor
+        const constr = target.constructor;
+        // retrieve the current metadata
+        const metadata = Reflect.getMetadata(METADATA_required, constr) || {};
+        // and enhance it (both ways)
+        metadata[property] = predicate;
+        // store back to the object
+        Reflect.defineMetadata(METADATA_required, metadata, constr);
+    };
+};
 /**
  * Checks if a property is required to be present in a serialized CoAP object
  * @param property - property name to lookup
  */
-function isRequired(target, property) {
+function isRequired(target, reference, property) {
     // get the class constructor
     const constr = target.constructor;
     logger_1.log(`${constr.name}: checking if ${property} is required...`, "silly");
     // retrieve the current metadata
     const metadata = Reflect.getMetadata(METADATA_required, constr) || {};
-    if (metadata.hasOwnProperty(property))
-        return metadata[property];
+    if (metadata.hasOwnProperty(property)) {
+        const ret = metadata[property];
+        if (typeof ret === "boolean")
+            return ret;
+        if (typeof ret === "function")
+            return ret(target, reference);
+    }
     return false;
 }
 /**
@@ -307,13 +313,13 @@ class IPSOObject {
             reference = reference.unproxy();
         const ret = {};
         const serializeValue = (propName, value, refValue, transform) => {
-            const _required = isRequired(this, propName);
+            const _required = isRequired(this, reference, propName);
             let _ret = value;
             if (value instanceof IPSOObject) {
                 // if the value is another IPSOObject, then serialize that
                 _ret = value.serialize(refValue);
                 // if the serialized object contains no required properties, don't remember it
-                if (value.isSerializedObjectEmpty(_ret))
+                if (value.isSerializedObjectEmpty(_ret, reference))
                     return null;
             }
             else {
@@ -392,11 +398,11 @@ class IPSOObject {
         // and parse them back
         return ret.parse(serialized);
     }
-    isSerializedObjectEmpty(obj) {
+    isSerializedObjectEmpty(obj, refObj) {
         // Prüfen, ob eine nicht-benötigte Eigenschaft angegeben ist. => nicht leer
         for (const key of Object.keys(obj)) {
             const propName = lookupKeyOrProperty(this, key);
-            if (!isRequired(this, propName)) {
+            if (!isRequired(this, refObj, propName)) {
                 return false;
             }
         }

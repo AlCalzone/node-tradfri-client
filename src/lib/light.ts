@@ -47,6 +47,7 @@ export class Light extends IPSODevice {
 	public colorX: number; // int
 
 	@ipsoKey("5710")
+	@required((me: Light, ref: Light) => ref != null && me.colorX !== ref.colorX) // force colorY to be present if colorX is
 	public colorY: number; // int
 
 	// currently not used directly, since the gateway only accepts 3 distinct values
@@ -55,7 +56,7 @@ export class Light extends IPSODevice {
 	public colorTemperature: number; // TODO: CoAP range unknown!
 
 	@ipsoKey("5712")
-	@required
+	@required()
 	@serializeWith(serializers.transitionTime)
 	@deserializeWith(deserializers.transitionTime)
 	public transitionTime: number = 0.5; // <float>

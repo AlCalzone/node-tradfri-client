@@ -268,6 +268,7 @@ export class TradfriClient {
 			return;
 		}
 		const result = parsePayload(response);
+		log(`observeDevice > ` + JSON.stringify(result), "debug");
 		// parse device info
 		const accessory = new Accessory().parse(result).createProxy();
 		// remember the device object, so we can later use it as a reference for updates
@@ -529,7 +530,14 @@ export class TradfriClient {
 	 * @returns true if a request was sent, false otherwise
 	 */
 	public async operateGroup(group: Group, operation: GroupOperation): Promise<boolean> {
-		return this.updateGroup( group.merge(operation) );
+
+		const reference = group.clone();
+		const newGroup = reference.clone().merge(operation);
+
+		return this.updateResource(
+			`${coapEndpoints.groups}/${group.instanceId}`,
+			newGroup, reference,
+		);
 	}
 
 	/**
@@ -542,8 +550,15 @@ export class TradfriClient {
 		if (accessory.type !== AccessoryTypes.lightbulb) {
 			throw new Error("The parameter accessory must be a lightbulb!");
 		}
-		accessory.lightList[0].merge(operation);
-		return this.updateDevice(accessory);
+
+		const reference = accessory.clone();
+		const newAccessory = reference.clone();
+		newAccessory.lightList[0].merge(operation);
+
+		return this.updateResource(
+			`${coapEndpoints.devices}/${accessory.instanceId}`,
+			newAccessory, reference,
+		);
 	}
 
 	/**

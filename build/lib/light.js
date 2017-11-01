@@ -106,6 +106,8 @@ __decorate([
 ], Light.prototype, "colorX", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("5710"),
+    ipsoObject_1.required((me, ref) => ref != null && me.colorX !== ref.colorX) // force colorY to be present if colorX is
+    ,
     __metadata("design:type", Number)
 ], Light.prototype, "colorY", void 0);
 __decorate([
@@ -114,7 +116,7 @@ __decorate([
 ], Light.prototype, "colorTemperature", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("5712"),
-    ipsoObject_1.required,
+    ipsoObject_1.required(),
     ipsoObject_1.serializeWith(conversions_1.serializers.transitionTime),
     ipsoObject_1.deserializeWith(conversions_1.deserializers.transitionTime),
     __metadata("design:type", Number)

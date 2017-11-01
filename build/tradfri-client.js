@@ -230,6 +230,7 @@ class TradfriClient {
             return;
         }
         const result = parsePayload(response);
+        logger_1.log(`observeDevice > ` + JSON.stringify(result), "debug");
         // parse device info
         const accessory = new accessory_1.Accessory().parse(result).createProxy();
         // remember the device object, so we can later use it as a reference for updates
@@ -454,7 +455,9 @@ class TradfriClient {
      */
     operateGroup(group, operation) {
         return __awaiter(this, void 0, void 0, function* () {
-            return this.updateGroup(group.merge(operation));
+            const reference = group.clone();
+            const newGroup = reference.clone().merge(operation);
+            return this.updateResource(`${endpoints_1.endpoints.groups}/${group.instanceId}`, newGroup, reference);
         });
     }
     /**
@@ -468,8 +471,10 @@ class TradfriClient {
             if (accessory.type !== accessory_1.AccessoryTypes.lightbulb) {
                 throw new Error("The parameter accessory must be a lightbulb!");
             }
-            accessory.lightList[0].merge(operation);
-            return this.updateDevice(accessory);
+            const reference = accessory.clone();
+            const newAccessory = reference.clone();
+            newAccessory.lightList[0].merge(operation);
+            return this.updateResource(`${endpoints_1.endpoints.devices}/${accessory.instanceId}`, newAccessory, reference);
         });
     }
     /**

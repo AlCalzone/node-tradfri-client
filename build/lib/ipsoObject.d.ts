@@ -1,5 +1,6 @@
 import { DictionaryLike } from "./object-polyfill";
 export declare type PropertyTransform = (value: any, parent?: IPSOObject) => any;
+export declare type RequiredPredicate = (me: IPSOObject, reference: IPSOObject) => boolean;
 /**
  * Defines the ipso key neccessary to serialize a property to a CoAP object
  */
@@ -7,7 +8,7 @@ export declare const ipsoKey: (key: string) => PropertyDecorator;
 /**
  * Declares that a property is required to be present in a serialized CoAP object
  */
-export declare function required(target: object, property: string | symbol): void;
+export declare const required: (predicate?: boolean | RequiredPredicate) => PropertyDecorator;
 /**
  * Defines the required transformations to serialize a property to a CoAP object
  * @param transform: The transformation to apply during serialization
@@ -42,7 +43,7 @@ export declare class IPSOObject {
      * Deeply clones an IPSO Object
      */
     clone(): this;
-    private isSerializedObjectEmpty(obj);
+    private isSerializedObjectEmpty(obj, refObj);
     /** If this object was proxied or not */
     readonly isProxy: boolean;
     /** Returns the raw object without a wrapping proxy */

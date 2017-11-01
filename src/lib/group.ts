@@ -12,6 +12,7 @@ export interface GroupInfo {
 export class Group extends IPSODevice {
 
 	@ipsoKey("5850")
+	@required((me: Group, ref: Group) => ref != null && me.sceneId !== ref.sceneId) // force on/off to be present if sceneId is
 	public onOff: boolean; // <bool>
 
 	@ipsoKey("5851")
@@ -30,7 +31,9 @@ export class Group extends IPSODevice {
 	// The transition time is not reported by the gateway
 	// but it accepts it for a state change
 	@ipsoKey("5712")
-	@required
+	// force transition time to be present if brightness is
+	// all other properties don't support the transition time
+	@required((me: Group, ref: Group) => ref != null && me.dimmer !== ref.dimmer)
 	@serializeWith(serializers.transitionTime)
 	@deserializeWith(deserializers.transitionTime)
 	public transitionTime: number; // <float>
