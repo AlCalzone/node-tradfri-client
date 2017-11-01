@@ -5,8 +5,8 @@ Library to talk to IKEA Trådfri Gateways without external binaries
 
 ## Changelog
 
-#### 0.0.1
-* (AlCalzone) not ready yet
+#### 0.2.0
+* (AlCalzone) first working release
 
 
 ## License
