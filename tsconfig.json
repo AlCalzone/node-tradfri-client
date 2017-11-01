@@ -14,8 +14,12 @@
         "inlineSourceMap": false,
         "target": "es2015"
     },
+    "include": [
+        "src/**/*.ts"
+    ],
     "exclude": [
         "src/**/*.test.ts",
-        "build/**"
+        "build/**",
+        "node_modules/**"
     ]
 }
