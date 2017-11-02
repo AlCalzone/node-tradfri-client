@@ -21,14 +21,10 @@ export declare class TradfriClient {
     constructor(hostname: string, customLogger: LoggerFunction);
     /**
      * Connect to the gateway
-     * @param securityCode The security code that is printed on the gateway
-     * @param identity (optional) A previously negotiated identity. If none is given, a new one is returned on success.
-     * @param psk (optional) The pre-shared key belonging to the identity. If none is given, a new one is returned on success.
+     * @param identity A previously negotiated identity.
+     * @param psk The pre-shared key belonging to the identity.
      */
-    connect(securityCode: string, identity?: string, psk?: string): Promise<{
-        usedIdentity?: string;
-        usedPSK?: string;
-    }>;
+    connect(identity: string, psk: string): Promise<boolean>;
     /**
      * Try to establish a connection to the configured gateway.
      * @param identity The DTLS identity to use
@@ -36,7 +32,15 @@ export declare class TradfriClient {
      * @returns true if the connection attempt was successful, otherwise false.
      */
     private tryToConnect(identity, psk);
-    private authenticate();
+    /**
+     * Negotiates a new identity and psk with the gateway to use for connections
+     * @param securityCode The security code that is printed on the gateway
+     * @returns The identity and psk to use for future connections. Store these!
+     */
+    authenticate(securityCode: string): Promise<{
+        identity: string;
+        psk: string;
+    }>;
     /**
      * Observes a resource at the given url and calls the callback when the information is updated.
      * Prefer the specialized versions if possible.
