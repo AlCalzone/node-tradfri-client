@@ -1,6 +1,6 @@
-import { IPSODevice } from "./ipsoDevice";
+import { IPSOObject } from "./ipsoObject";
 /** contains information about the gateway */
-export declare class GatewayDetails extends IPSODevice {
+export declare class GatewayDetails extends IPSOObject {
     ntpServerUrl: string;
     version: string;
     updateState: number;

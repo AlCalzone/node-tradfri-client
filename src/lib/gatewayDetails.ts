@@ -2,7 +2,7 @@ import { IPSODevice } from "./ipsoDevice";
 import { deserializeWith, ipsoKey, IPSOObject, PropertyTransform, required, serializeWith } from "./ipsoObject";
 
 /** contains information about the gateway */
-export class GatewayDetails extends IPSODevice {
+export class GatewayDetails extends IPSOObject {
 
 	@ipsoKey("9023")
 	public ntpServerUrl: string = "";

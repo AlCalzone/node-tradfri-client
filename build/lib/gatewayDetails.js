@@ -9,10 +9,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const ipsoDevice_1 = require("./ipsoDevice");
 const ipsoObject_1 = require("./ipsoObject");
 /** contains information about the gateway */
-class GatewayDetails extends ipsoDevice_1.IPSODevice {
+class GatewayDetails extends ipsoObject_1.IPSOObject {
     constructor() {
         super(...arguments);
         this.ntpServerUrl = "";
