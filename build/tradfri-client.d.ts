@@ -18,7 +18,7 @@ export declare class TradfriClient {
     groups: DictionaryLike<GroupInfo>;
     /** Base URL for all CoAP requests */
     private requestBase;
-    constructor(hostname: string, customLogger: LoggerFunction);
+    constructor(hostname: string, customLogger?: LoggerFunction);
     /**
      * Connect to the gateway
      * @param securityCode The security code that is printed on the gateway

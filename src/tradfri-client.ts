@@ -33,7 +33,7 @@ export class TradfriClient {
 
 	constructor(
 		public readonly hostname: string,
-		customLogger: LoggerFunction,
+		customLogger?: LoggerFunction,
 	) {
 		this.requestBase = `coaps://${hostname}:5684/`;
 		if (customLogger != null) setCustomLogger(customLogger);
