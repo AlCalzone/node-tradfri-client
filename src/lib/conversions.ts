@@ -208,12 +208,13 @@ const transitionTime_in: PropertyTransform = val => val / 10;
 // interpolate from [0..100%] to [0..254]
 const brightness_out: PropertyTransform = (value) => {
 	value = clamp(value, 0, 100);
-	return roundTo(value / 100 * 254, 0);
+	return Math.round(value / 100 * 254);
 };
 // interpolate from [0..254] to [0..100%]
 const brightness_in: PropertyTransform = (value) => {
 	value = clamp(value, 0, 254);
-	return roundTo(value / 254 * 100, 0);
+	// we round up here, so a 1 is at least 1% in brightness, not 0%
+	return Math.ceil(value / 254 * 100);
 };
 
 export const serializers = {
