@@ -41,57 +41,11 @@ export class TradfriClient {
 
 	/**
 	 * Connect to the gateway
-	 * @param securityCode The security code that is printed on the gateway
-	 * @param identity (optional) A previously negotiated identity. If none is given, a new one is returned on success.
-	 * @param psk (optional) The pre-shared key belonging to the identity. If none is given, a new one is returned on success.
+	 * @param identity A previously negotiated identity.
+	 * @param psk The pre-shared key belonging to the identity.
 	 */
-	public async connect(
-		securityCode: string,
-		identity?: string,
-		psk?: string,
-	): Promise<{
-		usedIdentity?: string,
-		usedPSK?: string,
-	}> {
-
-		// TODO: make this more elegant when I have the time
-		// we're reconnecting a bit too much
-
-		// first, check try to connect with the security code
-		log("trying to connect with the security code", "debug");
-		if (!await this.tryToConnect("Client_identity", securityCode)) {
-			// that didn't work, so the code is wrong
-			throw new TradfriError("The security code is wrong", TradfriErrorCodes.ConnectionFailed);
-		}
-		// now, if we have a stored identity, try to connect with that one
-		let needsAuthentication: boolean;
-		if (identity == null || psk == null) {
-			log("no identity stored, creating a new one", "debug");
-			needsAuthentication = true;
-		} else if (!await this.tryToConnect(identity, psk)) {
-			log("stored identity has expired, creating a new one", "debug");
-			// either there was no stored identity, or the current one is expired,
-			// so we need to get a new one
-			needsAuthentication = true;
-			// therefore, reconnect with the working security code
-			await this.tryToConnect("Client_identity", securityCode);
-		}
-		if (needsAuthentication) {
-			const authResult = await this.authenticate();
-			if (authResult == null) {
-				throw new TradfriError("The authentication failed", TradfriErrorCodes.AuthenticationFailed);
-			}
-			log(`reconnecting with the new identity`, "debug");
-			if (!await this.tryToConnect(authResult.identity, authResult.psk)) {
-				throw new TradfriError("The connection with the fresh identity failed", TradfriErrorCodes.AuthenticationFailed);
-			}
-			return {
-				usedIdentity: authResult.identity,
-				usedPSK: authResult.psk,
-			};
-		}
-
-		return {};
+	public async connect(identity: string, psk: string): Promise<boolean> {
+		return this.tryToConnect(identity, psk);
 	}
 
 	/**
@@ -114,10 +68,20 @@ export class TradfriClient {
 		return result;
 	}
 
-	private async authenticate(): Promise<{identity: string, psk: string}> {
+	/**
+	 * Negotiates a new identity and psk with the gateway to use for connections
+	 * @param securityCode The security code that is printed on the gateway
+	 * @returns The identity and psk to use for future connections. Store these!
+	 */
+	public async authenticate(securityCode: string): Promise<{identity: string, psk: string}> {
+		// first, check try to connect with the security code
+		log("authenticate() > trying to connect with the security code", "debug");
+		if (!await this.tryToConnect("Client_identity", securityCode)) {
+			// that didn't work, so the code is wrong
+			throw new TradfriError("The security code is wrong", TradfriErrorCodes.ConnectionFailed);
+		}
 		// generate a new identity
 		const identity = `tradfri_${Date.now()}`;
-
 		log(`authenticating with identity "${identity}"`, "debug");
 
 		// request creation of new PSK
@@ -131,8 +95,11 @@ export class TradfriClient {
 
 		// check the response
 		if (response.code.toString() !== "2.01") {
-			log(`unexpected response (${response.code.toString()}) to getPSK().`, "error");
-			return null;
+			// that didn't work, so the code is wrong
+			throw new TradfriError(
+				`unexpected response (${response.code.toString()}) to getPSK().`,
+				TradfriErrorCodes.AuthenticationFailed,
+			);
 		}
 		// the response is a buffer containing a JSON object as a string
 		const pskResponse = JSON.parse(response.payload.toString("utf8"));
