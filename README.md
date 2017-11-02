@@ -1,6 +1,8 @@
 # node-tradfri-client
 Library to talk to IKEA Trådfri Gateways without external binaries
 
+[![Build Status](https://travis-ci.org/AlCalzone/node-tradfri-client.svg?branch=master)](https://travis-ci.org/AlCalzone/node-tradfri-client)
+
 *Requires NodeJS >= 6.x*
 
 ## Changelog
