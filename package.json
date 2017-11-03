@@ -36,10 +36,12 @@
     "@types/node": "^6.0.90",
     "@types/reflect-metadata": "0.0.5",
     "@types/sinon": "^2.3.7",
+    "@types/sinon-chai": "^2.7.29",
     "chai": "^4.1.2",
     "mocha": "^4.0.1",
     "nyc": "^11.2.1",
     "sinon": "^4.0.2",
+    "sinon-chai": "^2.14.0",
     "source-map-support": "^0.5.0",
     "ts-node": "^3.3.0",
     "tslint": "^5.8.0",
@@ -75,7 +77,8 @@
     ],
     "reporter": [
       "text-summary",
-      "html"
+      "html",
+      "lcov"
     ],
     "sourceMap": true,
     "instrument": true
