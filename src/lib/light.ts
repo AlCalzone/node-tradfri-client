@@ -1,4 +1,3 @@
-import { TradfriClient } from "../tradfri-client";
 import { Accessory } from "./accessory";
 import { conversions, deserializers, serializers } from "./conversions";
 import { IPSODevice } from "./ipsoDevice";
@@ -152,7 +151,7 @@ export class Light extends IPSODevice {
 	 * @throws Throws an error if it isn't
 	 */
 	private ensureLink() {
-		if (!(this.client instanceof TradfriClient)) {
+		if (this.client == null) {
 			throw new Error("Cannot use the simplified API on devices which aren't linked to a client instance.");
 		}
 		if (!(this._accessory instanceof Accessory)) {

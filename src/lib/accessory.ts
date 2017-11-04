@@ -3,6 +3,7 @@ import { DeviceInfo } from "./deviceInfo";
 import { IPSODevice } from "./ipsoDevice";
 import { deserializeWith, ipsoKey, IPSOObject, PropertyTransform, required, serializeWith } from "./ipsoObject";
 import { Light } from "./light";
+import { OperationProvider } from "./operation-provider";
 import { Plug } from "./plug";
 import { Sensor } from "./sensor";
 
@@ -53,19 +54,27 @@ export class Accessory extends IPSODevice {
 	 * INTERNAL USE ONLY!
 	 * @param client The client instance to link this object to
 	 */
-	public link(client: TradfriClient): this {
+	public link(client: OperationProvider): this {
 		super.link(client);
-		for (const light of this.lightList) {
-			light.link(client);
+		if (this.lightList != null) {
+			for (const light of this.lightList) {
+				light.link(client);
+			}
 		}
-		for (const plug of this.plugList) {
-			plug.link(client);
+		if (this.plugList != null) {
+			for (const plug of this.plugList) {
+				plug.link(client);
+			}
 		}
-		for (const sensor of this.sensorList) {
-			sensor.link(client);
+		if (this.sensorList != null) {
+			for (const sensor of this.sensorList) {
+				sensor.link(client);
+			}
 		}
-		for (const swtch of this.switchList) {
-			swtch.link(client);
+		if (this.switchList != null) {
+			for (const swtch of this.switchList) {
+				swtch.link(client);
+			}
 		}
 		return this;
 	}

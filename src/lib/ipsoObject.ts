@@ -1,6 +1,7 @@
 import { TradfriClient } from "../tradfri-client";
 import { log } from "./logger";
 import { DictionaryLike, entries } from "./object-polyfill";
+import { OperationProvider } from "./operation-provider";
 
 // ===========================================================
 // define decorators so we can define all properties type-safe
@@ -499,13 +500,13 @@ export class IPSOObject {
 		});
 	}
 
-	@doNotSerialize protected client: TradfriClient;
+	@doNotSerialize protected client: OperationProvider;
 	/**
 	 * Link this object to a TradfriClient for a simplified API.
 	 * INTERNAL USE ONLY!
 	 * @param client The client instance to link this object to
 	 */
-	public link(client: TradfriClient): this {
+	public link(client: OperationProvider): this {
 		this.client = client;
 		return this;
 	}

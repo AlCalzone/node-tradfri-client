@@ -11,6 +11,7 @@ import { IPSOObject } from "./lib/ipsoObject";
 import { Light, LightOperation, Spectrum } from "./lib/light";
 import { log, LoggerFunction, setCustomLogger } from "./lib/logger";
 import { DictionaryLike } from "./lib/object-polyfill";
+import { OperationProvider } from "./lib/operation-provider";
 import { wait } from "./lib/promises";
 import { Scene } from "./lib/scene";
 import { TradfriError, TradfriErrorCodes } from "./lib/tradfri-error";
@@ -56,7 +57,7 @@ export declare interface TradfriClient {
 	removeAllListeners(event?: ObservableEvents): this;
 }
 
-export class TradfriClient extends EventEmitter {
+export class TradfriClient extends EventEmitter implements OperationProvider {
 
 	/** dictionary of CoAP observers */
 	public observedPaths: string[] = [];

@@ -6,6 +6,7 @@ import { Group, GroupInfo, GroupOperation } from "./lib/group";
 import { LightOperation } from "./lib/light";
 import { LoggerFunction } from "./lib/logger";
 import { DictionaryLike } from "./lib/object-polyfill";
+import { OperationProvider } from "./lib/operation-provider";
 import { Scene } from "./lib/scene";
 export declare type ObserveResourceCallback = (resp: CoapResponse) => void;
 export declare type ObserveDevicesCallback = (addedDevices: Accessory[], removedDevices: Accessory[]) => void;
@@ -34,7 +35,7 @@ export interface TradfriClient {
     removeListener(event: "error", callback: ErrorCallback): this;
     removeAllListeners(event?: ObservableEvents): this;
 }
-export declare class TradfriClient extends EventEmitter {
+export declare class TradfriClient extends EventEmitter implements OperationProvider {
     readonly hostname: string;
     /** dictionary of CoAP observers */
     observedPaths: string[];

@@ -39,17 +39,25 @@ class Accessory extends ipsoDevice_1.IPSODevice {
      */
     link(client) {
         super.link(client);
-        for (const light of this.lightList) {
-            light.link(client);
+        if (this.lightList != null) {
+            for (const light of this.lightList) {
+                light.link(client);
+            }
         }
-        for (const plug of this.plugList) {
-            plug.link(client);
+        if (this.plugList != null) {
+            for (const plug of this.plugList) {
+                plug.link(client);
+            }
         }
-        for (const sensor of this.sensorList) {
-            sensor.link(client);
+        if (this.sensorList != null) {
+            for (const sensor of this.sensorList) {
+                sensor.link(client);
+            }
         }
-        for (const swtch of this.switchList) {
-            swtch.link(client);
+        if (this.switchList != null) {
+            for (const swtch of this.switchList) {
+                swtch.link(client);
+            }
         }
         return this;
     }

@@ -17,7 +17,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const tradfri_client_1 = require("../tradfri-client");
 const accessory_1 = require("./accessory");
 const conversions_1 = require("./conversions");
 const ipsoDevice_1 = require("./ipsoDevice");
@@ -100,7 +99,7 @@ class Light extends ipsoDevice_1.IPSODevice {
      * @throws Throws an error if it isn't
      */
     ensureLink() {
-        if (!(this.client instanceof tradfri_client_1.TradfriClient)) {
+        if (this.client == null) {
             throw new Error("Cannot use the simplified API on devices which aren't linked to a client instance.");
         }
         if (!(this._accessory instanceof accessory_1.Accessory)) {

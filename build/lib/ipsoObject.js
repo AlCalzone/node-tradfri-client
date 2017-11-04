@@ -9,7 +9,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const tradfri_client_1 = require("../tradfri-client");
 const logger_1 = require("./logger");
 const object_polyfill_1 = require("./object-polyfill");
 // ===========================================================
@@ -486,6 +485,6 @@ __decorate([
 ], IPSOObject.prototype, "isProxy", void 0);
 __decorate([
     exports.doNotSerialize,
-    __metadata("design:type", tradfri_client_1.TradfriClient)
+    __metadata("design:type", Object)
 ], IPSOObject.prototype, "client", void 0);
 exports.IPSOObject = IPSOObject;
