@@ -1,4 +1,5 @@
 // load external modules
+import { EventEmitter } from "events";
 import { CoapClient as coap, CoapResponse, RequestMethod } from "node-coap-client";
 
 // load internal modules
@@ -13,16 +14,52 @@ import { DictionaryLike } from "./lib/object-polyfill";
 import { wait } from "./lib/promises";
 import { Scene } from "./lib/scene";
 import { TradfriError, TradfriErrorCodes } from "./lib/tradfri-error";
-import { TradfriObserver, TradfriObserverAPI } from "./lib/tradfri-observer";
 
 export type ObserveResourceCallback = (resp: CoapResponse) => void;
 export type ObserveDevicesCallback = (addedDevices: Accessory[], removedDevices: Accessory[]) => void;
 
-export class TradfriClient {
+export type DeviceUpdatedCallback = (device: Accessory) => void;
+export type DeviceRemovedCallback = (instanceId: number) => void;
+export type GroupUpdatedCallback = (device: Group) => void;
+export type GroupRemovedCallback = (instanceId: number) => void;
+export type SceneUpdatedCallback = (groupId: number, scene: Scene) => void;
+export type SceneRemovedCallback = (groupId: number, instanceId: number) => void;
+export type ErrorCallback = (e: Error) => void;
+
+export type ObservableEvents =
+	"device updated" |
+	"device removed" |
+	"group updated" |
+	"group removed" |
+	"scene updated" |
+	"scene removed" |
+	"error"
+	;
+
+export declare interface TradfriClient {
+	on(event: "device updated", callback: DeviceUpdatedCallback): this;
+	on(event: "device removed", callback: DeviceRemovedCallback): this;
+	on(event: "group updated", callback: GroupUpdatedCallback): this;
+	on(event: "group removed", callback: GroupRemovedCallback): this;
+	on(event: "scene updated", callback: SceneUpdatedCallback): this;
+	on(event: "scene removed", callback: SceneRemovedCallback): this;
+	on(event: "error", callback: ErrorCallback): this;
+
+	removeListener(event: "device updated", callback: DeviceUpdatedCallback): this;
+	removeListener(event: "device removed", callback: DeviceRemovedCallback): this;
+	removeListener(event: "group updated", callback: GroupUpdatedCallback): this;
+	removeListener(event: "group removed", callback: GroupRemovedCallback): this;
+	removeListener(event: "scene updated", callback: SceneUpdatedCallback): this;
+	removeListener(event: "scene removed", callback: SceneRemovedCallback): this;
+	removeListener(event: "error", callback: ErrorCallback): this;
+
+	removeAllListeners(event?: ObservableEvents): this;
+}
+
+export class TradfriClient extends EventEmitter {
 
 	/** dictionary of CoAP observers */
 	public observedPaths: string[] = [];
-	private observer: TradfriObserver;
 	/** dictionary of known devices */
 	public devices: DictionaryLike<Accessory> = {};
 	/** dictionary of known groups */
@@ -35,6 +72,7 @@ export class TradfriClient {
 		public readonly hostname: string,
 		customLogger?: LoggerFunction,
 	) {
+		super();
 		this.requestBase = `coaps://${hostname}:5684/`;
 		if (customLogger != null) setCustomLogger(customLogger);
 	}
@@ -72,6 +110,7 @@ export class TradfriClient {
 	 * Negotiates a new identity and psk with the gateway to use for connections
 	 * @param securityCode The security code that is printed on the gateway
 	 * @returns The identity and psk to use for future connections. Store these!
+	 * @throws TradfriError
 	 */
 	public async authenticate(securityCode: string): Promise<{identity: string, psk: string}> {
 		// first, check try to connect with the security code
@@ -113,18 +152,20 @@ export class TradfriClient {
 	 * Prefer the specialized versions if possible.
 	 * @param path The path of the resource
 	 * @param callback The callback to be invoked when the resource updates
+	 * @returns true if the observer was set up, false otherwise (e.g. if it already exists)
 	 */
-	public async observeResource(path: string, callback: (resp: CoapResponse) => void): Promise<void> {
+	public async observeResource(path: string, callback: (resp: CoapResponse) => void): Promise<boolean> {
 
 		path = normalizeResourcePath(path);
 
 		// check if we are already observing this resource
 		const observerUrl = `${this.requestBase}${path}`;
-		if (this.observedPaths.indexOf(observerUrl) > -1) return;
+		if (this.observedPaths.indexOf(observerUrl) > -1) return false;
 
 		// start observing
 		this.observedPaths.push(observerUrl);
-		return coap.observe(observerUrl, "get", callback);
+		await coap.observe(observerUrl, "get", callback);
+		return true;
 	}
 
 	/**
@@ -169,24 +210,18 @@ export class TradfriClient {
 		this.observedPaths = [];
 	}
 
-	public getObserver(): TradfriObserverAPI {
-		if (this.observer == null) this.observer = new TradfriObserver();
-		return this.observer.getAPI();
-	}
-
 	/** Sets up an observer for all devices */
-	public async observeDevices(): Promise<TradfriObserverAPI> {
-		const ret = this.getObserver();
+	public async observeDevices(): Promise<this> {
 		await this.observeResource(
 			coapEndpoints.devices,
 			this.observeDevices_callback.bind(this),
 		);
-		return ret;
+		return this;
 	}
 
 	private async observeDevices_callback(response: CoapResponse) {
 		if (response.code.toString() !== "2.05") {
-			log(`unexpected response (${response.code.toString()}) to observeDevices.`, "error");
+			this.emit("error", new Error(`unexpected response (${response.code.toString()}) to observeDevices.`));
 			return;
 		}
 		const newDevices = parsePayload(response);
@@ -212,11 +247,11 @@ export class TradfriClient {
 		const removedKeys = except(oldKeys, newKeys);
 		log(`removing devices with keys ${JSON.stringify(removedKeys)}`, "debug");
 		for (const id of removedKeys) {
-			if (id in this.devices) delete this.devices[id];
+			delete this.devices[id];
 			// remove observer
 			this.stopObservingResource(`${coapEndpoints.devices}/${id}`);
 			// and notify all listeners about the removal
-			this.observer.raise("device removed", id);
+			this.emit("device removed", id);
 		}
 	}
 
@@ -231,7 +266,7 @@ export class TradfriClient {
 	// gets called whenever "get /15001/<instanceId>" updates
 	private observeDevice_callback(instanceId: number, response: CoapResponse) {
 		if (response.code.toString() !== "2.05") {
-			log(`unexpected response (${response.code.toString()}) to observeDevice(${instanceId}).`, "error");
+			this.emit("error", new Error(`unexpected response (${response.code.toString()}) to observeDevice(${instanceId}).`));
 			return;
 		}
 		const result = parsePayload(response);
@@ -242,24 +277,23 @@ export class TradfriClient {
 		// store a clone, so we don't have to care what the calling library does
 		this.devices[instanceId] = accessory.clone();
 		// and notify all listeners about the update
-		this.observer.raise("device updated", accessory);
+		this.emit("device updated", accessory);
 	}
 
 	/** Sets up an observer for all groups */
-	public async observeGroupsAndScenes(): Promise<TradfriObserverAPI> {
-		const ret = this.getObserver();
+	public async observeGroupsAndScenes(): Promise<this> {
 		await this.observeResource(
 			coapEndpoints.groups,
 			this.observeGroups_callback.bind(this),
 		);
-		return ret;
+		return this;
 	}
 
 	// gets called whenever "get /15004" updates
 	private async observeGroups_callback(response: CoapResponse) {
 
 		if (response.code.toString() !== "2.05") {
-			log(`unexpected response (${response.code.toString()}) to getAllGroups.`, "error");
+			this.emit("error", new Error(`unexpected response (${response.code.toString()}) to getAllGroups.`));
 			return;
 		}
 		const newGroups = parsePayload(response);
@@ -285,11 +319,11 @@ export class TradfriClient {
 		const removedKeys = except(oldKeys, newKeys);
 		log(`removing groups with keys ${JSON.stringify(removedKeys)}`, "debug");
 		removedKeys.forEach(async (id) => {
-			if (id in this.groups) delete this.groups[id];
+			delete this.groups[id];
 			// remove observers
 			this.stopObservingGroup(id);
 			// and notify all listeners about the removal
-			this.observer.raise("group removed", id);
+			this.emit("group removed", id);
 		});
 	}
 
@@ -321,7 +355,7 @@ export class TradfriClient {
 				// TODO: Should we delete it here or where its being handled right now?
 				return;
 			default:
-				log(`unexpected response (${response.code.toString()}) to getGroup(${instanceId}).`, "error");
+				this.emit("error", new Error(`unexpected response (${response.code.toString()}) to getGroup(${instanceId}).`));
 				return;
 		}
 
@@ -343,7 +377,7 @@ export class TradfriClient {
 		groupInfo.group = group.clone();
 
 		// notify all listeners about the update
-		this.observer.raise("group updated", group);
+		this.emit("group updated", group);
 
 		// load scene information
 		this.observeResource(
@@ -355,7 +389,7 @@ export class TradfriClient {
 	// gets called whenever "get /15005/<groupId>" updates
 	private async observeScenes_callback(groupId: number, response: CoapResponse) {
 		if (response.code.toString() !== "2.05") {
-			log(`unexpected response (${response.code.toString()}) to observeScenes(${groupId}).`, "error");
+			this.emit("error", new Error(`unexpected response (${response.code.toString()}) to observeScenes(${groupId}).`));
 			return;
 		}
 
@@ -384,11 +418,11 @@ export class TradfriClient {
 		log(`removing scenes with keys ${JSON.stringify(removedKeys)} from group ${groupId}`, "debug");
 		removedKeys.forEach(id => {
 			// remove scene from dictionary
-			if (id in groupInfo.scenes) delete groupInfo.scenes[id];
+			delete groupInfo.scenes[id];
 			// remove observers
 			this.stopObservingResource(`${coapEndpoints.scenes}/${groupId}/${id}`);
 			// and notify all listeners about the removal
-			this.observer.raise("scene removed", groupId, id);
+			this.emit("scene removed", groupId, id);
 		});
 	}
 
@@ -404,7 +438,7 @@ export class TradfriClient {
 				// TODO: Should we delete it here or where its being handled right now?
 				return;
 			default:
-				log(`unexpected response (${response.code.toString()}) to observeScene(${groupId}, ${instanceId}).`, "error");
+				this.emit("error", new Error(`unexpected response (${response.code.toString()}) to observeScene(${groupId}, ${instanceId}).`));
 				return;
 		}
 
@@ -415,7 +449,7 @@ export class TradfriClient {
 		// store a clone, so we don't have to care what the calling library does
 		this.groups[groupId].scenes[instanceId] = scene.clone();
 		// and notify all listeners about the update
-		this.observer.raise("scene updated", groupId, scene);
+		this.emit("scene updated", groupId, scene);
 	}
 
 	/**

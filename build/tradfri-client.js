@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 // load external modules
+const events_1 = require("events");
 const node_coap_client_1 = require("node-coap-client");
 // load internal modules
 const accessory_1 = require("./lib/accessory");
@@ -18,9 +19,9 @@ const group_1 = require("./lib/group");
 const logger_1 = require("./lib/logger");
 const scene_1 = require("./lib/scene");
 const tradfri_error_1 = require("./lib/tradfri-error");
-const tradfri_observer_1 = require("./lib/tradfri-observer");
-class TradfriClient {
+class TradfriClient extends events_1.EventEmitter {
     constructor(hostname, customLogger) {
+        super();
         this.hostname = hostname;
         /** dictionary of CoAP observers */
         this.observedPaths = [];
@@ -65,6 +66,7 @@ class TradfriClient {
      * Negotiates a new identity and psk with the gateway to use for connections
      * @param securityCode The security code that is printed on the gateway
      * @returns The identity and psk to use for future connections. Store these!
+     * @throws TradfriError
      */
     authenticate(securityCode) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -97,6 +99,7 @@ class TradfriClient {
      * Prefer the specialized versions if possible.
      * @param path The path of the resource
      * @param callback The callback to be invoked when the resource updates
+     * @returns true if the observer was set up, false otherwise (e.g. if it already exists)
      */
     observeResource(path, callback) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -104,10 +107,11 @@ class TradfriClient {
             // check if we are already observing this resource
             const observerUrl = `${this.requestBase}${path}`;
             if (this.observedPaths.indexOf(observerUrl) > -1)
-                return;
+                return false;
             // start observing
             this.observedPaths.push(observerUrl);
-            return node_coap_client_1.CoapClient.observe(observerUrl, "get", callback);
+            yield node_coap_client_1.CoapClient.observe(observerUrl, "get", callback);
+            return true;
         });
     }
     /**
@@ -146,23 +150,17 @@ class TradfriClient {
     clearObservers() {
         this.observedPaths = [];
     }
-    getObserver() {
-        if (this.observer == null)
-            this.observer = new tradfri_observer_1.TradfriObserver();
-        return this.observer.getAPI();
-    }
     /** Sets up an observer for all devices */
     observeDevices() {
         return __awaiter(this, void 0, void 0, function* () {
-            const ret = this.getObserver();
             yield this.observeResource(endpoints_1.endpoints.devices, this.observeDevices_callback.bind(this));
-            return ret;
+            return this;
         });
     }
     observeDevices_callback(response) {
         return __awaiter(this, void 0, void 0, function* () {
             if (response.code.toString() !== "2.05") {
-                logger_1.log(`unexpected response (${response.code.toString()}) to observeDevices.`, "error");
+                this.emit("error", new Error(`unexpected response (${response.code.toString()}) to observeDevices.`));
                 return;
             }
             const newDevices = parsePayload(response);
@@ -181,12 +179,11 @@ class TradfriClient {
             const removedKeys = array_extensions_1.except(oldKeys, newKeys);
             logger_1.log(`removing devices with keys ${JSON.stringify(removedKeys)}`, "debug");
             for (const id of removedKeys) {
-                if (id in this.devices)
-                    delete this.devices[id];
+                delete this.devices[id];
                 // remove observer
                 this.stopObservingResource(`${endpoints_1.endpoints.devices}/${id}`);
                 // and notify all listeners about the removal
-                this.observer.raise("device removed", id);
+                this.emit("device removed", id);
             }
         });
     }
@@ -200,7 +197,7 @@ class TradfriClient {
     // gets called whenever "get /15001/<instanceId>" updates
     observeDevice_callback(instanceId, response) {
         if (response.code.toString() !== "2.05") {
-            logger_1.log(`unexpected response (${response.code.toString()}) to observeDevice(${instanceId}).`, "error");
+            this.emit("error", new Error(`unexpected response (${response.code.toString()}) to observeDevice(${instanceId}).`));
             return;
         }
         const result = parsePayload(response);
@@ -211,21 +208,20 @@ class TradfriClient {
         // store a clone, so we don't have to care what the calling library does
         this.devices[instanceId] = accessory.clone();
         // and notify all listeners about the update
-        this.observer.raise("device updated", accessory);
+        this.emit("device updated", accessory);
     }
     /** Sets up an observer for all groups */
     observeGroupsAndScenes() {
         return __awaiter(this, void 0, void 0, function* () {
-            const ret = this.getObserver();
             yield this.observeResource(endpoints_1.endpoints.groups, this.observeGroups_callback.bind(this));
-            return ret;
+            return this;
         });
     }
     // gets called whenever "get /15004" updates
     observeGroups_callback(response) {
         return __awaiter(this, void 0, void 0, function* () {
             if (response.code.toString() !== "2.05") {
-                logger_1.log(`unexpected response (${response.code.toString()}) to getAllGroups.`, "error");
+                this.emit("error", new Error(`unexpected response (${response.code.toString()}) to getAllGroups.`));
                 return;
             }
             const newGroups = parsePayload(response);
@@ -244,12 +240,11 @@ class TradfriClient {
             const removedKeys = array_extensions_1.except(oldKeys, newKeys);
             logger_1.log(`removing groups with keys ${JSON.stringify(removedKeys)}`, "debug");
             removedKeys.forEach((id) => __awaiter(this, void 0, void 0, function* () {
-                if (id in this.groups)
-                    delete this.groups[id];
+                delete this.groups[id];
                 // remove observers
                 this.stopObservingGroup(id);
                 // and notify all listeners about the removal
-                this.observer.raise("group removed", id);
+                this.emit("group removed", id);
             }));
         });
     }
@@ -279,7 +274,7 @@ class TradfriClient {
                     // TODO: Should we delete it here or where its being handled right now?
                     return;
                 default:
-                    logger_1.log(`unexpected response (${response.code.toString()}) to getGroup(${instanceId}).`, "error");
+                    this.emit("error", new Error(`unexpected response (${response.code.toString()}) to getGroup(${instanceId}).`));
                     return;
             }
             const result = parsePayload(response);
@@ -299,7 +294,7 @@ class TradfriClient {
             // store a clone, so we don't have to care what the calling library does
             groupInfo.group = group.clone();
             // notify all listeners about the update
-            this.observer.raise("group updated", group);
+            this.emit("group updated", group);
             // load scene information
             this.observeResource(`${endpoints_1.endpoints.scenes}/${instanceId}`, (resp) => this.observeScenes_callback(instanceId, resp));
         });
@@ -308,7 +303,7 @@ class TradfriClient {
     observeScenes_callback(groupId, response) {
         return __awaiter(this, void 0, void 0, function* () {
             if (response.code.toString() !== "2.05") {
-                logger_1.log(`unexpected response (${response.code.toString()}) to observeScenes(${groupId}).`, "error");
+                this.emit("error", new Error(`unexpected response (${response.code.toString()}) to observeScenes(${groupId}).`));
                 return;
             }
             const groupInfo = this.groups[groupId];
@@ -329,12 +324,11 @@ class TradfriClient {
             logger_1.log(`removing scenes with keys ${JSON.stringify(removedKeys)} from group ${groupId}`, "debug");
             removedKeys.forEach(id => {
                 // remove scene from dictionary
-                if (id in groupInfo.scenes)
-                    delete groupInfo.scenes[id];
+                delete groupInfo.scenes[id];
                 // remove observers
                 this.stopObservingResource(`${endpoints_1.endpoints.scenes}/${groupId}/${id}`);
                 // and notify all listeners about the removal
-                this.observer.raise("scene removed", groupId, id);
+                this.emit("scene removed", groupId, id);
             });
         });
     }
@@ -349,7 +343,7 @@ class TradfriClient {
                 // TODO: Should we delete it here or where its being handled right now?
                 return;
             default:
-                logger_1.log(`unexpected response (${response.code.toString()}) to observeScene(${groupId}, ${instanceId}).`, "error");
+                this.emit("error", new Error(`unexpected response (${response.code.toString()}) to observeScene(${groupId}, ${instanceId}).`));
                 return;
         }
         const result = parsePayload(response);
@@ -359,7 +353,7 @@ class TradfriClient {
         // store a clone, so we don't have to care what the calling library does
         this.groups[groupId].scenes[instanceId] = scene.clone();
         // and notify all listeners about the update
-        this.observer.raise("scene updated", groupId, scene);
+        this.emit("scene updated", groupId, scene);
     }
     /**
      * Pings the gateway to check if it is alive

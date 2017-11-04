@@ -14,10 +14,11 @@ export { Plug } from "./lib/plug";
 export { Scene } from "./lib/scene";
 export { Sensor } from "./lib/sensor";
 export { TradfriError, TradfriErrorCodes } from "./lib/tradfri-error";
-export { TradfriClient, ObserveDevicesCallback, ObserveResourceCallback } from "./tradfri-client";
 export {
 	DeviceRemovedCallback, DeviceUpdatedCallback,
+	ErrorCallback,
 	GroupRemovedCallback, GroupUpdatedCallback,
+	ObserveDevicesCallback, ObserveResourceCallback,
 	SceneRemovedCallback, SceneUpdatedCallback,
-	TradfriObserverAPI,
-} from "./lib/tradfri-observer";
+	TradfriClient,
+} from "./tradfri-client";

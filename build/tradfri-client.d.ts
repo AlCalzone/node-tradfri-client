@@ -1,17 +1,43 @@
+/// <reference types="node" />
+import { EventEmitter } from "events";
 import { CoapResponse, RequestMethod } from "node-coap-client";
 import { Accessory } from "./lib/accessory";
 import { Group, GroupInfo, GroupOperation } from "./lib/group";
 import { LightOperation } from "./lib/light";
 import { LoggerFunction } from "./lib/logger";
 import { DictionaryLike } from "./lib/object-polyfill";
-import { TradfriObserverAPI } from "./lib/tradfri-observer";
+import { Scene } from "./lib/scene";
 export declare type ObserveResourceCallback = (resp: CoapResponse) => void;
 export declare type ObserveDevicesCallback = (addedDevices: Accessory[], removedDevices: Accessory[]) => void;
-export declare class TradfriClient {
+export declare type DeviceUpdatedCallback = (device: Accessory) => void;
+export declare type DeviceRemovedCallback = (instanceId: number) => void;
+export declare type GroupUpdatedCallback = (device: Group) => void;
+export declare type GroupRemovedCallback = (instanceId: number) => void;
+export declare type SceneUpdatedCallback = (groupId: number, scene: Scene) => void;
+export declare type SceneRemovedCallback = (groupId: number, instanceId: number) => void;
+export declare type ErrorCallback = (e: Error) => void;
+export declare type ObservableEvents = "device updated" | "device removed" | "group updated" | "group removed" | "scene updated" | "scene removed" | "error";
+export interface TradfriClient {
+    on(event: "device updated", callback: DeviceUpdatedCallback): this;
+    on(event: "device removed", callback: DeviceRemovedCallback): this;
+    on(event: "group updated", callback: GroupUpdatedCallback): this;
+    on(event: "group removed", callback: GroupRemovedCallback): this;
+    on(event: "scene updated", callback: SceneUpdatedCallback): this;
+    on(event: "scene removed", callback: SceneRemovedCallback): this;
+    on(event: "error", callback: ErrorCallback): this;
+    removeListener(event: "device updated", callback: DeviceUpdatedCallback): this;
+    removeListener(event: "device removed", callback: DeviceRemovedCallback): this;
+    removeListener(event: "group updated", callback: GroupUpdatedCallback): this;
+    removeListener(event: "group removed", callback: GroupRemovedCallback): this;
+    removeListener(event: "scene updated", callback: SceneUpdatedCallback): this;
+    removeListener(event: "scene removed", callback: SceneRemovedCallback): this;
+    removeListener(event: "error", callback: ErrorCallback): this;
+    removeAllListeners(event?: ObservableEvents): this;
+}
+export declare class TradfriClient extends EventEmitter {
     readonly hostname: string;
     /** dictionary of CoAP observers */
     observedPaths: string[];
-    private observer;
     /** dictionary of known devices */
     devices: DictionaryLike<Accessory>;
     /** dictionary of known groups */
@@ -36,6 +62,7 @@ export declare class TradfriClient {
      * Negotiates a new identity and psk with the gateway to use for connections
      * @param securityCode The security code that is printed on the gateway
      * @returns The identity and psk to use for future connections. Store these!
+     * @throws TradfriError
      */
     authenticate(securityCode: string): Promise<{
         identity: string;
@@ -46,8 +73,9 @@ export declare class TradfriClient {
      * Prefer the specialized versions if possible.
      * @param path The path of the resource
      * @param callback The callback to be invoked when the resource updates
+     * @returns true if the observer was set up, false otherwise (e.g. if it already exists)
      */
-    observeResource(path: string, callback: (resp: CoapResponse) => void): Promise<void>;
+    observeResource(path: string, callback: (resp: CoapResponse) => void): Promise<boolean>;
     /**
      * Stops observing a resource that is being observed through `observeResource`
      * Use the specialized version of this method for observers that were set up with the specialized versions of `observeResource`
@@ -67,14 +95,13 @@ export declare class TradfriClient {
      * This does not stop observing the resources if the observers are still active
      */
     private clearObservers();
-    getObserver(): TradfriObserverAPI;
     /** Sets up an observer for all devices */
-    observeDevices(): Promise<TradfriObserverAPI>;
+    observeDevices(): Promise<this>;
     private observeDevices_callback(response);
     stopObservingDevices(): void;
     private observeDevice_callback(instanceId, response);
     /** Sets up an observer for all groups */
-    observeGroupsAndScenes(): Promise<TradfriObserverAPI>;
+    observeGroupsAndScenes(): Promise<this>;
     private observeGroups_callback(response);
     stopObservingGroups(): void;
     private stopObservingGroup(instanceId);
