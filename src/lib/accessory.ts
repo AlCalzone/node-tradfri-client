@@ -1,3 +1,4 @@
+import { TradfriClient } from "../tradfri-client";
 import { DeviceInfo } from "./deviceInfo";
 import { IPSODevice } from "./ipsoDevice";
 import { deserializeWith, ipsoKey, IPSOObject, PropertyTransform, required, serializeWith } from "./ipsoObject";
@@ -46,5 +47,27 @@ export class Accessory extends IPSODevice {
 
 	@ipsoKey("9054")
 	public otaUpdateState: number = 0; // boolean?
+
+	/**
+	 * Link this object to a TradfriClient for a simplified API.
+	 * INTERNAL USE ONLY!
+	 * @param client The client instance to link this object to
+	 */
+	public link(client: TradfriClient): this {
+		super.link(client);
+		for (const light of this.lightList) {
+			light.link(client);
+		}
+		for (const plug of this.plugList) {
+			plug.link(client);
+		}
+		for (const sensor of this.sensorList) {
+			sensor.link(client);
+		}
+		for (const swtch of this.switchList) {
+			swtch.link(client);
+		}
+		return this;
+	}
 
 }

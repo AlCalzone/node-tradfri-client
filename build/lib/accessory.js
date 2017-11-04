@@ -32,6 +32,27 @@ class Accessory extends ipsoDevice_1.IPSODevice {
         this.lastSeen = 0;
         this.otaUpdateState = 0; // boolean?
     }
+    /**
+     * Link this object to a TradfriClient for a simplified API.
+     * INTERNAL USE ONLY!
+     * @param client The client instance to link this object to
+     */
+    link(client) {
+        super.link(client);
+        for (const light of this.lightList) {
+            light.link(client);
+        }
+        for (const plug of this.plugList) {
+            plug.link(client);
+        }
+        for (const sensor of this.sensorList) {
+            sensor.link(client);
+        }
+        for (const swtch of this.switchList) {
+            swtch.link(client);
+        }
+        return this;
+    }
 }
 __decorate([
     ipsoObject_1.ipsoKey("5750"),

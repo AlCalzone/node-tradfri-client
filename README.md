@@ -9,6 +9,7 @@ Library to talk to IKEA Trådfri Gateways without external binaries
 
 #### 0.4.0 (2017-11-04)
 * (AlCalzone) Reworked the observe api so it resides on TradfriClient now
+* (AlCalzone) Simplified operating lights
 
 #### 0.3.0 (2017-11-02)
 * (AlCalzone) Changed authentication procedure to comply with IKEA's request

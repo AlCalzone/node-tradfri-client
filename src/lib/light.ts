@@ -1,7 +1,9 @@
+import { TradfriClient } from "../tradfri-client";
 import { Accessory } from "./accessory";
 import { conversions, deserializers, serializers } from "./conversions";
 import { IPSODevice } from "./ipsoDevice";
 import { deserializeWith, doNotSerialize, ipsoKey, IPSOObject, PropertyTransform, required, serializeWith } from "./ipsoObject";
+import { clamp } from "./math";
 import { MAX_COLOR, predefinedColors } from "./predefined-colors";
 
 // see https://github.com/hreichert/smarthome/blob/master/extensions/binding/org.eclipse.smarthome.binding.tradfri/src/main/java/org/eclipse/smarthome/binding/modules/internal/TradfriColor.java
@@ -18,6 +20,8 @@ export class Light extends IPSODevice {
 	constructor(accessory?: Accessory) {
 		super();
 
+		this._accessory = accessory;
+
 		// get the model number to detect features
 		if (accessory != null &&
 			accessory.deviceInfo != null &&
@@ -28,7 +32,8 @@ export class Light extends IPSODevice {
 		}
 	}
 
-	private _modelName: string;
+	@doNotSerialize private _modelName: string;
+	@doNotSerialize private _accessory: Accessory;
 
 	@ipsoKey("5706")
 	@doNotSerialize // this is done through colorX / colorY
@@ -140,6 +145,122 @@ export class Light extends IPSODevice {
 		}
 	}
 
+	// =================================
+	// Simplified API access
+	/**
+	 * Ensures this instance is linked to a tradfri client and an accessory
+	 * @throws Throws an error if it isn't
+	 */
+	private ensureLink() {
+		if (!(this.client instanceof TradfriClient)) {
+			throw new Error("Cannot use the simplified API on devices which aren't linked to a client instance.");
+		}
+		if (!(this._accessory instanceof Accessory)) {
+			throw new Error("Cannot use the simplified API on lightbulbs which aren't linked to an Accessory instance.");
+		}
+	}
+
+	/** Turn this lightbulb on */
+	public async turnOn() {
+		this.ensureLink();
+		await this.client.operateLight(this._accessory, {
+			onOff: true,
+		});
+	}
+
+	/** Turn this lightbulb off */
+	public async turnOff() {
+		this.ensureLink();
+		await this.client.operateLight(this._accessory, {
+			onOff: false,
+		});
+	}
+
+	/** Toggles this lightbulb on or off */
+	public async toggle(value: boolean = !this.onOff) {
+		this.ensureLink();
+		await this.client.operateLight(this._accessory, {
+			onOff: value,
+		});
+	}
+
+	private async operateLight(operation: LightOperation, transitionTime?: number): Promise<boolean> {
+		if (transitionTime != null) {
+			transitionTime = Math.max(0, transitionTime);
+			operation.transitionTime = transitionTime;
+		}
+		return this.client.operateLight(this._accessory, operation);
+	}
+
+	/**
+	 * Changes this lightbulb's brightness
+	 * @returns true if a request was sent, false otherwise
+	 */
+	public async setBrightness(value: number, transitionTime?: number): Promise<boolean> {
+		this.ensureLink();
+
+		value = clamp(value, 0, 100);
+		return this.operateLight({
+			dimmer: value,
+		}, transitionTime);
+	}
+
+	/**
+	 * Changes this lightbulb's color
+	 * @param value The target color as a 6-digit hex string
+	 * @returns true if a request was sent, false otherwise
+	 */
+	public async setColor(value: string, transitionTime?: number): Promise<boolean> {
+		if (this.spectrum === "rgb") throw new Error("setColor is only available for RGB lightbulbs");
+		this.ensureLink();
+
+		return this.operateLight({
+			color: value,
+		}, transitionTime);
+	}
+
+	/**
+	 * Changes this lightbulb's color temperature
+	 * @param value The target color temperature in the range 0% (cold) to 100% (warm)
+	 * @returns true if a request was sent, false otherwise
+	 */
+	public async setColorTemperature(value: number, transitionTime?: number): Promise<boolean> {
+		if (this.spectrum === "white") throw new Error("setColorTemperature is only available for white spectrum lightbulbs");
+		this.ensureLink();
+
+		value = clamp(value, 0, 100);
+		return this.operateLight({
+			colorTemperature: value,
+		}, transitionTime);
+	}
+
+	/**
+	 * Changes this lightbulb's color hue
+	 * @returns true if a request was sent, false otherwise
+	 */
+	public async setHue(value: number, transitionTime?: number): Promise<boolean> {
+		if (this.spectrum === "rgb") throw new Error("setHue is only available for RGB lightbulbs");
+		this.ensureLink();
+
+		value = clamp(value, 0, 360);
+		return this.operateLight({
+			hue: value,
+		}, transitionTime);
+	}
+
+	/**
+	 * Changes this lightbulb's color saturation
+	 * @returns true if a request was sent, false otherwise
+	 */
+	public async setSaturation(value: number, transitionTime?: number): Promise<boolean> {
+		if (this.spectrum === "rgb") throw new Error("setSaturation is only available for RGB lightbulbs");
+		this.ensureLink();
+
+		value = clamp(value, 0, 100);
+		return this.operateLight({
+			saturation: value,
+		}, transitionTime);
+	}
 }
 
 export type Spectrum = "none" | "white" | "rgb";

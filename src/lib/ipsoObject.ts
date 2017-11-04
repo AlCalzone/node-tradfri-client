@@ -1,3 +1,4 @@
+import { TradfriClient } from "../tradfri-client";
 import { log } from "./logger";
 import { DictionaryLike, entries } from "./object-polyfill";
 
@@ -496,6 +497,17 @@ export class IPSOObject {
 				return true;
 			},
 		});
+	}
+
+	@doNotSerialize protected client: TradfriClient;
+	/**
+	 * Link this object to a TradfriClient for a simplified API.
+	 * INTERNAL USE ONLY!
+	 * @param client The client instance to link this object to
+	 */
+	public link(client: TradfriClient): this {
+		this.client = client;
+		return this;
 	}
 
 }

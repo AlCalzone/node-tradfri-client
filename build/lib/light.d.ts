@@ -4,6 +4,7 @@ export declare type LightOperation = Partial<Pick<Light, "onOff" | "dimmer" | "c
 export declare class Light extends IPSODevice {
     constructor(accessory?: Accessory);
     private _modelName;
+    private _accessory;
     color: string;
     hue: number;
     saturation: number;
@@ -35,5 +36,44 @@ export declare class Light extends IPSODevice {
      * Creates a proxy which redirects the properties to the correct internal one
      */
     createProxy(): this;
+    /**
+     * Ensures this instance is linked to a tradfri client and an accessory
+     * @throws Throws an error if it isn't
+     */
+    private ensureLink();
+    /** Turn this lightbulb on */
+    turnOn(): Promise<void>;
+    /** Turn this lightbulb off */
+    turnOff(): Promise<void>;
+    /** Toggles this lightbulb on or off */
+    toggle(value?: boolean): Promise<void>;
+    private operateLight(operation, transitionTime?);
+    /**
+     * Changes this lightbulb's brightness
+     * @returns true if a request was sent, false otherwise
+     */
+    setBrightness(value: number, transitionTime?: number): Promise<boolean>;
+    /**
+     * Changes this lightbulb's color
+     * @param value The target color as a 6-digit hex string
+     * @returns true if a request was sent, false otherwise
+     */
+    setColor(value: string, transitionTime?: number): Promise<boolean>;
+    /**
+     * Changes this lightbulb's color temperature
+     * @param value The target color temperature in the range 0% (cold) to 100% (warm)
+     * @returns true if a request was sent, false otherwise
+     */
+    setColorTemperature(value: number, transitionTime?: number): Promise<boolean>;
+    /**
+     * Changes this lightbulb's color hue
+     * @returns true if a request was sent, false otherwise
+     */
+    setHue(value: number, transitionTime?: number): Promise<boolean>;
+    /**
+     * Changes this lightbulb's color saturation
+     * @returns true if a request was sent, false otherwise
+     */
+    setSaturation(value: number, transitionTime?: number): Promise<boolean>;
 }
 export declare type Spectrum = "none" | "white" | "rgb";

@@ -1,3 +1,4 @@
+import { TradfriClient } from "../tradfri-client";
 import { DeviceInfo } from "./deviceInfo";
 import { IPSODevice } from "./ipsoDevice";
 import { Light } from "./light";
@@ -18,4 +19,10 @@ export declare class Accessory extends IPSODevice {
     sensorList: Sensor[];
     switchList: IPSODevice[];
     otaUpdateState: number;
+    /**
+     * Link this object to a TradfriClient for a simplified API.
+     * INTERNAL USE ONLY!
+     * @param client The client instance to link this object to
+     */
+    link(client: TradfriClient): this;
 }

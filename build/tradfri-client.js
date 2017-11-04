@@ -208,7 +208,7 @@ class TradfriClient extends events_1.EventEmitter {
         // store a clone, so we don't have to care what the calling library does
         this.devices[instanceId] = accessory.clone();
         // and notify all listeners about the update
-        this.emit("device updated", accessory);
+        this.emit("device updated", accessory.link(this));
     }
     /** Sets up an observer for all groups */
     observeGroupsAndScenes() {
@@ -294,7 +294,7 @@ class TradfriClient extends events_1.EventEmitter {
             // store a clone, so we don't have to care what the calling library does
             groupInfo.group = group.clone();
             // notify all listeners about the update
-            this.emit("group updated", group);
+            this.emit("group updated", group.link(this));
             // load scene information
             this.observeResource(`${endpoints_1.endpoints.scenes}/${instanceId}`, (resp) => this.observeScenes_callback(instanceId, resp));
         });
@@ -353,7 +353,7 @@ class TradfriClient extends events_1.EventEmitter {
         // store a clone, so we don't have to care what the calling library does
         this.groups[groupId].scenes[instanceId] = scene.clone();
         // and notify all listeners about the update
-        this.emit("scene updated", groupId, scene);
+        this.emit("scene updated", groupId, scene.link(this));
     }
     /**
      * Pings the gateway to check if it is alive

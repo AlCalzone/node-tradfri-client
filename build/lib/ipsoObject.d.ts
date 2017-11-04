@@ -1,3 +1,4 @@
+import { TradfriClient } from "../tradfri-client";
 import { DictionaryLike } from "./object-polyfill";
 export declare type PropertyTransform = (value: any, parent?: IPSOObject) => any;
 export declare type RequiredPredicate = (me: IPSOObject, reference: IPSOObject) => boolean;
@@ -54,4 +55,11 @@ export declare class IPSOObject {
      * @param set Custom setter trap (optional). This is called after mandatory traps are in place and before default behavior
      */
     createProxy(get?: (me: this, key: PropertyKey) => any, set?: (me: this, key: PropertyKey, value, receiver) => boolean): this;
+    protected client: TradfriClient;
+    /**
+     * Link this object to a TradfriClient for a simplified API.
+     * INTERNAL USE ONLY!
+     * @param client The client instance to link this object to
+     */
+    link(client: TradfriClient): this;
 }

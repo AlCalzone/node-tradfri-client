@@ -277,7 +277,7 @@ export class TradfriClient extends EventEmitter {
 		// store a clone, so we don't have to care what the calling library does
 		this.devices[instanceId] = accessory.clone();
 		// and notify all listeners about the update
-		this.emit("device updated", accessory);
+		this.emit("device updated", accessory.link(this));
 	}
 
 	/** Sets up an observer for all groups */
@@ -377,7 +377,7 @@ export class TradfriClient extends EventEmitter {
 		groupInfo.group = group.clone();
 
 		// notify all listeners about the update
-		this.emit("group updated", group);
+		this.emit("group updated", group.link(this));
 
 		// load scene information
 		this.observeResource(
@@ -449,7 +449,7 @@ export class TradfriClient extends EventEmitter {
 		// store a clone, so we don't have to care what the calling library does
 		this.groups[groupId].scenes[instanceId] = scene.clone();
 		// and notify all listeners about the update
-		this.emit("scene updated", groupId, scene);
+		this.emit("scene updated", groupId, scene.link(this));
 	}
 
 	/**
