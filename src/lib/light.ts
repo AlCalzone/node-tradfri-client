@@ -88,14 +88,14 @@ export class Light extends IPSODevice {
 	/**
 	 * Returns true if the current lightbulb is dimmable
 	 */
-	public isDimmable(): boolean {
+	public get isDimmable(): boolean {
 		return true; // we know no lightbulbs that aren't dimmable
 	}
 
 	/**
 	 * Returns true if the current lightbulb is switchable
 	 */
-	public isSwitchable(): boolean {
+	public get isSwitchable(): boolean {
 		return true; // we know no lightbulbs that aren't switchable
 	}
 
@@ -160,25 +160,25 @@ export class Light extends IPSODevice {
 	}
 
 	/** Turn this lightbulb on */
-	public async turnOn() {
+	public async turnOn(): Promise<boolean> {
 		this.ensureLink();
-		await this.client.operateLight(this._accessory, {
+		return this.client.operateLight(this._accessory, {
 			onOff: true,
 		});
 	}
 
 	/** Turn this lightbulb off */
-	public async turnOff() {
+	public async turnOff(): Promise<boolean> {
 		this.ensureLink();
-		await this.client.operateLight(this._accessory, {
+		return this.client.operateLight(this._accessory, {
 			onOff: false,
 		});
 	}
 
 	/** Toggles this lightbulb on or off */
-	public async toggle(value: boolean = !this.onOff) {
+	public async toggle(value: boolean = !this.onOff): Promise<boolean> {
 		this.ensureLink();
-		await this.client.operateLight(this._accessory, {
+		return this.client.operateLight(this._accessory, {
 			onOff: value,
 		});
 	}

@@ -44,13 +44,13 @@ class Light extends ipsoDevice_1.IPSODevice {
     /**
      * Returns true if the current lightbulb is dimmable
      */
-    isDimmable() {
+    get isDimmable() {
         return true; // we know no lightbulbs that aren't dimmable
     }
     /**
      * Returns true if the current lightbulb is switchable
      */
-    isSwitchable() {
+    get isSwitchable() {
         return true; // we know no lightbulbs that aren't switchable
     }
     clone() {
@@ -110,7 +110,7 @@ class Light extends ipsoDevice_1.IPSODevice {
     turnOn() {
         return __awaiter(this, void 0, void 0, function* () {
             this.ensureLink();
-            yield this.client.operateLight(this._accessory, {
+            return this.client.operateLight(this._accessory, {
                 onOff: true,
             });
         });
@@ -119,7 +119,7 @@ class Light extends ipsoDevice_1.IPSODevice {
     turnOff() {
         return __awaiter(this, void 0, void 0, function* () {
             this.ensureLink();
-            yield this.client.operateLight(this._accessory, {
+            return this.client.operateLight(this._accessory, {
                 onOff: false,
             });
         });
@@ -128,7 +128,7 @@ class Light extends ipsoDevice_1.IPSODevice {
     toggle(value = !this.onOff) {
         return __awaiter(this, void 0, void 0, function* () {
             this.ensureLink();
-            yield this.client.operateLight(this._accessory, {
+            return this.client.operateLight(this._accessory, {
                 onOff: value,
             });
         });

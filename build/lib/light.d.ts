@@ -21,11 +21,11 @@ export declare class Light extends IPSODevice {
     /**
      * Returns true if the current lightbulb is dimmable
      */
-    isDimmable(): boolean;
+    readonly isDimmable: boolean;
     /**
      * Returns true if the current lightbulb is switchable
      */
-    isSwitchable(): boolean;
+    readonly isSwitchable: boolean;
     clone(): this;
     /**
      * Returns the supported color spectrum of the lightbulb
@@ -42,11 +42,11 @@ export declare class Light extends IPSODevice {
      */
     private ensureLink();
     /** Turn this lightbulb on */
-    turnOn(): Promise<void>;
+    turnOn(): Promise<boolean>;
     /** Turn this lightbulb off */
-    turnOff(): Promise<void>;
+    turnOff(): Promise<boolean>;
     /** Toggles this lightbulb on or off */
-    toggle(value?: boolean): Promise<void>;
+    toggle(value?: boolean): Promise<boolean>;
     private operateLight(operation, transitionTime?);
     /**
      * Changes this lightbulb's brightness
