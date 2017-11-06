@@ -84,7 +84,7 @@ If the connection was unsuccessful, either the gateway was unreachable or the id
 ### Pinging the gateway
 ```TS
 const success = await tradfri.ping(
-    [timeout?: number]
+    [timeout: number]
 );
 ```
 Check the reachability of the gateway using inexpensive CoAP pings. The optional `timeout` parameter sets the time in ms (default: 5000) after which the ping fails. This is only possible after an initial connection to the gateway.
@@ -202,7 +202,7 @@ The parameter `accessory` is the device containing the lightbulb. The `operation
 ### Updating a group on the gateway
 Similar to updating devices, you can update groups by calling
 ```TS
-const requestSent = updateGroup(group: Group);
+const requestSent = await updateGroup(group: Group);
 ```
 
 **NOTE:** To switch all lights in a group or to change their properties, prefer the `operateGroup` method.
@@ -231,6 +231,77 @@ The `path` is the CoAP endpoint to be requested, the payload (if provided) must 
 where the code the string representation of one of the defined [CoAP message codes](https://tools.ietf.org/html/rfc7252#section-12.1.2) and the payload is either a string or a JSON object.
 
 ## Data structure
+
+### `Accessory`
+An Accessory is a generic device connected to the gateway. It can have several sub-devices, such as
+* `Light`
+* `Sensor`
+* `Plug`
+* `Switch` (no known devices exist)
+although all currently known devices only have a single sub-device.
+
+The properties available on an `Accessory` are:
+* `name: string` - The name of this accessory as displayed in the app. Defaults to the model name.
+* `createdAt: number` - The unix timestamp of the creation of the device. Unknown what this is exactly.
+* `instanceId: number` - The ID under which the accessory is known to the gateway. Is used in callbacks throughout the library.
+* `type: AccessoryTypes` - The type of the accessory: `remote (0)`, `lightbulb (2)` or `motionSensor (4)`. Currently only lightbulbs contain meaningful information.
+* `deviceInfo: DeviceInfo` - Some additional information about the device in form of a `DeviceInfo` object (see below)
+* `alive: boolean` - Whether the gateway considers this device as alive.
+* `lastSeen: number` - The unix timestamp of the last communication with the gateway.
+* `lightList: Light[]` - An array of all lights belonging to this accessory.
+* `plugList: Plug[]` - An array of all plugs belonging to this accessory.
+* `sensorList: Sensor[]` - An array of all sensors belonging to this accessory.
+* `switchList: any[]` - An array of all switches belonging to this accessory. **Unsupported atm.**
+* `otaUpdateState: number` - Unknown. Might be a boolean
+
+### `Light`
+A light represents a single lightbulb and has several properties describing its state. The supported properties depend on the spectrum of the lightbulb. All of them support the most basic properties:
+* `dimmer: number` - The brightness in percent [0..100%]
+* `onOff: boolean` - If the lightbulb is on (`true`) or off (`false`)
+* `transitionTime: number` - The duration of state changes in seconds. Default 0.5s, not supported for on/off.
+as well as a few readonly properties:
+* `isSwitchable: boolean` - Whether the lightbulb supports on/off.
+* `isDimmable: boolean` - Whether the lightbulb supports setting the brightness.
+* `spectrum: "none" | "white" | "rgb"` - The supported color spectrum of the lightbulb.
+
+White spectrum lightbulbs also support
+* `colorTemperature: number` - The color temperature in percent, where 0% equals cold white and 100% equals warm white.
+
+RGB lightbulbs have the following properties:
+* `color: string` - The 6 digit hex number representing the lightbulb's color. Don't use any prefixes like "#", only the hex number itself!
+* `hue: number` - The color's hue [0..360°]
+* `saturation: number` - The color's saturation [0..100%]
+
+The additional properties are either for internal use (`colorX`/`colorY`) or not supported by the gateway. So don't use them!
+
+If the light object was returned from a library function and not created by you, the following methods are available to change its appearance directly. You can await them to make sure the commands were sent or just fire-and-forget them. The returned Promises resolve to true if a command was sent, otherwise to false.
+* `turnOn()` - Turns the light on.
+* `turnOff()` - Turns the light off.
+* `toggle([value: boolean])` - Toggles the light's state to the given value or the opposite of its current state. 
+* `setBrightness(value: number [, transitionTime: number])` - Dims the light to the given brightness. You can specify an optional transition time or use the default of 0.5s.
+* `setColorTemperature(value: string [, transitionTime: number])` - Changes a white spectrum lightbulb's color temperature to the given value. You can specify an optional transition time or use the default of 0.5s.
+* `setHue(value: number [, transitionTime: number])` - Changes an RGB lightbulb's hue to the given value. You can specify an optional transition time or use the default of 0.5s.
+* `setSaturation(value: number [, transitionTime: number])` - Changes an RGB lightbulb's saturation to the given value. You can specify an optional transition time or use the default of 0.5s.
+
+### `LightOperation`
+A LightOperation is an object containing at least one of a `Light`'s properties, which are:
+```TS
+{
+    onOff: boolean;
+    dimmer: number;
+    transitionTime: number;
+    colorTemperature: number;
+    color: string;
+    hue: number;
+    saturation: number;
+}
+```
+or a subset thereof.
+
+### `Group` - TODO
+### `GroupOperation` - TODO
+
+### `Plug`, `Sensor` - Not supported
 
 ## Changelog
 
