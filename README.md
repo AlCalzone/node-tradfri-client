@@ -22,7 +22,7 @@ By providing a custom logger function to the constructor, all diagnostic output 
 ```TS
 type LoggerFunction = (
     message: string, 
-    severity?: "info" | "warn" | "debug" | "error" | "silly"
+    [severity: "info" | "warn" | "debug" | "error" | "silly"]
 ) => void;
 ```
 
@@ -228,7 +228,7 @@ The `path` is the CoAP endpoint to be requested, the payload (if provided) must 
     payload: string | object,
 }
 ```
-where the code the string representation of one of the defined [CoAP message codes](https://tools.ietf.org/html/rfc7252#section-12.1.2) and the payload is either a string or a JSON object.
+where the code is the string representation of one of the defined [CoAP message codes](https://tools.ietf.org/html/rfc7252#section-12.1.2) and the payload is either a string or a JSON object.
 
 ## Data structure
 
@@ -259,6 +259,7 @@ A light represents a single lightbulb and has several properties describing its 
 * `dimmer: number` - The brightness in percent [0..100%]
 * `onOff: boolean` - If the lightbulb is on (`true`) or off (`false`)
 * `transitionTime: number` - The duration of state changes in seconds. Default 0.5s, not supported for on/off.
+
 as well as a few readonly properties:
 * `isSwitchable: boolean` - Whether the lightbulb supports on/off.
 * `isDimmable: boolean` - Whether the lightbulb supports setting the brightness.
@@ -278,10 +279,12 @@ If the light object was returned from a library function and not created by you,
 * `turnOn()` - Turns the light on.
 * `turnOff()` - Turns the light off.
 * `toggle([value: boolean])` - Toggles the light's state to the given value or the opposite of its current state. 
-* `setBrightness(value: number [, transitionTime: number])` - Dims the light to the given brightness. You can specify an optional transition time or use the default of 0.5s.
-* `setColorTemperature(value: string [, transitionTime: number])` - Changes a white spectrum lightbulb's color temperature to the given value. You can specify an optional transition time or use the default of 0.5s.
-* `setHue(value: number [, transitionTime: number])` - Changes an RGB lightbulb's hue to the given value. You can specify an optional transition time or use the default of 0.5s.
-* `setSaturation(value: number [, transitionTime: number])` - Changes an RGB lightbulb's saturation to the given value. You can specify an optional transition time or use the default of 0.5s.
+* `setBrightness(value: number [, transitionTime: number])` - Dims the light to the given brightness. 
+* `setColorTemperature(value: string [, transitionTime: number])` - Changes a white spectrum lightbulb's color temperature to the given value.
+* `setHue(value: number [, transitionTime: number])` - Changes an RGB lightbulb's hue to the given value.
+* `setSaturation(value: number [, transitionTime: number])` - Changes an RGB lightbulb's saturation to the given value.
+
+For the methods accepting a transitionTime, you can specify an optional transition time or use the default of 0.5s.
 
 ### `LightOperation`
 A LightOperation is an object containing at least one of a `Light`'s properties, which are:
