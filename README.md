@@ -5,7 +5,50 @@ Library to talk to IKEA Trådfri Gateways without external binaries
 
 *Requires NodeJS >= 6.x*
 
-## Usage
+## Example usage
+```TS
+
+import { TradfriClient, Accessory, AccessoryTypes } from "node-tradfri-client";
+
+// connect
+const tradfri = new TradfriClient("gw-abcdef012345");
+await tradfri.connect(identity, psk);
+
+// observe devices
+tradfri
+    .on("device updated", tradfri_deviceUpdated)
+    .on("device removed", tradfri_deviceRemoved)
+    .observeDevices()
+;
+
+const lightbulbs = {};
+function tradfri_deviceUpdated(device: Accessory) {
+    if (device.type === AccessoryTypes.lightbulb) {
+        // remember it
+        lightbulbs[device.instanceId] = device;
+    }
+}
+
+function tradfri_deviceRemoved(instanceId: number) {
+	// clean up
+}
+
+// later...
+// at least after we have actually received the light object
+
+const light = lightbulbs[65537].lightList[0];
+// blink
+setTimeout(light.toggle, 0);
+setTimeout(light.toggle, 1000);
+setTimeout(light.toggle, 2000);
+setTimeout(light.toggle, 3000);
+
+// even later...
+// before shutting down the app
+tradfri.destroy();
+```
+
+## Detailed usage
 
 ```TS
 const tradfriLib = require("node-tradfri-client");
