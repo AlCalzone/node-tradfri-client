@@ -6,14 +6,17 @@ Library to talk to IKEA Trådfri Gateways without external binaries
 *Requires NodeJS >= 6.x*
 
 ## Example usage
+### Common code for all examples
 ```TS
-
 import { TradfriClient, Accessory, AccessoryTypes } from "node-tradfri-client";
 
 // connect
 const tradfri = new TradfriClient("gw-abcdef012345");
 await tradfri.connect(identity, psk);
+```
 
+### Make a lightbulb blink
+```TS
 // observe devices
 tradfri
     .on("device updated", tradfri_deviceUpdated)
@@ -42,6 +45,32 @@ setTimeout(light.toggle, 0);
 setTimeout(light.toggle, 1000);
 setTimeout(light.toggle, 2000);
 setTimeout(light.toggle, 3000);
+
+// even later...
+// before shutting down the app
+tradfri.destroy();
+```
+
+### Rename a group
+```TS
+// observe devices
+tradfri
+    .on("group updated", tradfri_groupUpdated)
+    .observeGroupsAndScenes()
+;
+
+const groups = {};
+function tradfri_groupUpdated(group: Group) {
+    // remember it
+    groups[group.instanceId] = group;
+}
+
+// later...
+// at least after we have actually received the group object
+
+const groups = groups[123456];
+group.name = "new name";
+await tradfri.updateGroup(group);
 
 // even later...
 // before shutting down the app
