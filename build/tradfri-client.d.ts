@@ -12,7 +12,7 @@ export declare type ObserveResourceCallback = (resp: CoapResponse) => void;
 export declare type ObserveDevicesCallback = (addedDevices: Accessory[], removedDevices: Accessory[]) => void;
 export declare type DeviceUpdatedCallback = (device: Accessory) => void;
 export declare type DeviceRemovedCallback = (instanceId: number) => void;
-export declare type GroupUpdatedCallback = (device: Group) => void;
+export declare type GroupUpdatedCallback = (group: Group) => void;
 export declare type GroupRemovedCallback = (instanceId: number) => void;
 export declare type SceneUpdatedCallback = (groupId: number, scene: Scene) => void;
 export declare type SceneRemovedCallback = (groupId: number, instanceId: number) => void;

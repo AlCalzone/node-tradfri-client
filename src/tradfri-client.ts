@@ -21,7 +21,7 @@ export type ObserveDevicesCallback = (addedDevices: Accessory[], removedDevices:
 
 export type DeviceUpdatedCallback = (device: Accessory) => void;
 export type DeviceRemovedCallback = (instanceId: number) => void;
-export type GroupUpdatedCallback = (device: Group) => void;
+export type GroupUpdatedCallback = (group: Group) => void;
 export type GroupRemovedCallback = (instanceId: number) => void;
 export type SceneUpdatedCallback = (groupId: number, scene: Scene) => void;
 export type SceneRemovedCallback = (groupId: number, instanceId: number) => void;
