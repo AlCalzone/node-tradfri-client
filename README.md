@@ -373,8 +373,30 @@ A LightOperation is an object containing at least one of a `Light`'s properties,
 ```
 or a subset thereof.
 
-### `Group` - TODO
-### `GroupOperation` - TODO
+### `Group`
+A group contains several devices, usually a remote control or dimmer and some lightbulbs. To control the group's lightbulbs, use the following properties:
+* `onOff: boolean` - Turn the group's lightbulbs on (`true`) or off (`false`)
+* `dimmer: number` - Set the brightness of the group's lightbulbs in percent [0..100%]
+* `transitionTime: number` - The duration of state changes in seconds. Not supported for on/off. 
+In contrast to controlling lightbulbs, the default transition time for groups is 0s (no transition).
+
+**Note:** The Trådfri gateway does not update those values when lights change, so they should be considered write-only.
+
+Additionally, these properties are also supported:
+* `sceneId: number` - Set this to the `instanceId` of a scene (or "mood" as IKEA calls them), to activate it.
+* `deviceIDs: number[]` - A **readonly** array of all `instanceId`s of the devices in this group.
+
+### `GroupOperation`
+A GroupOperation is an object containing at least one of a `Group`'s controllable properties, which are:
+```TS
+{
+    onOff: boolean;
+    dimmer: number;
+    transitionTime: number;
+    sceneId: number;
+}
+```
+or a subset thereof.
 
 ### `Plug`, `Sensor` - Not supported
 
