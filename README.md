@@ -425,6 +425,9 @@ A DeviceInfo object contains general information about a device. It has the foll
 
 ## Changelog
 
+#### 0.4.1 (2017-11-07)
+* (AlCalzone) Simplified operating groups
+
 #### 0.4.0 (2017-11-04)
 * (AlCalzone) Reworked the observe api so it resides on TradfriClient now
 * (AlCalzone) Simplified operating lights

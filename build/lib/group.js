@@ -20,8 +20,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const conversions_1 = require("./conversions");
 const ipsoDevice_1 = require("./ipsoDevice");
 const ipsoObject_1 = require("./ipsoObject");
-const scene_1 = require("./scene");
 const math_1 = require("./math");
+const scene_1 = require("./scene");
 class Group extends ipsoDevice_1.IPSODevice {
     // =================================
     // Simplified API access
