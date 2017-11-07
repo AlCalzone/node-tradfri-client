@@ -41,10 +41,10 @@ function tradfri_deviceRemoved(instanceId: number) {
 
 const light = lightbulbs[65537].lightList[0];
 // blink
-setTimeout(light.toggle, 0);
-setTimeout(light.toggle, 1000);
-setTimeout(light.toggle, 2000);
-setTimeout(light.toggle, 3000);
+setTimeout(() => light.toggle(), 0);
+setTimeout(() => light.toggle(), 1000);
+setTimeout(() => light.toggle(), 2000);
+setTimeout(() => light.toggle(), 3000);
 
 // even later...
 // before shutting down the app
@@ -68,7 +68,7 @@ function tradfri_groupUpdated(group: Group) {
 // later...
 // at least after we have actually received the group object
 
-const groups = groups[123456];
+const group = groups[123456];
 group.name = "new name";
 await tradfri.updateGroup(group);
 
