@@ -218,7 +218,7 @@ This doesn't have to be fatal and can be called when an unexpected response code
 ### Observe a resource
 The standard way to receive updates to a Trådfri (or CoAP) resource is by observing it. The TradfriClient provides a couple of methods to observe resources, with the most generic one being
 ```TS
-const success = await observeResource(
+const success = await tradfri.observeResource(
     path: string, 
     callback: (resp: CoapResponse) => void
 );
@@ -227,7 +227,7 @@ The `path` argument determines which endpoint should be observed, e.g. `"15001"`
 
 To stop observing the resource and no longer receive updates, call
 ```TS
-stopObservingResource(path: string): void;
+tradfri.stopObservingResource(path: string): void;
 ```
 with the same path you used to setup the observer.
 
@@ -238,7 +238,7 @@ For a more detailed explanation of the `CoapResponse` object, please refer to th
 ### Observe devices
 By calling (or awaiting)
 ```TS
-observeDevices(): Promise<void>;
+tradfri.observeDevices(): Promise<void>;
 ```
 you can set up an observer for all devices on the gateway. The callbacks registered with `on("device updated")` and `on("device removed")` will now be called for updates.
 
@@ -247,21 +247,21 @@ Calling `stopObservingDevices()` stops the observation of devices and the callba
 ### Observe groups and scenes ("moods")
 By calling (or awaiting)
 ```TS
-observeGroupsAndScenes(): Promise<void>;
+tradfri.observeGroupsAndScenes(): Promise<void>;
 ```
 you can set up an observer for all groups and their scenes, which will call the callbacks for `"group updated"`, `"group removed"`, `"scene updated"` and `"scene removed"` on updates. Stopping this observer is possible by calling `stopObservingGroups()`.
 
 ### Updating a device on the gateway
 You can change properties of a device on the gateway (e.g. rename it) by calling
 ```TS
-const requestSent = await updateDevice(accessory: Accessory);
+const requestSent = await tradfri.updateDevice(accessory: Accessory);
 ```
 If the accessory object is not changed in comparison to the one on the gateway, no request will be sent and the return value will be `false`. The usage of this method **requires** that the devices are already being observed.
 
 **NOTE:** To switch a light on/off or to change its properties, prefer the `operateLight` method or the specialized methods defined on the lightbulb itself.
 
 ```TS
-const requestSent = await operateLight(accessory: Accessory, operation: LightOperation);
+const requestSent = await tradfri.operateLight(accessory: Accessory, operation: LightOperation);
 ```
 The parameter `accessory` is the device containing the lightbulb. The `operation` object contains the properties to be updated, e.g.
 ```TS
@@ -274,20 +274,20 @@ The parameter `accessory` is the device containing the lightbulb. The `operation
 ### Updating a group on the gateway
 Similar to updating devices, you can update groups by calling
 ```TS
-const requestSent = await updateGroup(group: Group);
+const requestSent = await tradfri.updateGroup(group: Group);
 ```
 
 **NOTE:** To switch all lights in a group or to change their properties, prefer the `operateGroup` method.
 
 ```TS
-const requestSent = await operateGroup(group: Group, operation: GroupOperation);
+const requestSent = await tradfri.operateGroup(group: Group, operation: GroupOperation);
 ```
 It is similar to the `operateLight` method, see the chapter "Data structures" below for a complete list of all properties.
 
 ### Custom requests
 For all one-time requests currently not possible through specialized methods, you can use
 ```TS
-const response = await request(
+const response = await tradfri.request(
     path: string,
     method: "get" | "post" | "put" | "delete",
     [payload: object]
