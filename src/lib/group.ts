@@ -1,6 +1,7 @@
 import { deserializers, serializers } from "./conversions";
 import { IPSODevice } from "./ipsoDevice";
 import { deserializeWith, ipsoKey, IPSOObject, PropertyTransform, required, serializeWith } from "./ipsoObject";
+import { clamp } from "./math";
 import { DictionaryLike } from "./object-polyfill";
 import { Scene } from "./scene";
 
@@ -37,6 +38,72 @@ export class Group extends IPSODevice {
 	@serializeWith(serializers.transitionTime)
 	@deserializeWith(deserializers.transitionTime)
 	public transitionTime: number; // <float>
+
+	// =================================
+	// Simplified API access
+	/**
+	 * Ensures this instance is linked to a tradfri client and an accessory
+	 * @throws Throws an error if it isn't
+	 */
+	private ensureLink() {
+		if (this.client == null) {
+			throw new Error("Cannot use the simplified API on groups which aren't linked to a client instance.");
+		}
+	}
+
+	/** Turn all lightbulbs on */
+	public async turnOn(): Promise<boolean> {
+		this.ensureLink();
+		return this.client.operateGroup(this, {
+			onOff: true,
+		});
+	}
+
+	/** Turn all lightbulbs off */
+	public async turnOff(): Promise<boolean> {
+		this.ensureLink();
+		return this.client.operateGroup(this, {
+			onOff: false,
+		});
+	}
+
+	/** Set all lightbulbs on/off to the given state */
+	public async toggle(value: boolean): Promise<boolean> {
+		this.ensureLink();
+		return this.client.operateGroup(this, {
+			onOff: value,
+		});
+	}
+
+	/** Activates the given scene */
+	public async activateScene(sceneOrId: Scene | number): Promise<boolean> {
+		this.ensureLink();
+		const id: number = (sceneOrId instanceof Scene) ? sceneOrId.instanceId : sceneOrId;
+		return this.client.operateGroup(this, {
+			sceneId: id,
+		});
+	}
+
+	private async operateGroup(operation: GroupOperation, transitionTime?: number): Promise<boolean> {
+		if (transitionTime != null) {
+			transitionTime = Math.max(0, transitionTime);
+			operation.transitionTime = transitionTime;
+		}
+		return this.client.operateGroup(this, operation);
+	}
+
+	/**
+	 * Changes this lightbulb's brightness
+	 * @returns true if a request was sent, false otherwise
+	 */
+	public async setBrightness(value: number, transitionTime?: number): Promise<boolean> {
+		this.ensureLink();
+
+		value = clamp(value, 0, 100);
+		return this.operateGroup({
+			dimmer: value,
+		}, transitionTime);
+	}
 
 }
 

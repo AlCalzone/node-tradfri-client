@@ -386,6 +386,12 @@ Additionally, these properties are also supported:
 * `sceneId: number` - Set this to the `instanceId` of a scene (or "mood" as IKEA calls them), to activate it.
 * `deviceIDs: number[]` - A **readonly** array of all `instanceId`s of the devices in this group.
 
+Similar to lightbulbs, groups provide the following methods if they were returned from a library function. You can await them to make sure the commands were sent or just fire-and-forget them. The returned Promises resolve to true if a command was sent, otherwise to false.
+* `turnOn()` - Turns all lights on.
+* `turnOff()` - Turns all lights off.
+* `toggle(value: boolean)` - Sets all lights' state to the given value. 
+* `setBrightness(value: number [, transitionTime: number])` - Dims all lights to the given brightness. 
+
 ### `GroupOperation`
 A GroupOperation is an object containing at least one of a `Group`'s controllable properties, which are:
 ```TS
