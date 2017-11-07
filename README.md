@@ -378,6 +378,23 @@ or a subset thereof.
 
 ### `Plug`, `Sensor` - Not supported
 
+### `DeviceInfo`
+A DeviceInfo object contains general information about a device. It has the following properties:
+* `battery: number` - The battery percentage of a device. Only present if the device is battery-powered.
+* `firmwareVersion: string` - The firmware version of the device
+* `manufacturer: string` - The device manufacturer. Usually `"IKEA of Sweden"`.
+* `modelNumber: string` - The name/type of the device, e.g. `"TRADFRI bulb E27 CWS opal 600lm"`
+* `power: PowerSources` - How the device is powered. One of the following enum values:
+	* `Unknown (0)`
+	* `InternalBattery (1)`
+	* `ExternalBattery (2)`
+	* `Battery (3)` - Although not in the specs, this is apparently used by the remote
+	* `PowerOverEthernet (4)`
+	* `USB (5)`
+	* `AC_Power (6)`
+	* `Solar (7)`
+* `serialNumber: string` - Not used currently. Always `""`
+
 ## Changelog
 
 #### 0.4.0 (2017-11-04)
