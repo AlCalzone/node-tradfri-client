@@ -44,6 +44,7 @@
     "sinon-chai": "^2.14.0",
     "source-map-support": "^0.5.0",
     "ts-node": "^3.3.0",
+    "ts-unused-exports": "^2.0.4",
     "tslint": "^5.8.0",
     "typescript": "^2.5.3"
   },
@@ -58,7 +59,8 @@
     "test": "npm run test:ts",
     "coverage": "node node_modules/nyc/bin/nyc npm run test",
     "lint:ts": "tslint",
-    "lint": "npm run lint:ts \"src/**/*.ts\""
+    "lint": "npm run lint:ts \"src/**/*.ts\"",
+    "find-unused-exports": "node --require ts-node/register ./maintenance/find-unused-exports.ts"
   },
   "nyc": {
     "all": true,

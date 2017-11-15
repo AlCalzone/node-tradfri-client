@@ -2,8 +2,6 @@
 /// Stellt einen Promise-Wrapper für asynchrone Node-Funktionen zur Verfügung
 ///
 
-export type PromiseCallback = (value: any) => {} | PromiseLike<any>;
-
 export function promisify<T>(fn, context?: any): (...args: any[]) => Promise<T>;
 export function promisify(fn, context?: any) {
 	return function(...args) {
@@ -30,15 +28,6 @@ export function promisifyNoError(fn, context?: any) {
 			}]);
 		});
 	};
-}
-
-export function waterfall(...fn: PromiseCallback[]): Promise<any> {
-	// Führt eine Reihe von Promises sequentiell aus
-	// TODO: Rückgabewerte prüfen (ob da was zu viel ist)
-	return fn.reduce(
-		(prev, cur) => prev.then(cur),
-		Promise.resolve(),
-	);
 }
 
 /** Creates a promise that waits for the specified time and then resolves */

@@ -1,4 +1,3 @@
-import { TradfriClient } from "../tradfri-client";
 import { log } from "./logger";
 import { DictionaryLike, entries } from "./object-polyfill";
 import { OperationProvider } from "./operation-provider";
@@ -98,7 +97,7 @@ export const serializeWith = (transform: PropertyTransform, splitArrays: boolean
 };
 
 // tslint:disable:object-literal-key-quotes
-export const defaultSerializers: DictionaryLike<PropertyTransform> = {
+const defaultSerializers: DictionaryLike<PropertyTransform> = {
 	"Boolean": (bool: boolean) => bool ? 1 : 0,
 };
 // tslint:enable:object-literal-key-quotes
@@ -181,7 +180,7 @@ function isSerializable(target: object, property: string | symbol): boolean {
 }
 
 // tslint:disable:object-literal-key-quotes
-export const defaultDeserializers: DictionaryLike<PropertyTransform> = {
+const defaultDeserializers: DictionaryLike<PropertyTransform> = {
 	"Boolean": (raw: any) => raw === 1 || raw === "true" || raw === "on" || raw === true,
 };
 // tslint:enable:object-literal-key-quotes

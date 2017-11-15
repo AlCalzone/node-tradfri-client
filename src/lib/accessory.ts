@@ -1,7 +1,6 @@
-import { TradfriClient } from "../tradfri-client";
 import { DeviceInfo } from "./deviceInfo";
 import { IPSODevice } from "./ipsoDevice";
-import { deserializeWith, ipsoKey, IPSOObject, PropertyTransform, required, serializeWith } from "./ipsoObject";
+import { deserializeWith, ipsoKey, required, serializeWith } from "./ipsoObject";
 import { Light } from "./light";
 import { OperationProvider } from "./operation-provider";
 import { Plug } from "./plug";

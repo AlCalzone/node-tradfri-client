@@ -11,7 +11,7 @@ export const endpoints = {
 	authentication: "15011/9063",
 };
 
-export const gatewayEndpoints = {
-	alexaCertificate: "9094", // DELETE or POST (raw string)
-	alexa: "9095", // DELETE or POST (something with cognitoId)
-};
+// export const gatewayEndpoints = {
+// 	alexaCertificate: "9094", // DELETE or POST (raw string)
+// 	alexa: "9095", // DELETE or POST (something with cognitoId)
+// };

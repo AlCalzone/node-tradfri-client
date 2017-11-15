@@ -100,7 +100,7 @@ exports.serializeWith = (transform, splitArrays = true) => {
     };
 };
 // tslint:disable:object-literal-key-quotes
-exports.defaultSerializers = {
+const defaultSerializers = {
     "Boolean": (bool) => bool ? 1 : 0,
 };
 // tslint:enable:object-literal-key-quotes
@@ -116,8 +116,8 @@ function getSerializer(target, property) {
         return metadata[property].transform;
     // If there's no custom serializer, try to find a default one
     const type = getPropertyType(target, property);
-    if (type && type.name in exports.defaultSerializers) {
-        return exports.defaultSerializers[type.name];
+    if (type && type.name in defaultSerializers) {
+        return defaultSerializers[type.name];
     }
 }
 /**
@@ -177,7 +177,7 @@ function isSerializable(target, property) {
     return !metadata.hasOwnProperty(property);
 }
 // tslint:disable:object-literal-key-quotes
-exports.defaultDeserializers = {
+const defaultDeserializers = {
     "Boolean": (raw) => raw === 1 || raw === "true" || raw === "on" || raw === true,
 };
 // tslint:enable:object-literal-key-quotes
@@ -194,8 +194,8 @@ function getDeserializers(target, property) {
     }
     // If there's no custom deserializer, try to find a default one
     const type = getPropertyType(target, property);
-    if (type && type.name in exports.defaultDeserializers) {
-        return [exports.defaultDeserializers[type.name]];
+    if (type && type.name in defaultDeserializers) {
+        return [defaultDeserializers[type.name]];
     }
 }
 /**

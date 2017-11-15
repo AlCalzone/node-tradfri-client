@@ -9,7 +9,3 @@ export declare const endpoints: {
     gatewayDetails: string;
     authentication: string;
 };
-export declare const gatewayEndpoints: {
-    alexaCertificate: string;
-    alexa: string;
-};

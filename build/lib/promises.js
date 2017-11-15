@@ -30,12 +30,6 @@ function promisifyNoError(fn, context) {
     };
 }
 exports.promisifyNoError = promisifyNoError;
-function waterfall(...fn) {
-    // Führt eine Reihe von Promises sequentiell aus
-    // TODO: Rückgabewerte prüfen (ob da was zu viel ist)
-    return fn.reduce((prev, cur) => prev.then(cur), Promise.resolve());
-}
-exports.waterfall = waterfall;
 /** Creates a promise that waits for the specified time and then resolves */
 function wait(ms) {
     return new Promise((resolve) => {

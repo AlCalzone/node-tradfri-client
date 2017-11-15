@@ -24,6 +24,3 @@ export declare function filter<T>(obj: DictionaryLike<T>, predicate: Predicate<T
  * @param properties Die Key-Value-Paare, die zu einem Objekt kombiniert werden sollen
  */
 export declare function composeObject<T>(properties: KeyValuePair<T>[]): DictionaryLike<T>;
-export declare function dig<T>(object: DictionaryLike<T>, path: string): any;
-export declare function bury<T>(object: DictionaryLike<T>, path: string, value: any): any;
-export declare function extend(target: any, source: any): any;

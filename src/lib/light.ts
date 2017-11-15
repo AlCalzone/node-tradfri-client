@@ -1,7 +1,7 @@
 import { Accessory } from "./accessory";
 import { conversions, deserializers, serializers } from "./conversions";
 import { IPSODevice } from "./ipsoDevice";
-import { deserializeWith, doNotSerialize, ipsoKey, IPSOObject, PropertyTransform, required, serializeWith } from "./ipsoObject";
+import { deserializeWith, doNotSerialize, ipsoKey, PropertyTransform, required, serializeWith } from "./ipsoObject";
 import { clamp } from "./math";
 import { MAX_COLOR, predefinedColors } from "./predefined-colors";
 

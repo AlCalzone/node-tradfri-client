@@ -8,11 +8,10 @@ import { except } from "./lib/array-extensions";
 import { endpoints as coapEndpoints } from "./lib/endpoints";
 import { Group, GroupInfo, GroupOperation } from "./lib/group";
 import { IPSOObject } from "./lib/ipsoObject";
-import { Light, LightOperation, Spectrum } from "./lib/light";
+import { LightOperation } from "./lib/light";
 import { log, LoggerFunction, setCustomLogger } from "./lib/logger";
 import { DictionaryLike } from "./lib/object-polyfill";
 import { OperationProvider } from "./lib/operation-provider";
-import { wait } from "./lib/promises";
 import { Scene } from "./lib/scene";
 import { TradfriError, TradfriErrorCodes } from "./lib/tradfri-error";
 
