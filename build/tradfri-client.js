@@ -122,7 +122,7 @@ class TradfriClient extends events_1.EventEmitter {
     stopObservingResource(path) {
         path = normalizeResourcePath(path);
         // remove observer
-        const observerUrl = `${this.requestBase}${path}`;
+        const observerUrl = path.startsWith(this.requestBase) ? path : `${this.requestBase}${path}`;
         const index = this.observedPaths.indexOf(observerUrl);
         if (index === -1)
             return;
@@ -188,11 +188,11 @@ class TradfriClient extends events_1.EventEmitter {
         });
     }
     stopObservingDevices() {
-        for (const path of this.observedPaths) {
-            if (path.startsWith(endpoints_1.endpoints.devices)) {
-                this.stopObservingResource(path);
-            }
-        }
+        const pathPrefix = `${this.requestBase}${endpoints_1.endpoints.devices}`;
+        // remove all observers pointing to a device related endpoint
+        this.observedPaths
+            .filter(p => p.startsWith(pathPrefix))
+            .forEach(p => this.stopObservingResource(p));
     }
     // gets called whenever "get /15001/<instanceId>" updates
     observeDevice_callback(instanceId, response) {

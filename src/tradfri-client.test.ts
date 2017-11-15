@@ -195,4 +195,15 @@ describe("tradfri-client => ", () => {
 
 	});
 
+	describe("stopObservingDevices => ", () => {
+		it("should call coap.stopObserving for each observed device and the device endpoint", () => {
+			tradfri.stopObservingDevices();
+
+			fakeCoap.stopObserving.should.have.been.calledThrice;
+			fakeCoap.stopObserving.should.have.been.calledWith(`${devicesUrl}`);
+			fakeCoap.stopObserving.should.have.been.calledWith(`${devicesUrl}/65537`);
+			fakeCoap.stopObserving.should.have.been.calledWith(`${devicesUrl}/65538`);
+		});
+	});
+
 });

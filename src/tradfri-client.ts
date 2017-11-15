@@ -179,7 +179,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		path = normalizeResourcePath(path);
 
 		// remove observer
-		const observerUrl = `${this.requestBase}${path}`;
+		const observerUrl = path.startsWith(this.requestBase) ? path : `${this.requestBase}${path}`;
 		const index = this.observedPaths.indexOf(observerUrl);
 		if (index === -1) return;
 
@@ -257,11 +257,12 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	}
 
 	public stopObservingDevices() {
-		for (const path of this.observedPaths) {
-			if (path.startsWith(coapEndpoints.devices)) {
-				this.stopObservingResource(path);
-			}
-		}
+		const pathPrefix = `${this.requestBase}${coapEndpoints.devices}`;
+		// remove all observers pointing to a device related endpoint
+		this.observedPaths
+			.filter(p => p.startsWith(pathPrefix))
+			.forEach(p => this.stopObservingResource(p))
+		;
 	}
 
 	// gets called whenever "get /15001/<instanceId>" updates
