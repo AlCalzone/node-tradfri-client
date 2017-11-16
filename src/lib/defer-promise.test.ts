@@ -1,5 +1,6 @@
 import {expect, use } from "chai";
 import * as chaiAsPromised from "chai-as-promised";
+import { spy } from "sinon";
 
 before(() => {
 	use(chaiAsPromised);
@@ -27,6 +28,18 @@ describe("lib/defer-promise => createDeferredPromise() =>", () => {
 		const promiseRej = createDeferredPromise<boolean>();
 		promiseRej.reject();
 		return expect(promiseRej).to.be.rejected;
+	});
+
+	const leSpy = spy();
+	const promiseTwice = createDeferredPromise<void>();
+	promiseTwice.then(leSpy);
+
+	promiseTwice.resolve();
+	promiseTwice.resolve();
+
+	it("should not resolve twice", () => {
+		leSpy.should.have.been.calledOnce;
+		leSpy.should.not.have.been.calledTwice;
 	});
 
 });

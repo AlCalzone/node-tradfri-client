@@ -5,6 +5,7 @@ import { CoapClient as coap, CoapResponse, RequestMethod } from "node-coap-clien
 // load internal modules
 import { Accessory, AccessoryTypes } from "./lib/accessory";
 import { except } from "./lib/array-extensions";
+import { createDeferredPromise, DeferredPromise } from "./lib/defer-promise";
 import { endpoints as coapEndpoints } from "./lib/endpoints";
 import { Group, GroupInfo, GroupOperation } from "./lib/group";
 import { IPSOObject } from "./lib/ipsoObject";
@@ -210,16 +211,22 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		this.observedPaths = [];
 	}
 
-	/** Sets up an observer for all devices */
-	public async observeDevices(): Promise<this> {
+	/**
+	 * Sets up an observer for all devices
+	 * @returns A promise that resolves when the information about all devices has been received.
+	 */
+	public async observeDevices(): Promise<void> {
+		const ret = createDeferredPromise<void>();
+		// although we return another promise, await the observeResource promise
+		// so errors don't fall through the gaps
 		await this.observeResource(
 			coapEndpoints.devices,
-			this.observeDevices_callback.bind(this),
+			(resp) => this.observeDevices_callback(ret, resp),
 		);
-		return this;
+		return ret;
 	}
 
-	private async observeDevices_callback(response: CoapResponse) {
+	private async observeDevices_callback(observePromise: DeferredPromise<void>, response: CoapResponse) {
 		if (response.code.toString() !== "2.05") {
 			this.emit("error", new Error(`unexpected response (${response.code.toString()}) to observeDevices.`));
 			return;
@@ -237,9 +244,26 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		log(`adding devices with keys ${JSON.stringify(addedKeys)}`, "debug");
 
 		const observeDevicePromises = newKeys.map(id => {
+			const handleResponse = (resp: CoapResponse) => {
+				// first, try to parse the device information
+				const result = this.observeDevice_callback(id, resp);
+				// if we are still waiting to confirm the `observeDevices` call,
+				// check if we have received information about all devices
+				if (observePromise != null) {
+					if (result) {
+						if (newKeys.each(k => k in this.devices)) {
+							observePromise.resolve();
+							observePromise = null;
+						}
+					} else {
+						observePromise.reject(`The device with the id ${id} could not be observed`);
+						observePromise = null;
+					}
+				}
+			};
 			return this.observeResource(
 				`${coapEndpoints.devices}/${id}`,
-				(resp) => this.observeDevice_callback(id, resp),
+				handleResponse,
 			);
 		});
 		await Promise.all(observeDevicePromises);
@@ -265,10 +289,11 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	}
 
 	// gets called whenever "get /15001/<instanceId>" updates
-	private observeDevice_callback(instanceId: number, response: CoapResponse) {
+	// returns true when the device was received successfully
+	private observeDevice_callback(instanceId: number, response: CoapResponse): boolean {
 		if (response.code.toString() !== "2.05") {
 			this.emit("error", new Error(`unexpected response (${response.code.toString()}) to observeDevice(${instanceId}).`));
-			return;
+			return false;
 		}
 		const result = parsePayload(response);
 		log(`observeDevice > ` + JSON.stringify(result), "debug");
@@ -279,6 +304,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		this.devices[instanceId] = accessory.clone();
 		// and notify all listeners about the update
 		this.emit("device updated", accessory.link(this));
+		return true;
 	}
 
 	/** Sets up an observer for all groups */

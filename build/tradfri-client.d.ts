@@ -96,9 +96,12 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
      * This does not stop observing the resources if the observers are still active
      */
     private clearObservers();
-    /** Sets up an observer for all devices */
-    observeDevices(): Promise<this>;
-    private observeDevices_callback(response);
+    /**
+     * Sets up an observer for all devices
+     * @returns A promise that resolves when the information about all devices has been received.
+     */
+    observeDevices(): Promise<void>;
+    private observeDevices_callback(observePromise, response);
     stopObservingDevices(): void;
     private observeDevice_callback(instanceId, response);
     /** Sets up an observer for all groups */

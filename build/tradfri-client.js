@@ -14,6 +14,7 @@ const node_coap_client_1 = require("node-coap-client");
 // load internal modules
 const accessory_1 = require("./lib/accessory");
 const array_extensions_1 = require("./lib/array-extensions");
+const defer_promise_1 = require("./lib/defer-promise");
 const endpoints_1 = require("./lib/endpoints");
 const group_1 = require("./lib/group");
 const logger_1 = require("./lib/logger");
@@ -150,14 +151,20 @@ class TradfriClient extends events_1.EventEmitter {
     clearObservers() {
         this.observedPaths = [];
     }
-    /** Sets up an observer for all devices */
+    /**
+     * Sets up an observer for all devices
+     * @returns A promise that resolves when the information about all devices has been received.
+     */
     observeDevices() {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.observeResource(endpoints_1.endpoints.devices, this.observeDevices_callback.bind(this));
-            return this;
+            const ret = defer_promise_1.createDeferredPromise();
+            // although we return another promise, await the observeResource promise
+            // so errors don't fall through the gaps
+            yield this.observeResource(endpoints_1.endpoints.devices, (resp) => this.observeDevices_callback(ret, resp));
+            return ret;
         });
     }
-    observeDevices_callback(response) {
+    observeDevices_callback(observePromise, response) {
         return __awaiter(this, void 0, void 0, function* () {
             if (response.code.toString() !== "2.05") {
                 this.emit("error", new Error(`unexpected response (${response.code.toString()}) to observeDevices.`));
@@ -173,7 +180,25 @@ class TradfriClient extends events_1.EventEmitter {
             const addedKeys = array_extensions_1.except(newKeys, oldKeys);
             logger_1.log(`adding devices with keys ${JSON.stringify(addedKeys)}`, "debug");
             const observeDevicePromises = newKeys.map(id => {
-                return this.observeResource(`${endpoints_1.endpoints.devices}/${id}`, (resp) => this.observeDevice_callback(id, resp));
+                const handleResponse = (resp) => {
+                    // first, try to parse the device information
+                    const result = this.observeDevice_callback(id, resp);
+                    // if we are still waiting to confirm the `observeDevices` call,
+                    // check if we have received information about all devices
+                    if (observePromise != null) {
+                        if (result) {
+                            if (newKeys.each(k => k in this.devices)) {
+                                observePromise.resolve();
+                                observePromise = null;
+                            }
+                        }
+                        else {
+                            observePromise.reject(`The device with the id ${id} could not be observed`);
+                            observePromise = null;
+                        }
+                    }
+                };
+                return this.observeResource(`${endpoints_1.endpoints.devices}/${id}`, handleResponse);
             });
             yield Promise.all(observeDevicePromises);
             const removedKeys = array_extensions_1.except(oldKeys, newKeys);
@@ -195,10 +220,11 @@ class TradfriClient extends events_1.EventEmitter {
             .forEach(p => this.stopObservingResource(p));
     }
     // gets called whenever "get /15001/<instanceId>" updates
+    // returns true when the device was received successfully
     observeDevice_callback(instanceId, response) {
         if (response.code.toString() !== "2.05") {
             this.emit("error", new Error(`unexpected response (${response.code.toString()}) to observeDevice(${instanceId}).`));
-            return;
+            return false;
         }
         const result = parsePayload(response);
         logger_1.log(`observeDevice > ` + JSON.stringify(result), "debug");
@@ -209,6 +235,7 @@ class TradfriClient extends events_1.EventEmitter {
         this.devices[instanceId] = accessory.clone();
         // and notify all listeners about the update
         this.emit("device updated", accessory.link(this));
+        return true;
     }
     /** Sets up an observer for all groups */
     observeGroupsAndScenes() {
