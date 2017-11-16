@@ -30,25 +30,25 @@
     "node": ">= 6.0.0"
   },
   "devDependencies": {
-    "@types/chai": "^4.0.4",
+    "@types/chai": "^4.0.5",
     "@types/chai-as-promised": "^7.1.0",
     "@types/debug": "0.0.30",
     "@types/mocha": "^2.2.44",
     "@types/node": "^6.0.90",
     "@types/reflect-metadata": "0.0.5",
-    "@types/sinon": "^2.3.7",
+    "@types/sinon": "^4.0.0",
     "@types/sinon-chai": "^2.7.29",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "mocha": "^4.0.1",
-    "nyc": "^11.2.1",
-    "sinon": "^4.0.2",
+    "nyc": "^11.3.0",
+    "sinon": "^4.1.2",
     "sinon-chai": "^2.14.0",
     "source-map-support": "^0.5.0",
     "ts-node": "^3.3.0",
     "ts-unused-exports": "^2.0.4",
     "tslint": "^5.8.0",
-    "typescript": "^2.5.3"
+    "typescript": "^2.6.1"
   },
   "dependencies": {
     "debug": "^3.1.0",
