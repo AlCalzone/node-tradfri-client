@@ -38,8 +38,7 @@ describe("lib/defer-promise => createDeferredPromise() =>", () => {
 	promiseTwice.resolve();
 
 	it("should not resolve twice", () => {
-		leSpy.should.have.been.calledOnce;
-		leSpy.should.not.have.been.calledTwice;
+		expect(leSpy.callCount).to.equal(1);
 	});
 
 });
