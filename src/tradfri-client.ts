@@ -231,7 +231,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 			this.emit("error", new Error(`unexpected response (${response.code.toString()}) to observeDevices.`));
 			return;
 		}
-		const newDevices = parsePayload(response);
+		const newDevices: number[] = parsePayload(response);
 
 		log(`got all devices: ${JSON.stringify(newDevices)}`);
 
@@ -251,7 +251,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 				// check if we have received information about all devices
 				if (observePromise != null) {
 					if (result) {
-						if (newKeys.each(k => k in this.devices)) {
+						if (newKeys.every(k => k in this.devices)) {
 							observePromise.resolve();
 							observePromise = null;
 						}

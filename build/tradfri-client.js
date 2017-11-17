@@ -187,7 +187,7 @@ class TradfriClient extends events_1.EventEmitter {
                     // check if we have received information about all devices
                     if (observePromise != null) {
                         if (result) {
-                            if (newKeys.each(k => k in this.devices)) {
+                            if (newKeys.every(k => k in this.devices)) {
                                 observePromise.resolve();
                                 observePromise = null;
                             }
