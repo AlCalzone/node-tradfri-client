@@ -170,6 +170,15 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	}
 
 	/**
+	 * Checks if a resource is currently being observed
+	 * @param path The path of the resource
+	 */
+	public isObserving(path: string): boolean {
+		const observerUrl = path.startsWith(this.requestBase) ? path : `${this.requestBase}${path}`;
+		return this.observedPaths.indexOf(observerUrl) > -1;
+	}
+
+	/**
 	 * Stops observing a resource that is being observed through `observeResource`
 	 * Use the specialized version of this method for observers that were set up with the specialized versions of `observeResource`
 	 * @param path The path of the resource
@@ -211,22 +220,25 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		this.observedPaths = [];
 	}
 
+	private observeDevicesPromise: DeferredPromise<void>;
 	/**
 	 * Sets up an observer for all devices
 	 * @returns A promise that resolves when the information about all devices has been received.
 	 */
 	public async observeDevices(): Promise<void> {
-		const ret = createDeferredPromise<void>();
+		if (this.isObserving(coapEndpoints.devices)) return;
+
+		this.observeDevicesPromise = createDeferredPromise<void>();
 		// although we return another promise, await the observeResource promise
 		// so errors don't fall through the gaps
 		await this.observeResource(
 			coapEndpoints.devices,
-			(resp) => this.observeDevices_callback(ret, resp),
+			(resp) => this.observeDevices_callback(resp),
 		);
-		return ret;
+		return this.observeDevicesPromise;
 	}
 
-	private async observeDevices_callback(observePromise: DeferredPromise<void>, response: CoapResponse) {
+	private async observeDevices_callback(response: CoapResponse) {
 		if (response.code.toString() !== "2.05") {
 			this.emit("error", new Error(`unexpected response (${response.code.toString()}) to observeDevices.`));
 			return;
@@ -249,15 +261,15 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 				const result = this.observeDevice_callback(id, resp);
 				// if we are still waiting to confirm the `observeDevices` call,
 				// check if we have received information about all devices
-				if (observePromise != null) {
+				if (this.observeDevicesPromise != null) {
 					if (result) {
 						if (newKeys.every(k => k in this.devices)) {
-							observePromise.resolve();
-							observePromise = null;
+							this.observeDevicesPromise.resolve();
+							this.observeDevicesPromise = null;
 						}
 					} else {
-						observePromise.reject(`The device with the id ${id} could not be observed`);
-						observePromise = null;
+						this.observeDevicesPromise.reject(`The device with the id ${id} could not be observed`);
+						this.observeDevicesPromise = null;
 					}
 				}
 			};
@@ -307,13 +319,23 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		return true;
 	}
 
-	/** Sets up an observer for all groups */
-	public async observeGroupsAndScenes(): Promise<this> {
+	private observeGroupsPromise: DeferredPromise<void>;
+	private observeScenesPromises: Map<number, DeferredPromise<void>>;
+	/**
+	 * Sets up an observer for all groups and scenes
+	 * @returns A promise that resolves when the information about all groups and scenes has been received.
+	 */
+	public async observeGroupsAndScenes(): Promise<void> {
+		if (this.isObserving(coapEndpoints.groups)) return;
+
+		this.observeGroupsPromise = createDeferredPromise<void>();
+		// although we return another promise, await the observeResource promise
+		// so errors don't fall through the gaps
 		await this.observeResource(
 			coapEndpoints.groups,
-			this.observeGroups_callback.bind(this),
+			(resp) => this.observeGroups_callback(resp),
 		);
-		return this;
+		return this.observeGroupsPromise;
 	}
 
 	// gets called whenever "get /15004" updates
@@ -323,7 +345,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 			this.emit("error", new Error(`unexpected response (${response.code.toString()}) to getAllGroups.`));
 			return;
 		}
-		const newGroups = parsePayload(response);
+		const newGroups: number[] = parsePayload(response);
 
 		log(`got all groups: ${JSON.stringify(newGroups)}`);
 
@@ -335,10 +357,45 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		const addedKeys = except(newKeys, oldKeys);
 		log(`adding groups with keys ${JSON.stringify(addedKeys)}`, "debug");
 
+		// create a deferred promise for each group, so we can wait for them to be fulfilled
+		if (this.observeScenesPromises == null) {
+			this.observeScenesPromises = new Map(
+				newKeys.map(id => [id, createDeferredPromise<void>()] as [number, DeferredPromise<void>]),
+			);
+		}
 		const observeGroupPromises = newKeys.map(id => {
+			const handleResponse = (resp: CoapResponse) => {
+				// first, try to parse the device information
+				const result = this.observeGroup_callback(id, resp);
+				// if we are still waiting to confirm the `observeDevices` call,
+				// check if we have received information about all devices
+				if (this.observeGroupsPromise != null) {
+					if (result) {
+						if (newKeys.every(k => k in this.groups)) {
+							// once we have all groups, wait for all scenes to be received
+							Promise
+								.all(this.observeScenesPromises.values())
+								.then(() => {
+									this.observeGroupsPromise.resolve();
+									this.observeGroupsPromise = null;
+									this.observeScenesPromises = null;
+								})
+								.catch(reason => {
+									this.observeGroupsPromise.reject(reason);
+									this.observeGroupsPromise = null;
+									this.observeScenesPromises = null;
+								})
+							;
+						}
+					} else {
+						this.observeGroupsPromise.reject(`The group with the id ${id} could not be observed`);
+						this.observeGroupsPromise = null;
+					}
+				}
+			};
 			return this.observeResource(
 				`${coapEndpoints.groups}/${id}`,
-				(resp) => this.observeGroup_callback(id, resp),
+				handleResponse,
 			);
 		});
 		await Promise.all(observeGroupPromises);
@@ -371,7 +428,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	}
 
 	// gets called whenever "get /15004/<instanceId>" updates
-	private async observeGroup_callback(instanceId: number, response: CoapResponse) {
+	private observeGroup_callback(instanceId: number, response: CoapResponse): boolean {
 
 		// check response code
 		switch (response.code.toString()) {
@@ -380,10 +437,10 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 				// We know this group existed or we wouldn't have requested it
 				// This means it has been deleted
 				// TODO: Should we delete it here or where its being handled right now?
-				return;
+				return false;
 			default:
 				this.emit("error", new Error(`unexpected response (${response.code.toString()}) to getGroup(${instanceId}).`));
-				return;
+				return false;
 		}
 
 		const result = parsePayload(response);
@@ -411,6 +468,8 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 			`${coapEndpoints.scenes}/${instanceId}`,
 			(resp) => this.observeScenes_callback(instanceId, resp),
 		);
+
+		return true;
 	}
 
 	// gets called whenever "get /15005/<groupId>" updates
@@ -434,9 +493,25 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		log(`adding scenes with keys ${JSON.stringify(addedKeys)} to group ${groupId}`, "debug");
 
 		const observeScenePromises = newKeys.map(id => {
+			const handleResponse = (resp: CoapResponse) => {
+				// first, try to parse the device information
+				const result = this.observeScene_callback(groupId, id, resp);
+				// if we are still waiting to confirm the `observeDevices` call,
+				// check if we have received information about all devices
+				if (this.observeScenesPromises != null) {
+					const scenePromise = this.observeScenesPromises.get(groupId);
+					if (result) {
+						if (newKeys.every(k => k in groupInfo.scenes)) {
+							scenePromise.resolve();
+						}
+					} else {
+						scenePromise.reject(`The scene with the id ${id} could not be observed`);
+					}
+				}
+			};
 			return this.observeResource(
 				`${coapEndpoints.scenes}/${groupId}/${id}`,
-				(resp) => this.observeScene_callback(groupId, id, resp),
+				handleResponse,
 			);
 		});
 		await Promise.all(observeScenePromises);
@@ -454,7 +529,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	}
 
 	// gets called whenever "get /15005/<groupId>/<instanceId>" updates
-	private observeScene_callback(groupId: number, instanceId: number, response: CoapResponse) {
+	private observeScene_callback(groupId: number, instanceId: number, response: CoapResponse): boolean {
 
 		// check response code
 		switch (response.code.toString()) {
@@ -463,10 +538,10 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 				// We know this scene existed or we wouldn't have requested it
 				// This means it has been deleted
 				// TODO: Should we delete it here or where its being handled right now?
-				return;
+				return false;
 			default:
 				this.emit("error", new Error(`unexpected response (${response.code.toString()}) to observeScene(${groupId}, ${instanceId}).`));
-				return;
+				return false;
 		}
 
 		const result = parsePayload(response);
@@ -477,6 +552,8 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		this.groups[groupId].scenes[instanceId] = scene.clone();
 		// and notify all listeners about the update
 		this.emit("scene updated", groupId, scene.link(this));
+
+		return true;
 	}
 
 	/**

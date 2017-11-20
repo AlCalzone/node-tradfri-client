@@ -116,6 +116,14 @@ class TradfriClient extends events_1.EventEmitter {
         });
     }
     /**
+     * Checks if a resource is currently being observed
+     * @param path The path of the resource
+     */
+    isObserving(path) {
+        const observerUrl = path.startsWith(this.requestBase) ? path : `${this.requestBase}${path}`;
+        return this.observedPaths.indexOf(observerUrl) > -1;
+    }
+    /**
      * Stops observing a resource that is being observed through `observeResource`
      * Use the specialized version of this method for observers that were set up with the specialized versions of `observeResource`
      * @param path The path of the resource
@@ -157,14 +165,16 @@ class TradfriClient extends events_1.EventEmitter {
      */
     observeDevices() {
         return __awaiter(this, void 0, void 0, function* () {
-            const ret = defer_promise_1.createDeferredPromise();
+            if (this.isObserving(endpoints_1.endpoints.devices))
+                return;
+            this.observeDevicesPromise = defer_promise_1.createDeferredPromise();
             // although we return another promise, await the observeResource promise
             // so errors don't fall through the gaps
-            yield this.observeResource(endpoints_1.endpoints.devices, (resp) => this.observeDevices_callback(ret, resp));
-            return ret;
+            yield this.observeResource(endpoints_1.endpoints.devices, (resp) => this.observeDevices_callback(resp));
+            return this.observeDevicesPromise;
         });
     }
-    observeDevices_callback(observePromise, response) {
+    observeDevices_callback(response) {
         return __awaiter(this, void 0, void 0, function* () {
             if (response.code.toString() !== "2.05") {
                 this.emit("error", new Error(`unexpected response (${response.code.toString()}) to observeDevices.`));
@@ -185,16 +195,16 @@ class TradfriClient extends events_1.EventEmitter {
                     const result = this.observeDevice_callback(id, resp);
                     // if we are still waiting to confirm the `observeDevices` call,
                     // check if we have received information about all devices
-                    if (observePromise != null) {
+                    if (this.observeDevicesPromise != null) {
                         if (result) {
                             if (newKeys.every(k => k in this.devices)) {
-                                observePromise.resolve();
-                                observePromise = null;
+                                this.observeDevicesPromise.resolve();
+                                this.observeDevicesPromise = null;
                             }
                         }
                         else {
-                            observePromise.reject(`The device with the id ${id} could not be observed`);
-                            observePromise = null;
+                            this.observeDevicesPromise.reject(`The device with the id ${id} could not be observed`);
+                            this.observeDevicesPromise = null;
                         }
                     }
                 };
@@ -237,11 +247,19 @@ class TradfriClient extends events_1.EventEmitter {
         this.emit("device updated", accessory.link(this));
         return true;
     }
-    /** Sets up an observer for all groups */
+    /**
+     * Sets up an observer for all groups and scenes
+     * @returns A promise that resolves when the information about all groups and scenes has been received.
+     */
     observeGroupsAndScenes() {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.observeResource(endpoints_1.endpoints.groups, this.observeGroups_callback.bind(this));
-            return this;
+            if (this.isObserving(endpoints_1.endpoints.groups))
+                return;
+            this.observeGroupsPromise = defer_promise_1.createDeferredPromise();
+            // although we return another promise, await the observeResource promise
+            // so errors don't fall through the gaps
+            yield this.observeResource(endpoints_1.endpoints.groups, (resp) => this.observeGroups_callback(resp));
+            return this.observeGroupsPromise;
         });
     }
     // gets called whenever "get /15004" updates
@@ -260,8 +278,41 @@ class TradfriClient extends events_1.EventEmitter {
             // translate that into added and removed devices
             const addedKeys = array_extensions_1.except(newKeys, oldKeys);
             logger_1.log(`adding groups with keys ${JSON.stringify(addedKeys)}`, "debug");
+            // create a deferred promise for each group, so we can wait for them to be fulfilled
+            if (this.observeScenesPromises == null) {
+                this.observeScenesPromises = new Map(newKeys.map(id => [id, defer_promise_1.createDeferredPromise()]));
+            }
             const observeGroupPromises = newKeys.map(id => {
-                return this.observeResource(`${endpoints_1.endpoints.groups}/${id}`, (resp) => this.observeGroup_callback(id, resp));
+                const handleResponse = (resp) => {
+                    // first, try to parse the device information
+                    const result = this.observeGroup_callback(id, resp);
+                    // if we are still waiting to confirm the `observeDevices` call,
+                    // check if we have received information about all devices
+                    if (this.observeGroupsPromise != null) {
+                        if (result) {
+                            if (newKeys.every(k => k in this.groups)) {
+                                // once we have all groups, wait for all scenes to be received
+                                Promise
+                                    .all(this.observeScenesPromises.values())
+                                    .then(() => {
+                                    this.observeGroupsPromise.resolve();
+                                    this.observeGroupsPromise = null;
+                                    this.observeScenesPromises = null;
+                                })
+                                    .catch(reason => {
+                                    this.observeGroupsPromise.reject(reason);
+                                    this.observeGroupsPromise = null;
+                                    this.observeScenesPromises = null;
+                                });
+                            }
+                        }
+                        else {
+                            this.observeGroupsPromise.reject(`The group with the id ${id} could not be observed`);
+                            this.observeGroupsPromise = null;
+                        }
+                    }
+                };
+                return this.observeResource(`${endpoints_1.endpoints.groups}/${id}`, handleResponse);
             });
             yield Promise.all(observeGroupPromises);
             const removedKeys = array_extensions_1.except(oldKeys, newKeys);
@@ -291,40 +342,39 @@ class TradfriClient extends events_1.EventEmitter {
     }
     // gets called whenever "get /15004/<instanceId>" updates
     observeGroup_callback(instanceId, response) {
-        return __awaiter(this, void 0, void 0, function* () {
-            // check response code
-            switch (response.code.toString()) {
-                case "2.05": break; // all good
-                case "4.04":// not found
-                    // We know this group existed or we wouldn't have requested it
-                    // This means it has been deleted
-                    // TODO: Should we delete it here or where its being handled right now?
-                    return;
-                default:
-                    this.emit("error", new Error(`unexpected response (${response.code.toString()}) to getGroup(${instanceId}).`));
-                    return;
-            }
-            const result = parsePayload(response);
-            // parse group info
-            const group = (new group_1.Group()).parse(result).createProxy();
-            // remember the group object, so we can later use it as a reference for updates
-            let groupInfo;
-            if (!(instanceId in this.groups)) {
-                // if there's none, create one
-                this.groups[instanceId] = {
-                    group: null,
-                    scenes: {},
-                };
-            }
-            groupInfo = this.groups[instanceId];
-            // remember the group object, so we can later use it as a reference for updates
-            // store a clone, so we don't have to care what the calling library does
-            groupInfo.group = group.clone();
-            // notify all listeners about the update
-            this.emit("group updated", group.link(this));
-            // load scene information
-            this.observeResource(`${endpoints_1.endpoints.scenes}/${instanceId}`, (resp) => this.observeScenes_callback(instanceId, resp));
-        });
+        // check response code
+        switch (response.code.toString()) {
+            case "2.05": break; // all good
+            case "4.04":// not found
+                // We know this group existed or we wouldn't have requested it
+                // This means it has been deleted
+                // TODO: Should we delete it here or where its being handled right now?
+                return false;
+            default:
+                this.emit("error", new Error(`unexpected response (${response.code.toString()}) to getGroup(${instanceId}).`));
+                return false;
+        }
+        const result = parsePayload(response);
+        // parse group info
+        const group = (new group_1.Group()).parse(result).createProxy();
+        // remember the group object, so we can later use it as a reference for updates
+        let groupInfo;
+        if (!(instanceId in this.groups)) {
+            // if there's none, create one
+            this.groups[instanceId] = {
+                group: null,
+                scenes: {},
+            };
+        }
+        groupInfo = this.groups[instanceId];
+        // remember the group object, so we can later use it as a reference for updates
+        // store a clone, so we don't have to care what the calling library does
+        groupInfo.group = group.clone();
+        // notify all listeners about the update
+        this.emit("group updated", group.link(this));
+        // load scene information
+        this.observeResource(`${endpoints_1.endpoints.scenes}/${instanceId}`, (resp) => this.observeScenes_callback(instanceId, resp));
+        return true;
     }
     // gets called whenever "get /15005/<groupId>" updates
     observeScenes_callback(groupId, response) {
@@ -344,7 +394,24 @@ class TradfriClient extends events_1.EventEmitter {
             const addedKeys = array_extensions_1.except(newKeys, oldKeys);
             logger_1.log(`adding scenes with keys ${JSON.stringify(addedKeys)} to group ${groupId}`, "debug");
             const observeScenePromises = newKeys.map(id => {
-                return this.observeResource(`${endpoints_1.endpoints.scenes}/${groupId}/${id}`, (resp) => this.observeScene_callback(groupId, id, resp));
+                const handleResponse = (resp) => {
+                    // first, try to parse the device information
+                    const result = this.observeScene_callback(groupId, id, resp);
+                    // if we are still waiting to confirm the `observeDevices` call,
+                    // check if we have received information about all devices
+                    if (this.observeScenesPromises != null) {
+                        const scenePromise = this.observeScenesPromises.get(groupId);
+                        if (result) {
+                            if (newKeys.every(k => k in groupInfo.scenes)) {
+                                scenePromise.resolve();
+                            }
+                        }
+                        else {
+                            scenePromise.reject(`The scene with the id ${id} could not be observed`);
+                        }
+                    }
+                };
+                return this.observeResource(`${endpoints_1.endpoints.scenes}/${groupId}/${id}`, handleResponse);
             });
             yield Promise.all(observeScenePromises);
             const removedKeys = array_extensions_1.except(oldKeys, newKeys);
@@ -368,10 +435,10 @@ class TradfriClient extends events_1.EventEmitter {
                 // We know this scene existed or we wouldn't have requested it
                 // This means it has been deleted
                 // TODO: Should we delete it here or where its being handled right now?
-                return;
+                return false;
             default:
                 this.emit("error", new Error(`unexpected response (${response.code.toString()}) to observeScene(${groupId}, ${instanceId}).`));
-                return;
+                return false;
         }
         const result = parsePayload(response);
         // parse scene info
@@ -381,6 +448,7 @@ class TradfriClient extends events_1.EventEmitter {
         this.groups[groupId].scenes[instanceId] = scene.clone();
         // and notify all listeners about the update
         this.emit("scene updated", groupId, scene.link(this));
+        return true;
     }
     /**
      * Pings the gateway to check if it is alive
