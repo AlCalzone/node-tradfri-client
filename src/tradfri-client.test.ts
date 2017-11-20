@@ -127,12 +127,15 @@ describe("tradfri-client => ", () => {
 
 	describe("observeDevices => ", () => {
 
-		it("should call coap.observe for the devices endpoint", async () => {
-			await tradfri.observeDevices();
-			fakeCoap.observe.should.have.been.calledWith(devicesUrl);
-		});
+		it("should call coap.observe for the devices endpoint and for each observed device", async () => {
+			// remember the deferred promise
+			const devicesPromise = tradfri.observeDevices();
 
-		it("should call coap.observe for each observed device", async () => {
+			fakeCoap.observe.should.have.been.calledOnce;
+			fakeCoap.observe.should.have.been.calledWith(devicesUrl);
+
+			fakeCoap.observe.resetHistory();
+
 			const devices = [65536, 65537];
 			await observeDevices_callback(createResponse(devices));
 
@@ -144,6 +147,9 @@ describe("tradfri-client => ", () => {
 			// now for the following tests to work
 			await observeDevice_callbacks[65536](createResponse(emptyAccessory));
 			await observeDevice_callbacks[65537](createResponse(emptyAccessory));
+
+			// now the deferred promise should have resolved
+			await devicesPromise;
 		});
 
 		it("when a device is added, it should only call observe for that one", async () => {

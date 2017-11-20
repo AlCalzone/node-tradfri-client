@@ -78,6 +78,11 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
      */
     observeResource(path: string, callback: (resp: CoapResponse) => void): Promise<boolean>;
     /**
+     * Checks if a resource is currently being observed
+     * @param path The path of the resource
+     */
+    isObserving(path: string): boolean;
+    /**
      * Stops observing a resource that is being observed through `observeResource`
      * Use the specialized version of this method for observers that were set up with the specialized versions of `observeResource`
      * @param path The path of the resource
@@ -96,13 +101,22 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
      * This does not stop observing the resources if the observers are still active
      */
     private clearObservers();
-    /** Sets up an observer for all devices */
-    observeDevices(): Promise<this>;
+    private observeDevicesPromise;
+    /**
+     * Sets up an observer for all devices
+     * @returns A promise that resolves when the information about all devices has been received.
+     */
+    observeDevices(): Promise<void>;
     private observeDevices_callback(response);
     stopObservingDevices(): void;
     private observeDevice_callback(instanceId, response);
-    /** Sets up an observer for all groups */
-    observeGroupsAndScenes(): Promise<this>;
+    private observeGroupsPromise;
+    private observeScenesPromises;
+    /**
+     * Sets up an observer for all groups and scenes
+     * @returns A promise that resolves when the information about all groups and scenes has been received.
+     */
+    observeGroupsAndScenes(): Promise<void>;
     private observeGroups_callback(response);
     stopObservingGroups(): void;
     private stopObservingGroup(instanceId);
