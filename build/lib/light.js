@@ -162,7 +162,7 @@ class Light extends ipsoDevice_1.IPSODevice {
      */
     setColor(value, transitionTime) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (this.spectrum === "rgb")
+            if (this.spectrum !== "rgb")
                 throw new Error("setColor is only available for RGB lightbulbs");
             this.ensureLink();
             return this.operateLight({
@@ -177,7 +177,7 @@ class Light extends ipsoDevice_1.IPSODevice {
      */
     setColorTemperature(value, transitionTime) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (this.spectrum === "white")
+            if (this.spectrum !== "white")
                 throw new Error("setColorTemperature is only available for white spectrum lightbulbs");
             this.ensureLink();
             value = math_1.clamp(value, 0, 100);
@@ -192,7 +192,7 @@ class Light extends ipsoDevice_1.IPSODevice {
      */
     setHue(value, transitionTime) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (this.spectrum === "rgb")
+            if (this.spectrum !== "rgb")
                 throw new Error("setHue is only available for RGB lightbulbs");
             this.ensureLink();
             value = math_1.clamp(value, 0, 360);
@@ -207,7 +207,7 @@ class Light extends ipsoDevice_1.IPSODevice {
      */
     setSaturation(value, transitionTime) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (this.spectrum === "rgb")
+            if (this.spectrum !== "rgb")
                 throw new Error("setSaturation is only available for RGB lightbulbs");
             this.ensureLink();
             value = math_1.clamp(value, 0, 100);

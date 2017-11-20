@@ -210,7 +210,7 @@ export class Light extends IPSODevice {
 	 * @returns true if a request was sent, false otherwise
 	 */
 	public async setColor(value: string, transitionTime?: number): Promise<boolean> {
-		if (this.spectrum === "rgb") throw new Error("setColor is only available for RGB lightbulbs");
+		if (this.spectrum !== "rgb") throw new Error("setColor is only available for RGB lightbulbs");
 		this.ensureLink();
 
 		return this.operateLight({
@@ -224,7 +224,7 @@ export class Light extends IPSODevice {
 	 * @returns true if a request was sent, false otherwise
 	 */
 	public async setColorTemperature(value: number, transitionTime?: number): Promise<boolean> {
-		if (this.spectrum === "white") throw new Error("setColorTemperature is only available for white spectrum lightbulbs");
+		if (this.spectrum !== "white") throw new Error("setColorTemperature is only available for white spectrum lightbulbs");
 		this.ensureLink();
 
 		value = clamp(value, 0, 100);
@@ -238,7 +238,7 @@ export class Light extends IPSODevice {
 	 * @returns true if a request was sent, false otherwise
 	 */
 	public async setHue(value: number, transitionTime?: number): Promise<boolean> {
-		if (this.spectrum === "rgb") throw new Error("setHue is only available for RGB lightbulbs");
+		if (this.spectrum !== "rgb") throw new Error("setHue is only available for RGB lightbulbs");
 		this.ensureLink();
 
 		value = clamp(value, 0, 360);
@@ -252,7 +252,7 @@ export class Light extends IPSODevice {
 	 * @returns true if a request was sent, false otherwise
 	 */
 	public async setSaturation(value: number, transitionTime?: number): Promise<boolean> {
-		if (this.spectrum === "rgb") throw new Error("setSaturation is only available for RGB lightbulbs");
+		if (this.spectrum !== "rgb") throw new Error("setSaturation is only available for RGB lightbulbs");
 		this.ensureLink();
 
 		value = clamp(value, 0, 100);
