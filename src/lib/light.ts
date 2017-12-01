@@ -19,6 +19,11 @@ export class Light extends IPSODevice {
 	constructor(accessory?: Accessory) {
 		super();
 
+		// In order for the simplified API to work, the
+		// accessory reference must be a proxy
+		if (accessory != null && !accessory.isProxy) {
+			accessory = accessory.createProxy();
+		}
 		this._accessory = accessory;
 
 		// get the model number to detect features

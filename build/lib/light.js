@@ -32,6 +32,11 @@ class Light extends ipsoDevice_1.IPSODevice {
          * Returns the supported color spectrum of the lightbulb
          */
         this._spectrum = null;
+        // In order for the simplified API to work, the
+        // accessory reference must be a proxy
+        if (accessory != null && !accessory.isProxy) {
+            accessory = accessory.createProxy();
+        }
         this._accessory = accessory;
         // get the model number to detect features
         if (accessory != null &&
