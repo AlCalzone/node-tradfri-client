@@ -425,6 +425,9 @@ A DeviceInfo object contains general information about a device. It has the foll
 
 ## Changelog
 
+#### 0.5.1 (2017-12-01)
+* (AlCalzone) Fixed a bug where the simplified light API would not always send the correct payloads.
+
 #### 0.5.0 (2017-11-20)
 * (AlCalzone) Fixed some checks in the simplified API for lights
 * (AlCalzone) The promises returned by `observeDevices` and `observeGroupsAndScenes` now only resolve after all devices or groups and scenes have been received
