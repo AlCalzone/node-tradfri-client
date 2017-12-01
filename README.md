@@ -353,6 +353,7 @@ If the light object was returned from a library function and not created by you,
 * `toggle([value: boolean])` - Toggles the light's state to the given value or the opposite of its current state. 
 * `setBrightness(value: number [, transitionTime: number])` - Dims the light to the given brightness. 
 * `setColorTemperature(value: string [, transitionTime: number])` - Changes a white spectrum lightbulb's color temperature to the given value.
+* `setColor(value: string [, transitionTime: number])` - Changes an RGB lightbulb's hex color to the given value. May also be use for white spectrum bulbs to target one of the predefined colors `f5faf6` (cold), `f1e0b5` (normal) and `efd275` (warm).
 * `setHue(value: number [, transitionTime: number])` - Changes an RGB lightbulb's hue to the given value.
 * `setSaturation(value: number [, transitionTime: number])` - Changes an RGB lightbulb's saturation to the given value.
 
@@ -424,6 +425,9 @@ A DeviceInfo object contains general information about a device. It has the foll
 * `serialNumber: string` - Not used currently. Always `""`
 
 ## Changelog
+
+#### 0.5.2 (2017-12-01)
+* (AlCalzone) Allow calling `setColor()` for white spectrum bulbs with `f5faf6`, `f1e0b5` and `efd275`
 
 #### 0.5.1 (2017-12-01)
 * (AlCalzone) Fixed a bug where the simplified light API would not always send the correct payloads.

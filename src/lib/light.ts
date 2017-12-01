@@ -3,7 +3,7 @@ import { conversions, deserializers, serializers } from "./conversions";
 import { IPSODevice } from "./ipsoDevice";
 import { deserializeWith, doNotSerialize, ipsoKey, PropertyTransform, required, serializeWith } from "./ipsoObject";
 import { clamp } from "./math";
-import { MAX_COLOR, predefinedColors } from "./predefined-colors";
+import { MAX_COLOR, predefinedColors, whiteSpectrumHex } from "./predefined-colors";
 
 // see https://github.com/hreichert/smarthome/blob/master/extensions/binding/org.eclipse.smarthome.binding.tradfri/src/main/java/org/eclipse/smarthome/binding/modules/internal/TradfriColor.java
 // for some color conversion
@@ -215,12 +215,31 @@ export class Light extends IPSODevice {
 	 * @returns true if a request was sent, false otherwise
 	 */
 	public async setColor(value: string, transitionTime?: number): Promise<boolean> {
-		if (this.spectrum !== "rgb") throw new Error("setColor is only available for RGB lightbulbs");
-		this.ensureLink();
+		switch (this.spectrum) {
+			case "rgb": {
+				this.ensureLink();
+				return this.operateLight({
+					color: value,
+				}, transitionTime);
+			}
 
-		return this.operateLight({
-			color: value,
-		}, transitionTime);
+			case "white": {
+				// We make an exception for the predefined white spectrum colors
+				if (!(value in whiteSpectrumHex)) {
+					throw new Error(
+						"White spectrum bulbs only support the following colors: " +
+						Object.keys(whiteSpectrumHex).join(", "),
+					);
+				}
+				this.ensureLink();
+				return this.operateLight({
+					colorTemperature: whiteSpectrumHex[value],
+				}, transitionTime);
+			}
+			default: {
+				throw new Error("setColor is only available for RGB lightbulbs");
+			}
+		}
 	}
 
 	/**

@@ -24,13 +24,17 @@ export const MAX_COLOR: number = 65279;
  */
 export const predefinedColors = new Map<string, ColorDefinition>();
 /**
- * The hex colors for the white spectrum, sorted from cold to warm
+ * The hex colors for the white spectrum and the corresponding colorTemperature values, sorted from cold to warm
  */
-export const whiteSpectrumHex = ["f5faf6", "f1e0b5", "efd275"];
-/**
- * The color temp in Mired for the white spectrum, sorted from cold to warm
- */
-export const whiteSpectrumTemp = [250, 370, 454];
+export const whiteSpectrumHex = {
+	f5faf6: 0,
+	f1e0b5: 67,
+	efd275: 100,
+};
+// /**
+//  * The color temp in Mired for the white spectrum, sorted from cold to warm
+//  */
+// export const whiteSpectrumTemp = [250, 370, 454];
 
 function defineColor(rgbHex: string, x: number, y: number, hue: number, saturation: number, temperature?: number) {
 	const definition: ColorDefinition = {

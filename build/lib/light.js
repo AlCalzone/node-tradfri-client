@@ -167,12 +167,28 @@ class Light extends ipsoDevice_1.IPSODevice {
      */
     setColor(value, transitionTime) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (this.spectrum !== "rgb")
-                throw new Error("setColor is only available for RGB lightbulbs");
-            this.ensureLink();
-            return this.operateLight({
-                color: value,
-            }, transitionTime);
+            switch (this.spectrum) {
+                case "rgb": {
+                    this.ensureLink();
+                    return this.operateLight({
+                        color: value,
+                    }, transitionTime);
+                }
+                case "white": {
+                    // We make an exception for the predefined white spectrum colors
+                    if (!(value in predefined_colors_1.whiteSpectrumHex)) {
+                        throw new Error("White spectrum bulbs only support the following colors: " +
+                            Object.keys(predefined_colors_1.whiteSpectrumHex).join(", "));
+                    }
+                    this.ensureLink();
+                    return this.operateLight({
+                        colorTemperature: predefined_colors_1.whiteSpectrumHex[value],
+                    }, transitionTime);
+                }
+                default: {
+                    throw new Error("setColor is only available for RGB lightbulbs");
+                }
+            }
         });
     }
     /**
