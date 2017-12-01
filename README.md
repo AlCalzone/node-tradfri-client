@@ -426,7 +426,7 @@ A DeviceInfo object contains general information about a device. It has the foll
 
 ## Changelog
 
-#### 0.5.2 (2017-12-01)
+#### 0.5.3 (2017-12-01)
 * (AlCalzone) Allow calling `setColor()` for white spectrum bulbs with `f5faf6`, `f1e0b5` and `efd275`
 
 #### 0.5.1 (2017-12-01)

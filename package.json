@@ -1,6 +1,6 @@
 {
   "name": "node-tradfri-client",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "Library to talk to IKEA Trådfri Gateways without external binaries",
   "keywords": [
     "coap",

@@ -13,7 +13,7 @@ exports.predefinedColors = new Map();
  */
 exports.whiteSpectrumHex = {
     f5faf6: 0,
-    f1e0b5: 67,
+    f1e0b5: 63,
     efd275: 100,
 };
 // /**

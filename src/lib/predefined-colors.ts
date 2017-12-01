@@ -28,7 +28,7 @@ export const predefinedColors = new Map<string, ColorDefinition>();
  */
 export const whiteSpectrumHex = {
 	f5faf6: 0,
-	f1e0b5: 67,
+	f1e0b5: 63,
 	efd275: 100,
 };
 // /**
