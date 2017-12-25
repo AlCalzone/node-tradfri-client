@@ -426,6 +426,9 @@ A DeviceInfo object contains general information about a device. It has the foll
 
 ## Changelog
 
+#### 0.5.4 (2017-12-25)
+* (AlCalzone) Update `node-coap-client` dependency to support receiving block-wise messages.
+
 #### 0.5.3 (2017-12-01)
 * (AlCalzone) Allow calling `setColor()` for white spectrum bulbs with `f5faf6`, `f1e0b5` and `efd275`
 
