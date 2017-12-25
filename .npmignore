@@ -12,3 +12,4 @@ node-tradfri-client-*.tgz
 bin/
 obj/
 coverage/
+maintenance/
