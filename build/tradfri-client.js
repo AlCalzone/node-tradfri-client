@@ -300,7 +300,10 @@ class TradfriClient extends events_1.EventEmitter {
                                     this.observeScenesPromises = null;
                                 })
                                     .catch(reason => {
-                                    this.observeGroupsPromise.reject(reason);
+                                    // in some cases, the promises can be null here
+                                    if (this.observeGroupsPromise != null) {
+                                        this.observeGroupsPromise.reject(reason);
+                                    }
                                     this.observeGroupsPromise = null;
                                     this.observeScenesPromises = null;
                                 });

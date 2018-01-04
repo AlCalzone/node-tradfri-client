@@ -426,6 +426,9 @@ A DeviceInfo object contains general information about a device. It has the foll
 
 ## Changelog
 
+#### 0.5.5 (2017-12-25)
+* (AlCalzone) Fixed a null reference in `observeGroups_callback()`
+
 #### 0.5.4 (2017-12-25)
 * (AlCalzone) Update `node-coap-client` dependency to support receiving block-wise messages.
 
