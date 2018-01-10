@@ -279,6 +279,10 @@ __decorate([
     __metadata("design:type", Number)
 ], Light.prototype, "colorTemperature", void 0);
 __decorate([
+    ipsoObject_1.ipsoKey("5717"),
+    __metadata("design:type", Object)
+], Light.prototype, "UNKNOWN1", void 0);
+__decorate([
     ipsoObject_1.ipsoKey("5712"),
     ipsoObject_1.required(),
     ipsoObject_1.serializeWith(conversions_1.serializers.transitionTime),

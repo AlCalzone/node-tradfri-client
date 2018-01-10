@@ -64,6 +64,12 @@ export class Light extends IPSODevice {
 	@ipsoKey("5711")
 	public colorTemperature: number; // TODO: CoAP range unknown!
 
+	// This property was added in Gateway v1.3.14
+	// not sure what it does, as it is not in the IKEA app yet
+	/** @internal */
+	@ipsoKey("5717")
+	public UNKNOWN1: any;
+
 	@ipsoKey("5712")
 	@required()
 	@serializeWith(serializers.transitionTime)

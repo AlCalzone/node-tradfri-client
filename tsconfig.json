@@ -12,6 +12,7 @@
         "emitDecoratorMetadata": true,        
         "sourceMap": false,
         "inlineSourceMap": false,
+        "stripInternal": true,
         "target": "es2015"
     },
     "include": [
