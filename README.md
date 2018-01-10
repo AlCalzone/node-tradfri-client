@@ -426,6 +426,9 @@ A DeviceInfo object contains general information about a device. It has the foll
 
 ## Changelog
 
+#### 0.5.6 (2018-01-10)
+* (AlCalzone) Added stub property for IPSO key `5717` in Light objects to remove warnings for Gateway v1.3.14
+
 #### 0.5.5 (2017-12-25)
 * (AlCalzone) Fixed a null reference in `observeGroups_callback()`
 
