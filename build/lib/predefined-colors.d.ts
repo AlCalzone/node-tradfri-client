@@ -26,4 +26,7 @@ export declare const whiteSpectrumHex: {
     f1e0b5: number;
     efd275: number;
 };
+/**
+ * The white spectrum [cold, warm] in Mireds, as defined in the app
+ */
 export declare const colorTemperatureRange: number[];

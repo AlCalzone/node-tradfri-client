@@ -25,20 +25,6 @@ const colorTemperature_in: PropertyTransform = (value) => {
 	return roundTo(value * 100, 0);
 };
 
-// const whiteSpectrumToColorX: PropertyTransform = value => {
-// 	const [min, max] = whiteSpectrumRange;
-// 	// extrapolate 0-100% to [min..max]
-// 	value = clamp(value, 0, 100);
-// 	return roundTo(min + value / 100 * (max - min), 0);
-// };
-// const whiteSpectrumFromColorX: PropertyTransform = value => {
-// 	const [min, max] = whiteSpectrumRange;
-// 	// interpolate "color percentage" from the colorX range of a lightbulb
-// 	value = (value - min) / (max - min);
-// 	value = clamp(value, 0, 1);
-// 	return roundTo(value * 100, 0);
-// };
-
 // ==========================
 // RGB conversions
 // Tradfri lights seem to be Philips Hue Gamut B, see
@@ -250,8 +236,6 @@ export const deserializers = {
 };
 
 export const conversions = {
-	// whiteSpectrumToColorX,
-	// whiteSpectrumFromColorX,
 	rgbFromCIExyY,
 	rgbToCIExyY,
 	rgbFromHSV,
