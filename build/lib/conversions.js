@@ -6,19 +6,34 @@ const predefined_colors_1 = require("./predefined-colors");
 const strings_1 = require("./strings");
 // ==========================
 // WHITE SPECTRUM conversions
-const whiteSpectrumToColorX = value => {
-    const [min, max] = predefined_colors_1.whiteSpectrumRange;
+// interpolate from [0..100%] to [250..454]
+const colorTemperature_out = (value) => {
+    const [min, max] = predefined_colors_1.colorTemperatureRange;
     // extrapolate 0-100% to [min..max]
     value = math_1.clamp(value, 0, 100);
     return math_1.roundTo(min + value / 100 * (max - min), 0);
 };
-const whiteSpectrumFromColorX = value => {
-    const [min, max] = predefined_colors_1.whiteSpectrumRange;
-    // interpolate "color percentage" from the colorX range of a lightbulb
+// interpolate from [250..454] to [0..100%]
+const colorTemperature_in = (value) => {
+    const [min, max] = predefined_colors_1.colorTemperatureRange;
+    // interpolate "color percentage" from the colorTemperature range of a lightbulb
     value = (value - min) / (max - min);
     value = math_1.clamp(value, 0, 1);
     return math_1.roundTo(value * 100, 0);
 };
+// const whiteSpectrumToColorX: PropertyTransform = value => {
+// 	const [min, max] = whiteSpectrumRange;
+// 	// extrapolate 0-100% to [min..max]
+// 	value = clamp(value, 0, 100);
+// 	return roundTo(min + value / 100 * (max - min), 0);
+// };
+// const whiteSpectrumFromColorX: PropertyTransform = value => {
+// 	const [min, max] = whiteSpectrumRange;
+// 	// interpolate "color percentage" from the colorX range of a lightbulb
+// 	value = (value - min) / (max - min);
+// 	value = clamp(value, 0, 1);
+// 	return roundTo(value * 100, 0);
+// };
 // ==========================
 // RGB conversions
 // Tradfri lights seem to be Philips Hue Gamut B, see
@@ -211,16 +226,18 @@ exports.serializers = {
     hue: hue_out,
     saturation: saturation_out,
     brightness: brightness_out,
+    colorTemperature: colorTemperature_out,
 };
 exports.deserializers = {
     transitionTime: transitionTime_in,
     hue: hue_in,
     saturation: saturation_in,
     brightness: brightness_in,
+    colorTemperature: colorTemperature_in,
 };
 exports.conversions = {
-    whiteSpectrumToColorX,
-    whiteSpectrumFromColorX,
+    // whiteSpectrumToColorX,
+    // whiteSpectrumFromColorX,
     rgbFromCIExyY,
     rgbToCIExyY,
     rgbFromHSV,

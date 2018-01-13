@@ -85,10 +85,11 @@ class Light extends ipsoDevice_1.IPSODevice {
      */
     createProxy() {
         switch (this.spectrum) {
-            case "white": {
-                const proxy = createWhiteSpectrumProxy();
-                return super.createProxy(proxy.get, proxy.set);
-            }
+            // The white spectrum proxy should no longer be needed
+            // case "white": {
+            // 	const proxy = createWhiteSpectrumProxy();
+            // 	return super.createProxy(proxy.get, proxy.set);
+            // }
             case "rgb": {
                 const proxy = createRGBProxy();
                 return super.createProxy(proxy.get, proxy.set);
@@ -276,6 +277,8 @@ __decorate([
 ], Light.prototype, "colorY", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("5711"),
+    ipsoObject_1.serializeWith(conversions_1.serializers.colorTemperature),
+    ipsoObject_1.deserializeWith(conversions_1.deserializers.colorTemperature),
     __metadata("design:type", Number)
 ], Light.prototype, "colorTemperature", void 0);
 __decorate([
@@ -316,39 +319,39 @@ __decorate([
     __metadata("design:type", String)
 ], Light.prototype, "unit", void 0);
 exports.Light = Light;
-/**
- * Creates a proxy for a white spectrum lamp,
- * which converts color temperature to the correct colorX value
- */
-function createWhiteSpectrumProxy() {
-    return {
-        get: (me, key) => {
-            switch (key) {
-                case "colorTemperature": {
-                    return conversions_1.conversions.whiteSpectrumFromColorX(me.colorX);
-                }
-                default: return me[key];
-            }
-        },
-        set: (me, key, value) => {
-            switch (key) {
-                case "colorTemperature": {
-                    me.colorX = conversions_1.conversions.whiteSpectrumToColorX(value);
-                    me.colorY = 27000; // magic number, but it works!
-                    break;
-                }
-                case "hue":
-                case "saturation":
-                case "color": {
-                    // don't update these properties, they are not supported in white spectrum lamps
-                    break;
-                }
-                default: me[key] = value;
-            }
-            return true;
-        },
-    };
-}
+// /**
+//  * Creates a proxy for a white spectrum lamp,
+//  * which converts color temperature to the correct colorX value
+//  */
+// function createWhiteSpectrumProxy<T extends Light>() {
+// 	return {
+// 		get: (me: T, key: PropertyKey) => {
+// 			switch (key) {
+// 				case "colorTemperature": {
+// 					return conversions.whiteSpectrumFromColorX(me.colorX);
+// 				}
+// 				default: return me[key];
+// 			}
+// 		},
+// 		set: (me: T, key: PropertyKey, value) => {
+// 			switch (key) {
+// 				case "colorTemperature": {
+// 					me.colorX = conversions.whiteSpectrumToColorX(value);
+// 					me.colorY = 27000; // magic number, but it works!
+// 					break;
+// 				}
+// 				case "hue":
+// 				case "saturation":
+// 				case "color": {
+// 					// don't update these properties, they are not supported in white spectrum lamps
+// 					break;
+// 				}
+// 				default: me[key] = value;
+// 			}
+// 			return true;
+// 		},
+// 	};
+// }
 const rgbRegex = /^[0-9A-Fa-f]{6}$/;
 /**
  * Creates a proxy for an RGB lamp,

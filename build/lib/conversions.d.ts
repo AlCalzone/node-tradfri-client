@@ -4,16 +4,16 @@ export declare const serializers: {
     hue: PropertyTransform;
     saturation: PropertyTransform;
     brightness: PropertyTransform;
+    colorTemperature: PropertyTransform;
 };
 export declare const deserializers: {
     transitionTime: PropertyTransform;
     hue: PropertyTransform;
     saturation: PropertyTransform;
     brightness: PropertyTransform;
+    colorTemperature: PropertyTransform;
 };
 export declare const conversions: {
-    whiteSpectrumToColorX: PropertyTransform;
-    whiteSpectrumFromColorX: PropertyTransform;
     rgbFromCIExyY: (x: number, y: number, Y?: number) => {
         r: number;
         g: number;

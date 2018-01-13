@@ -54,7 +54,8 @@ defineColor("6c83ba", 0.2, 0.1, 47324, 51774);
 defineColor("a9d62b", 0.41, 0.51, 11383, 65279);
 defineColor("d6e44b", 0.45, 0.47, 8572, 55985);
 // The white spectrum expressed in colorX values, as defined in the app
-exports.whiteSpectrumRange = [24930, 33135];
+// export const whiteSpectrumRange = [24930, 33135];
+exports.colorTemperatureRange = [250, 454];
 // TODO: it could be expressed like in RGB bulbs but the iOS app does it differently
 // 	Math.round(predefinedColors.get(whiteSpectrumHex[0]).colorX * MAX_COLOR),
 // 	Math.round(predefinedColors.get(whiteSpectrumHex[whiteSpectrumHex.length - 1]).colorX * MAX_COLOR),

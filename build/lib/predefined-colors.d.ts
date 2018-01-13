@@ -26,4 +26,4 @@ export declare const whiteSpectrumHex: {
     f1e0b5: number;
     efd275: number;
 };
-export declare const whiteSpectrumRange: number[];
+export declare const colorTemperatureRange: number[];
