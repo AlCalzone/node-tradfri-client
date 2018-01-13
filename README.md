@@ -426,6 +426,9 @@ A DeviceInfo object contains general information about a device. It has the foll
 
 ## Changelog
 
+#### 0.6.0 (2018-01-13)
+* (AlCalzone) Use the `colorTemperature` CoAP property directly instead of `colorX/Y`
+
 #### 0.5.6 (2018-01-10)
 * (AlCalzone) Added stub property for IPSO key `5717` in Light objects to remove warnings for Gateway v1.3.14
 
