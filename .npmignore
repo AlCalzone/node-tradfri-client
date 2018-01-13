@@ -13,3 +13,4 @@ bin/
 obj/
 coverage/
 maintenance/
+.travis.yml
