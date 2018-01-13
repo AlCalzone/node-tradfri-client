@@ -3,21 +3,23 @@
 import { PropertyTransform } from "./ipsoObject";
 import { Light } from "./light";
 import { clamp, findClosestTriangleEdge, Point, pointInTriangle, projectPointOnEdge, roundTo } from "./math";
-import { MAX_COLOR, whiteSpectrumRange } from "./predefined-colors";
+import { colorTemperatureRange, MAX_COLOR } from "./predefined-colors";
 import { padStart } from "./strings";
 
 // ==========================
 // WHITE SPECTRUM conversions
 
-const whiteSpectrumToColorX: PropertyTransform = value => {
-	const [min, max] = whiteSpectrumRange;
+// interpolate from [0..100%] to [250..454]
+const colorTemperature_out: PropertyTransform = (value) => {
+	const [min, max] = colorTemperatureRange;
 	// extrapolate 0-100% to [min..max]
 	value = clamp(value, 0, 100);
 	return roundTo(min + value / 100 * (max - min), 0);
 };
-const whiteSpectrumFromColorX: PropertyTransform = value => {
-	const [min, max] = whiteSpectrumRange;
-	// interpolate "color percentage" from the colorX range of a lightbulb
+// interpolate from [250..454] to [0..100%]
+const colorTemperature_in: PropertyTransform = (value) => {
+	const [min, max] = colorTemperatureRange;
+	// interpolate "color percentage" from the colorTemperature range of a lightbulb
 	value = (value - min) / (max - min);
 	value = clamp(value, 0, 1);
 	return roundTo(value * 100, 0);
@@ -225,6 +227,7 @@ export const serializers = {
 	hue: hue_out,
 	saturation: saturation_out,
 	brightness: brightness_out,
+	colorTemperature: colorTemperature_out,
 };
 
 export const deserializers = {
@@ -232,11 +235,10 @@ export const deserializers = {
 	hue: hue_in,
 	saturation: saturation_in,
 	brightness: brightness_in,
+	colorTemperature: colorTemperature_in,
 };
 
 export const conversions = {
-	whiteSpectrumToColorX,
-	whiteSpectrumFromColorX,
 	rgbFromCIExyY,
 	rgbToCIExyY,
 	rgbFromHSV,

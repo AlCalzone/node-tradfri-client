@@ -5,7 +5,7 @@ require("reflect-metadata");
 import { expect } from "chai";
 import { Accessory } from "./accessory";
 import { Spectrum } from "./light";
-import { predefinedColors, whiteSpectrumRange } from "./predefined-colors";
+import { predefinedColors } from "./predefined-colors";
 
 function buildAccessory(modelName: string) {
 	return {
@@ -88,36 +88,6 @@ describe("ipso/light => feature tests =>", () => {
 			expect(light.isDimmable).to.equal(device.isDimmable, `${device.name} should ${device.isDimmable ? "" : "not "}be dimmable`);
 			expect(light.spectrum).to.equal(device.spectrum, `${device.name} should have spectrum ${device.spectrum}`);
 		}
-	});
-
-	it("setting the colorTemp on a white spectrum bulb should correctly set colorX", () => {
-		const white = new Accessory()
-			.parse(buildAccessory("TRADFRI bulb E27 WS clear 950lm"))
-			.createProxy()
-			;
-		const light = white.lightList[0];
-
-		light.colorTemperature = 0;
-		expect(light.colorX).to.equal(whiteSpectrumRange[0]);
-		light.colorTemperature = 50;
-		expect(light.colorX).to.equal(Math.round((whiteSpectrumRange[0] + whiteSpectrumRange[1]) / 2));
-		light.colorTemperature = 100;
-		expect(light.colorX).to.equal(whiteSpectrumRange[1]);
-	});
-
-	it("setting the colorX on a white spectrum bulb should be correctly transformed to colorTemperature", () => {
-		const white = new Accessory()
-			.parse(buildAccessory("TRADFRI bulb E27 WS clear 950lm"))
-			.createProxy()
-			;
-		const light = white.lightList[0];
-
-		light.colorX = whiteSpectrumRange[0];
-		expect(light.colorTemperature).to.equal(0);
-		light.colorX = Math.round((whiteSpectrumRange[0] + whiteSpectrumRange[1]) / 2);
-		expect(light.colorTemperature).to.equal(50);
-		light.colorX = whiteSpectrumRange[1];
-		expect(light.colorTemperature).to.equal(100);
 	});
 
 	it("setting the hex color on an RGB bulb should update colorX and colorY", () => {

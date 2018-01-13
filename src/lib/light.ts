@@ -59,10 +59,11 @@ export class Light extends IPSODevice {
 	@required((me: Light, ref: Light) => ref != null && me.colorX !== ref.colorX) // force colorY to be present if colorX is
 	public colorY: number; // int
 
-	// currently not used directly, since the gateway only accepts 3 distinct values
-	// we have to set colorX to set more than those 3 color temps
+	// As of Gateway version v1.3.14, this is finally supported
 	@ipsoKey("5711")
-	public colorTemperature: number; // TODO: CoAP range unknown!
+	@serializeWith(serializers.colorTemperature)
+	@deserializeWith(deserializers.colorTemperature)
+	public colorTemperature: number;
 
 	// This property was added in Gateway v1.3.14
 	// not sure what it does, as it is not in the IKEA app yet
@@ -142,10 +143,6 @@ export class Light extends IPSODevice {
 	 */
 	public createProxy(): this {
 		switch (this.spectrum) {
-			case "white": {
-				const proxy = createWhiteSpectrumProxy();
-				return super.createProxy(proxy.get, proxy.set);
-			}
 			case "rgb": {
 				const proxy = createRGBProxy();
 				return super.createProxy(proxy.get, proxy.set);
@@ -293,40 +290,6 @@ export class Light extends IPSODevice {
 }
 
 export type Spectrum = "none" | "white" | "rgb";
-
-/**
- * Creates a proxy for a white spectrum lamp,
- * which converts color temperature to the correct colorX value
- */
-function createWhiteSpectrumProxy<T extends Light>() {
-	return {
-		get: (me: T, key: PropertyKey) => {
-			switch (key) {
-				case "colorTemperature": {
-					return conversions.whiteSpectrumFromColorX(me.colorX);
-				}
-				default: return me[key];
-			}
-		},
-		set: (me: T, key: PropertyKey, value) => {
-			switch (key) {
-				case "colorTemperature": {
-					me.colorX = conversions.whiteSpectrumToColorX(value);
-					me.colorY = 27000; // magic number, but it works!
-					break;
-				}
-				case "hue":
-				case "saturation":
-				case "color": {
-					// don't update these properties, they are not supported in white spectrum lamps
-					break;
-				}
-				default: me[key] = value;
-			}
-			return true;
-		},
-	};
-}
 
 const rgbRegex = /^[0-9A-Fa-f]{6}$/;
 
