@@ -203,8 +203,13 @@ const brightness_out = (value) => {
 // interpolate from [0..254] to [0..100%]
 const brightness_in = (value) => {
     value = math_1.clamp(value, 0, 254);
-    // we round up here, so a 1 is at least 1% in brightness, not 0%
-    return Math.ceil(value / 254 * 100);
+    if (value === 0)
+        return 0;
+    value = value / 254 * 100;
+    // Any value > 0 should equal at least 1% brightness
+    if (value < 1)
+        return 1;
+    return Math.round(value);
 };
 exports.serializers = {
     transitionTime: transitionTime_out,
