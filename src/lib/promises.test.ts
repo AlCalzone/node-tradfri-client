@@ -1,4 +1,5 @@
 import { assert, expect } from "chai";
+import { SinonFakeTimers, spy, useFakeTimers } from "sinon";
 import { promisify, promisifyNoError, wait } from "./promises";
 // tslint:disable:no-unused-expression
 
@@ -51,16 +52,27 @@ describe("lib/promises => promisifyNoError()", () => {
 });
 
 describe("lib/promises => wait()", () => {
-	let start;
+
+	let clock: SinonFakeTimers;
+	beforeEach(() => {
+		clock = useFakeTimers();
+	});
+
 	const timeout = 100;
-	const delta = 20;
 
-	it(`wait(${timeout}) should wait (${timeout}±${delta}) ms`, async function() {
-		// this is not super accurate, so retry a few times until it works
-		this.retries(10);
+	it(`wait(${timeout}) should wait ${timeout} ms`, (done) => {
 
-		start = Date.now();
-		await wait(timeout);
-		expect(Date.now() - start).to.be.approximately(timeout, delta);
+		const leSpy = spy();
+
+		wait(timeout).then(() => {
+			expect(Date.now()).to.equal(timeout);
+			done();
+		});
+		clock.runAll();
+
+	});
+
+	afterEach(() => {
+		clock.restore();
 	});
 });
