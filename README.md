@@ -85,18 +85,27 @@ const TradfriClient = tradfriLib.TradfriClient;
 // or with the new import syntax
 import { TradfriClient /*, more imports */ } from "node-tradfri-client";
 
-const tradfri = new TradfriClient(
-    hostname: string,
-    [customLogger: LoggerFunction]
-);
+// one of the following
+const tradfri = new TradfriClient(hostname: string);
+const tradfri = new TradfriClient(hostname: string, customLogger: LoggerFunction);
+const tradfri = new TradfriClient(hostname: string, options: TradfriOptions);
 ```
-By providing a custom logger function to the constructor, all diagnostic output will be sent to that function. By default, the `debug` module is used instead. The logger function has the following signature:
+As the 2nd parameter, you can provide a custom logger function or some options. By providing a custom logger function to the constructor, all diagnostic output will be sent to that function. By default, the `debug` module is used instead. The logger function has the following signature:
 ```TS
 type LoggerFunction = (
     message: string, 
     [severity: "info" | "warn" | "debug" | "error" | "silly"]
 ) => void;
 ```
+
+The options object looks as follows:
+```TS
+interface TradfriOptions {
+	customLogger?: LoggerFunction,
+	useRawCoAPValues?: boolean,
+}
+```
+The custom logger function is used as above. By setting `useRawCoAPValues` to true, you can instruct `TradfriClient` to use raw CoAP values instead of the simplified scales used internally. See below for a detailed description how the scales change.
 
 The following code samples use the new `async/await` syntax which is available through TypeScript/Babel or in ES7. If that is no option for you, you can also consume the library by using promises:
 ```TS
@@ -328,7 +337,7 @@ The properties available on an `Accessory` are:
 
 ### `Light`
 A light represents a single lightbulb and has several properties describing its state. The supported properties depend on the spectrum of the lightbulb. All of them support the most basic properties:
-* `dimmer: number` - The brightness in percent [0..100%]
+* `dimmer: number` - The brightness in percent [0..100%]. _Note:_ When using raw values, this range is [0..254].
 * `onOff: boolean` - If the lightbulb is on (`true`) or off (`false`)
 * `transitionTime: number` - The duration of state changes in seconds. Default 0.5s, not supported for on/off.
 
@@ -338,12 +347,12 @@ as well as a few readonly properties:
 * `spectrum: "none" | "white" | "rgb"` - The supported color spectrum of the lightbulb.
 
 White spectrum lightbulbs also support
-* `colorTemperature: number` - The color temperature in percent, where 0% equals cold white and 100% equals warm white.
+* `colorTemperature: number` - The color temperature in percent, where 0% equals cold white and 100% equals warm white. _Note:_ When using raw values, this range is 250 (cold) to 454 (warm).
 
 RGB lightbulbs have the following properties:
 * `color: string` - The 6 digit hex number representing the lightbulb's color. Don't use any prefixes like "#", only the hex number itself!
-* `hue: number` - The color's hue [0..360°]
-* `saturation: number` - The color's saturation [0..100%]
+* `hue: number` - The color's hue [0..360°]. _Note:_ When using raw values, this range is [0..65279].
+* `saturation: number` - The color's saturation [0..100%]. _Note:_ When using raw values, this range is [0..65279].
 
 The additional properties are either for internal use (`colorX`/`colorY`) or not supported by the gateway. So don't use them!
 
@@ -377,7 +386,7 @@ or a subset thereof.
 ### `Group`
 A group contains several devices, usually a remote control or dimmer and some lightbulbs. To control the group's lightbulbs, use the following properties:
 * `onOff: boolean` - Turn the group's lightbulbs on (`true`) or off (`false`)
-* `dimmer: number` - Set the brightness of the group's lightbulbs in percent [0..100%]
+* `dimmer: number` - Set the brightness of the group's lightbulbs in percent [0..100%]. _Note:_ When using raw values, this range is [0..254].
 * `transitionTime: number` - The duration of state changes in seconds. Not supported for on/off. 
 In contrast to controlling lightbulbs, the default transition time for groups is 0s (no transition).
 

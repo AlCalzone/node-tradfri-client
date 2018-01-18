@@ -16,8 +16,8 @@ class LightSetting extends ipsoDevice_1.IPSODevice {
     constructor() {
         super(...arguments);
         this.color = "f1e0b5"; // hex string
-        this.hue = 0; // TODO: TODO: range unknown! [0-359]?
-        this.saturation = 0; // TODO: range unknown!
+        this.hue = 0; // [0-359]
+        this.saturation = 0; // [0..100%]
         this.colorX = 0; // int
         this.colorY = 0; // int
         this.colorTemperature = 0; // TODO: range unknown!

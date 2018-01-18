@@ -253,8 +253,30 @@ interface ProxiedIPSOObject<T extends IPSOObject> extends IPSOObject {
 	readonly underlyingObject: T;
 }
 
+/**
+ * Provides a set of options regarding IPSO objects and serialization
+ */
+export interface IPSOOptions {
+	/** 
+	 * Determines if basic serializers (i.e. for simple values) should be skipped 
+	 * This is used to support raw CoAP values instead of the simplified scales
+	 * */
+	skipBasicSerializers?: boolean;
+}
+
 // common base class for all objects that are transmitted somehow
 export class IPSOObject {
+
+	/**
+	 * Internal options regarding serialization
+	 * @internal
+	 */
+	@doNotSerialize 
+	public options: IPSOOptions;
+
+	constructor(options: IPSOOptions = {}) {
+		this.options = options;
+	}
 
 	/**
 	 * Reads this instance's properties from the given object
@@ -299,7 +321,7 @@ export class IPSOObject {
 			} else {
 				log(`could not find deserializer for key ${propKey}`, "warn");
 			}
-		} else if (deserializers) {
+		} else if (deserializers && !this.options.skipBasicSerializers) {
 			// if this property needs a parser, parse the value
 			return applyDeserializers(deserializers, value, this);
 		} else {
@@ -348,7 +370,7 @@ export class IPSOObject {
 					// there is no default value, just remember the actual value
 				}
 			}
-			if (transform) _ret = transform(_ret, this);
+			if (transform && !this.options.skipBasicSerializers) _ret = transform(_ret, this);
 			return _ret;
 		};
 
@@ -411,10 +433,10 @@ export class IPSOObject {
 	public clone(): this {
 		// create a new instance of the same object as this
 		interface Constructable<T> {
-			new(): T;
+			new(options?: IPSOOptions): T;
 		}
 		const constructor = this.constructor as Constructable<this>;
-		const ret = new constructor();
+		const ret = new constructor(this.options);
 		// serialize the old values
 		const serialized = this.serialize();
 		// and parse them back
@@ -502,7 +524,7 @@ export class IPSOObject {
 	@doNotSerialize protected client: OperationProvider;
 	/**
 	 * Link this object to a TradfriClient for a simplified API.
-	 * INTERNAL USE ONLY!
+	 * @internal
 	 * @param client The client instance to link this object to
 	 */
 	public link(client: OperationProvider): this {

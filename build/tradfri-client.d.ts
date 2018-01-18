@@ -35,6 +35,10 @@ export interface TradfriClient {
     removeListener(event: "error", callback: ErrorCallback): this;
     removeAllListeners(event?: ObservableEvents): this;
 }
+export interface TradfriOptions {
+    customLogger?: LoggerFunction;
+    useRawCoAPValues?: boolean;
+}
 export declare class TradfriClient extends EventEmitter implements OperationProvider {
     readonly hostname: string;
     /** dictionary of CoAP observers */
@@ -45,7 +49,11 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
     groups: DictionaryLike<GroupInfo>;
     /** Base URL for all CoAP requests */
     private requestBase;
-    constructor(hostname: string, customLogger?: LoggerFunction);
+    /** Options regarding IPSO objects and serialization */
+    private ipsoOptions;
+    constructor(hostname: string);
+    constructor(hostname: string, customLogger: LoggerFunction);
+    constructor(hostname: string, options: TradfriOptions);
     /**
      * Connect to the gateway
      * @param identity A previously negotiated identity.

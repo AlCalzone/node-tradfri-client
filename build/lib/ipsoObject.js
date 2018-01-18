@@ -232,9 +232,10 @@ function getPropertyType(target, property) {
 }
 // common base class for all objects that are transmitted somehow
 class IPSOObject {
-    constructor() {
+    constructor(options = {}) {
         /** If this object was proxied or not */
         this.isProxy = false;
+        this.options = options;
     }
     /**
      * Reads this instance's properties from the given object
@@ -282,7 +283,7 @@ class IPSOObject {
                 logger_1.log(`could not find deserializer for key ${propKey}`, "warn");
             }
         }
-        else if (deserializers) {
+        else if (deserializers && !this.options.skipBasicSerializers) {
             // if this property needs a parser, parse the value
             return applyDeserializers(deserializers, value, this);
         }
@@ -332,7 +333,7 @@ class IPSOObject {
                     // there is no default value, just remember the actual value
                 }
             }
-            if (transform)
+            if (transform && !this.options.skipBasicSerializers)
                 _ret = transform(_ret, this);
             return _ret;
         };
@@ -392,7 +393,7 @@ class IPSOObject {
      */
     clone() {
         const constructor = this.constructor;
-        const ret = new constructor();
+        const ret = new constructor(this.options);
         // serialize the old values
         const serialized = this.serialize();
         // and parse them back
@@ -471,7 +472,7 @@ class IPSOObject {
     }
     /**
      * Link this object to a TradfriClient for a simplified API.
-     * INTERNAL USE ONLY!
+     * @internal
      * @param client The client instance to link this object to
      */
     link(client) {
@@ -479,6 +480,10 @@ class IPSOObject {
         return this;
     }
 }
+__decorate([
+    exports.doNotSerialize,
+    __metadata("design:type", Object)
+], IPSOObject.prototype, "options", void 0);
 __decorate([
     exports.doNotSerialize,
     __metadata("design:type", Boolean)

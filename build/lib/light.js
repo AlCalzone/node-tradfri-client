@@ -24,8 +24,8 @@ const ipsoObject_1 = require("./ipsoObject");
 const math_1 = require("./math");
 const predefined_colors_1 = require("./predefined-colors");
 class Light extends ipsoDevice_1.IPSODevice {
-    constructor(accessory) {
-        super();
+    constructor(accessory, options) {
+        super(options);
         this.color = "f1e0b5"; // hex string
         this.transitionTime = 0.5; // <float>
         /**

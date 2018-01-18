@@ -21,7 +21,7 @@ const logger_1 = require("./lib/logger");
 const scene_1 = require("./lib/scene");
 const tradfri_error_1 = require("./lib/tradfri-error");
 class TradfriClient extends events_1.EventEmitter {
-    constructor(hostname, customLogger) {
+    constructor(hostname, optionsOrLogger) {
         super();
         this.hostname = hostname;
         /** dictionary of CoAP observers */
@@ -30,9 +30,21 @@ class TradfriClient extends events_1.EventEmitter {
         this.devices = {};
         /** dictionary of known groups */
         this.groups = {};
+        /** Options regarding IPSO objects and serialization */
+        this.ipsoOptions = {};
         this.requestBase = `coaps://${hostname}:5684/`;
-        if (customLogger != null)
-            logger_1.setCustomLogger(customLogger);
+        if (optionsOrLogger != null) {
+            if (typeof optionsOrLogger === "function") {
+                // Legacy version: 2nd parameter is a logger
+                logger_1.setCustomLogger(optionsOrLogger);
+            }
+            else {
+                if (optionsOrLogger.customLogger != null)
+                    logger_1.setCustomLogger(optionsOrLogger.customLogger);
+                if (optionsOrLogger.useRawCoAPValues)
+                    this.ipsoOptions.skipBasicSerializers = true;
+            }
+        }
     }
     /**
      * Connect to the gateway
@@ -239,7 +251,7 @@ class TradfriClient extends events_1.EventEmitter {
         const result = parsePayload(response);
         logger_1.log(`observeDevice > ` + JSON.stringify(result), "debug");
         // parse device info
-        const accessory = new accessory_1.Accessory().parse(result).createProxy();
+        const accessory = new accessory_1.Accessory(this.ipsoOptions).parse(result).createProxy();
         // remember the device object, so we can later use it as a reference for updates
         // store a clone, so we don't have to care what the calling library does
         this.devices[instanceId] = accessory.clone();
@@ -359,7 +371,7 @@ class TradfriClient extends events_1.EventEmitter {
         }
         const result = parsePayload(response);
         // parse group info
-        const group = (new group_1.Group()).parse(result).createProxy();
+        const group = (new group_1.Group(this.ipsoOptions)).parse(result).createProxy();
         // remember the group object, so we can later use it as a reference for updates
         let groupInfo;
         if (!(instanceId in this.groups)) {
@@ -445,7 +457,7 @@ class TradfriClient extends events_1.EventEmitter {
         }
         const result = parsePayload(response);
         // parse scene info
-        const scene = (new scene_1.Scene()).parse(result).createProxy();
+        const scene = (new scene_1.Scene(this.ipsoOptions)).parse(result).createProxy();
         // remember the scene object, so we can later use it as a reference for updates
         // store a clone, so we don't have to care what the calling library does
         this.groups[groupId].scenes[instanceId] = scene.clone();
@@ -499,6 +511,8 @@ class TradfriClient extends events_1.EventEmitter {
      */
     updateResource(path, newObj, reference) {
         return __awaiter(this, void 0, void 0, function* () {
+            // ensure the ipso options were not lost on the user side
+            newObj.options = this.ipsoOptions;
             const serializedObj = newObj.serialize(reference);
             // If the serialized object contains no properties, we don't need to send anything
             if (!serializedObj || Object.keys(serializedObj).length === 0) {

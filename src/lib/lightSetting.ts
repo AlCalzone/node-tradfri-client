@@ -8,9 +8,9 @@ export class LightSetting extends IPSODevice {
 	public color: string = "f1e0b5"; // hex string
 
 	@ipsoKey("5707")
-	public hue: number = 0; // TODO: TODO: range unknown! [0-359]?
+	public hue: number = 0; // [0-359]
 	@ipsoKey("5708")
-	public saturation: number = 0; // TODO: range unknown!
+	public saturation: number = 0; // [0..100%]
 
 	@ipsoKey("5709")
 	public colorX: number = 0; // int
