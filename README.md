@@ -435,6 +435,9 @@ A DeviceInfo object contains general information about a device. It has the foll
 
 ## Changelog
 
+#### 0.7.0 (2018-01-28)
+* (AlCalzone) Support using raw CoAP values instead of the simplified scales for many properties.
+
 #### 0.6.0 (2018-01-13)
 * (AlCalzone) Use the `colorTemperature` CoAP property directly instead of `colorX/Y`
 
