@@ -20,6 +20,21 @@ const METADATA_serializeWith = Symbol("serializeWith");
 const METADATA_deserializeWith = Symbol("deserializeWith");
 const METADATA_doNotSerialize = Symbol("doNotSerialize");
 /**
+ * Builds a property transform from a kernel and some options
+ * @param kernel The transform kernel
+ * @param options Some options regarding the property transform
+ */
+function buildPropertyTransform(kernel, options = {}) {
+    if (options.splitArrays == null)
+        options.splitArrays = true;
+    if (options.neverSkip == null)
+        options.neverSkip = false;
+    const ret = kernel;
+    ret.splitArrays = options.splitArrays;
+    ret.neverSkip = options.neverSkip;
+    return ret;
+}
+/**
  * Defines the ipso key neccessary to serialize a property to a CoAP object
  */
 exports.ipsoKey = (key) => {
@@ -86,24 +101,25 @@ function isRequired(target, reference, property) {
 /**
  * Defines the required transformations to serialize a property to a CoAP object
  * @param transform: The transformation to apply during serialization
- * @param splitArrays: Whether the serializer expects arrays to be split up in advance
+ * @param options: Some options regarding the behavior of the property transform
  */
-exports.serializeWith = (transform, splitArrays = true) => {
+function serializeWith(kernel, options) {
+    const transform = buildPropertyTransform(kernel, options);
     return (target, property) => {
         // get the class constructor
         const constr = target.constructor;
         // retrieve the current metadata
         const metadata = Reflect.getMetadata(METADATA_serializeWith, constr) || {};
-        metadata[property] = { transform, splitArrays };
+        metadata[property] = transform;
         // store back to the object
         Reflect.defineMetadata(METADATA_serializeWith, metadata, constr);
     };
-};
-// tslint:disable:object-literal-key-quotes
+}
+exports.serializeWith = serializeWith;
+// default serializers should not be skipped
 const defaultSerializers = {
-    "Boolean": (bool) => bool ? 1 : 0,
+    Boolean: buildPropertyTransform((bool) => bool ? 1 : 0, { neverSkip: true }),
 };
-// tslint:enable:object-literal-key-quotes
 /**
  * Retrieves the serializer for a given property
  */
@@ -113,7 +129,7 @@ function getSerializer(target, property) {
     // retrieve the current metadata
     const metadata = Reflect.getMetadata(METADATA_serializeWith, constr) || {};
     if (metadata.hasOwnProperty(property))
-        return metadata[property].transform;
+        return metadata[property];
     // If there's no custom serializer, try to find a default one
     const type = getPropertyType(target, property);
     if (type && type.name in defaultSerializers) {
@@ -121,38 +137,23 @@ function getSerializer(target, property) {
     }
 }
 /**
- * Checks if the deserializer for a given property expects arrays to be split in advance
- */
-function serializerRequiresArraySplitting(target, property) {
-    // get the class constructor
-    const constr = target.constructor;
-    // retrieve the current metadata
-    const metadata = Reflect.getMetadata(METADATA_serializeWith, constr) || {};
-    if (metadata.hasOwnProperty(property)) {
-        return metadata[property].splitArrays;
-    }
-    // return default value => true
-    return true;
-}
-/**
  * Defines the required transformations to deserialize a property from a CoAP object
  * @param transform: The transformation to apply during deserialization
  * @param splitArrays: Whether the deserializer expects arrays to be split up in advance
  */
-exports.deserializeWith = (transforms, splitArrays = true) => {
-    // make sure we have an array of transforms
-    if (!(transforms instanceof Array))
-        transforms = [transforms];
+function deserializeWith(kernel, options) {
+    const transform = buildPropertyTransform(kernel, options);
     return (target, property) => {
         // get the class constructor
         const constr = target.constructor;
         // retrieve the current metadata
         const metadata = Reflect.getMetadata(METADATA_deserializeWith, constr) || {};
-        metadata[property] = { transforms, splitArrays };
+        metadata[property] = transform;
         // store back to the object
         Reflect.defineMetadata(METADATA_deserializeWith, metadata, constr);
     };
-};
+}
+exports.deserializeWith = deserializeWith;
 /**
  * Defines that a property will not be serialized
  */
@@ -176,52 +177,26 @@ function isSerializable(target, property) {
     // if doNotSerialize is defined, don't serialize!
     return !metadata.hasOwnProperty(property);
 }
-// tslint:disable:object-literal-key-quotes
+// default deserializers should not be skipped
 const defaultDeserializers = {
-    "Boolean": (raw) => raw === 1 || raw === "true" || raw === "on" || raw === true,
+    Boolean: buildPropertyTransform((raw) => raw === 1 || raw === "true" || raw === "on" || raw === true, { neverSkip: true }),
 };
-// tslint:enable:object-literal-key-quotes
 /**
  * Retrieves the deserializer for a given property
  */
-function getDeserializers(target, property) {
+function getDeserializer(target, property) {
     // get the class constructor
     const constr = target.constructor;
     // retrieve the current metadata
     const metadata = Reflect.getMetadata(METADATA_deserializeWith, constr) || {};
     if (metadata.hasOwnProperty(property)) {
-        return metadata[property].transforms;
+        return metadata[property];
     }
     // If there's no custom deserializer, try to find a default one
     const type = getPropertyType(target, property);
     if (type && type.name in defaultDeserializers) {
-        return [defaultDeserializers[type.name]];
+        return defaultDeserializers[type.name];
     }
-}
-/**
- * Apply a series of deserializers in the defined order. The first one returning a value != null wins
- */
-function applyDeserializers(deserializers, target, parent) {
-    for (const d of deserializers) {
-        const ret = d(target, parent);
-        if (ret != null)
-            return ret;
-    }
-    return null;
-}
-/**
- * Checks if the deserializer for a given property expects arrays to be split in advance
- */
-function deserializerRequiresArraySplitting(target, property) {
-    // get the class constructor
-    const constr = target.constructor;
-    // retrieve the current metadata
-    const metadata = Reflect.getMetadata(METADATA_deserializeWith, constr) || {};
-    if (metadata.hasOwnProperty(property)) {
-        return metadata[property].splitArrays;
-    }
-    // return default value => true
-    return true;
 }
 /**
  * Finds the design type for a given property
@@ -242,11 +217,10 @@ class IPSOObject {
      */
     parse(obj) {
         for (const [key, value] of object_polyfill_1.entries(obj)) {
-            let deserializers = getDeserializers(this, key);
-            let requiresArraySplitting = deserializerRequiresArraySplitting(this, key);
+            let deserializer = getDeserializer(this, key);
             // key might be ipso key or property name
             let propName;
-            if (deserializers == null) {
+            if (deserializer == null) {
                 // deserializers are defined by property name, so key is actually the key
                 propName = lookupKeyOrProperty(this, key);
                 if (!propName) {
@@ -254,38 +228,37 @@ class IPSOObject {
                     logger_1.log(`object was: ${JSON.stringify(obj)}`, "warn");
                     continue;
                 }
-                deserializers = getDeserializers(this, propName);
-                requiresArraySplitting = deserializerRequiresArraySplitting(this, propName);
+                deserializer = getDeserializer(this, propName);
             }
             else {
                 // the deserializer was found, so key is actually the property name
                 propName = key;
             }
             // parse the value
-            const parsedValue = this.parseValue(key, value, deserializers, requiresArraySplitting);
+            const requiresArraySplitting = deserializer ? deserializer.splitArrays : true;
+            const parsedValue = this.parseValue(key, value, deserializer, requiresArraySplitting);
             // and remember it
             this[propName] = parsedValue;
         }
         return this;
     }
     // parses a value, depending on the value type and defined parsers
-    parseValue(propKey, value, deserializers, requiresArraySplitting = true) {
+    parseValue(propKey, value, transform, requiresArraySplitting = true) {
         if (value instanceof Array && requiresArraySplitting) {
             // Array: parse every element
-            return value.map(v => this.parseValue(propKey, v, deserializers, requiresArraySplitting));
+            return value.map(v => this.parseValue(propKey, v, transform, requiresArraySplitting));
         }
         else if (typeof value === "object") {
             // Object: try to parse this, objects should be parsed in any case
-            if (deserializers) {
-                return applyDeserializers(deserializers, value, this);
+            if (transform) {
+                return transform(value, this);
             }
             else {
                 logger_1.log(`could not find deserializer for key ${propKey}`, "warn");
             }
         }
-        else if (deserializers && !this.options.skipBasicSerializers) {
-            // if this property needs a parser, parse the value
-            return applyDeserializers(deserializers, value, this);
+        else if (transform && (transform.neverSkip || !this.options.skipBasicSerializers)) {
+            return transform(value, this);
         }
         else {
             // otherwise just return the value
@@ -333,8 +306,9 @@ class IPSOObject {
                     // there is no default value, just remember the actual value
                 }
             }
-            if (transform && !this.options.skipBasicSerializers)
+            if (transform && (transform.neverSkip || !this.options.skipBasicSerializers)) {
                 _ret = transform(_ret, this);
+            }
             return _ret;
         };
         // check all set properties
@@ -357,7 +331,7 @@ class IPSOObject {
                 }
                 // try to find serializer for this property
                 const serializer = getSerializer(this, propName);
-                const requiresArraySplitting = serializerRequiresArraySplitting(this, propName);
+                const requiresArraySplitting = serializer ? serializer.splitArrays : true;
                 if (value instanceof Array && requiresArraySplitting) {
                     // serialize each item
                     if (refValue != null) {

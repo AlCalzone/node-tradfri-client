@@ -11,7 +11,6 @@ import { Group, GroupInfo, GroupOperation } from "./lib/group";
 import { IPSOObject, IPSOOptions } from "./lib/ipsoObject";
 import { LightOperation } from "./lib/light";
 import { log, LoggerFunction, setCustomLogger } from "./lib/logger";
-import { DictionaryLike } from "./lib/object-polyfill";
 import { OperationProvider } from "./lib/operation-provider";
 import { Scene } from "./lib/scene";
 import { TradfriError, TradfriErrorCodes } from "./lib/tradfri-error";
@@ -58,8 +57,8 @@ export declare interface TradfriClient {
 }
 
 export interface TradfriOptions {
-	customLogger?: LoggerFunction,
-	useRawCoAPValues?: boolean,
+	customLogger?: LoggerFunction;
+	useRawCoAPValues?: boolean;
 }
 
 export class TradfriClient extends EventEmitter implements OperationProvider {
@@ -67,9 +66,9 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	/** dictionary of CoAP observers */
 	public observedPaths: string[] = [];
 	/** dictionary of known devices */
-	public devices: DictionaryLike<Accessory> = {};
+	public devices: Record<string, Accessory> = {};
 	/** dictionary of known groups */
-	public groups: DictionaryLike<GroupInfo> = {};
+	public groups: Record<string, GroupInfo> = {};
 
 	/** Base URL for all CoAP requests */
 	private requestBase: string;
@@ -86,7 +85,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	) {
 		super();
 		this.requestBase = `coaps://${hostname}:5684/`;
-		
+
 		if (optionsOrLogger != null) {
 			if (typeof optionsOrLogger === "function") {
 				// Legacy version: 2nd parameter is a logger

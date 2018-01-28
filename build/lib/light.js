@@ -283,8 +283,8 @@ __decorate([
 __decorate([
     ipsoObject_1.ipsoKey("5712"),
     ipsoObject_1.required(),
-    ipsoObject_1.serializeWith(conversions_1.serializers.transitionTime),
-    ipsoObject_1.deserializeWith(conversions_1.deserializers.transitionTime),
+    ipsoObject_1.serializeWith(conversions_1.serializers.transitionTime, { neverSkip: true }),
+    ipsoObject_1.deserializeWith(conversions_1.deserializers.transitionTime, { neverSkip: true }),
     __metadata("design:type", Number)
 ], Light.prototype, "transitionTime", void 0);
 __decorate([

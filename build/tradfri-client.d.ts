@@ -5,7 +5,6 @@ import { Accessory } from "./lib/accessory";
 import { Group, GroupInfo, GroupOperation } from "./lib/group";
 import { LightOperation } from "./lib/light";
 import { LoggerFunction } from "./lib/logger";
-import { DictionaryLike } from "./lib/object-polyfill";
 import { OperationProvider } from "./lib/operation-provider";
 import { Scene } from "./lib/scene";
 export declare type ObserveResourceCallback = (resp: CoapResponse) => void;
@@ -44,9 +43,9 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
     /** dictionary of CoAP observers */
     observedPaths: string[];
     /** dictionary of known devices */
-    devices: DictionaryLike<Accessory>;
+    devices: Record<string, Accessory>;
     /** dictionary of known groups */
-    groups: DictionaryLike<GroupInfo>;
+    groups: Record<string, GroupInfo>;
     /** Base URL for all CoAP requests */
     private requestBase;
     /** Options regarding IPSO objects and serialization */

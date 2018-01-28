@@ -1,6 +1,5 @@
 import { IPSODevice } from "./ipsoDevice";
 import { deserializeWith, ipsoKey, IPSOObject, PropertyTransform, required, serializeWith } from "./ipsoObject";
-import { DictionaryLike } from "./object-polyfill";
 
 export class Notification extends IPSODevice {
 
@@ -8,8 +7,8 @@ export class Notification extends IPSODevice {
 	public event: NotificationTypes = 0;
 
 	@ipsoKey("9017")
-	@deserializeWith(arr => parseNotificationDetails(arr), false /* parse whole arrays */)
-	public details: DictionaryLike<string> = {};
+	@deserializeWith(arr => parseNotificationDetails(arr), {splitArrays: false})
+	public details: Record<string, string> = {};
 
 	@ipsoKey("9014")
 	public state: number = 0; // => ?
@@ -27,7 +26,7 @@ export enum NotificationTypes {
 /**
  * Turns a key=value-Array into a Dictionary object
  */
-function parseNotificationDetails(kvpList: string[]): DictionaryLike<string> {
+function parseNotificationDetails(kvpList: string[]): Record<string, string> {
 	const ret = {};
 	for (const kvp of kvpList) {
 		const parts = kvp.split("=");

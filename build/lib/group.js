@@ -113,7 +113,7 @@ __decorate([
 __decorate([
     ipsoObject_1.ipsoKey("9018"),
     ipsoObject_1.deserializeWith(obj => parseAccessoryLink(obj)),
-    ipsoObject_1.serializeWith(ids => toAccessoryLink(ids), false),
+    ipsoObject_1.serializeWith(ids => toAccessoryLink(ids), { splitArrays: false }),
     __metadata("design:type", Array)
 ], Group.prototype, "deviceIDs", void 0);
 __decorate([
@@ -122,8 +122,8 @@ __decorate([
     // all other properties don't support the transition time
     ,
     ipsoObject_1.required((me, ref) => ref != null && me.dimmer !== ref.dimmer),
-    ipsoObject_1.serializeWith(conversions_1.serializers.transitionTime),
-    ipsoObject_1.deserializeWith(conversions_1.deserializers.transitionTime),
+    ipsoObject_1.serializeWith(conversions_1.serializers.transitionTime, { neverSkip: true }),
+    ipsoObject_1.deserializeWith(conversions_1.deserializers.transitionTime, { neverSkip: true }),
     __metadata("design:type", Number)
 ], Group.prototype, "transitionTime", void 0);
 exports.Group = Group;
