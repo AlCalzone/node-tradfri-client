@@ -24,8 +24,8 @@ const ipsoObject_1 = require("./ipsoObject");
 const math_1 = require("./math");
 const predefined_colors_1 = require("./predefined-colors");
 class Light extends ipsoDevice_1.IPSODevice {
-    constructor(accessory) {
-        super();
+    constructor(accessory, options) {
+        super(options);
         this.color = "f1e0b5"; // hex string
         this.transitionTime = 0.5; // <float>
         /**
@@ -283,8 +283,8 @@ __decorate([
 __decorate([
     ipsoObject_1.ipsoKey("5712"),
     ipsoObject_1.required(),
-    ipsoObject_1.serializeWith(conversions_1.serializers.transitionTime),
-    ipsoObject_1.deserializeWith(conversions_1.deserializers.transitionTime),
+    ipsoObject_1.serializeWith(conversions_1.serializers.transitionTime, { neverSkip: true }),
+    ipsoObject_1.deserializeWith(conversions_1.deserializers.transitionTime, { neverSkip: true }),
     __metadata("design:type", Number)
 ], Light.prototype, "transitionTime", void 0);
 __decorate([

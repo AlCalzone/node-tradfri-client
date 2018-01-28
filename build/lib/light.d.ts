@@ -1,8 +1,9 @@
 import { Accessory } from "./accessory";
 import { IPSODevice } from "./ipsoDevice";
+import { IPSOOptions } from "./ipsoObject";
 export declare type LightOperation = Partial<Pick<Light, "onOff" | "dimmer" | "color" | "colorTemperature" | "colorX" | "colorY" | "hue" | "saturation" | "transitionTime">>;
 export declare class Light extends IPSODevice {
-    constructor(accessory?: Accessory);
+    constructor(accessory?: Accessory, options?: IPSOOptions);
     private _modelName;
     private _accessory;
     color: string;

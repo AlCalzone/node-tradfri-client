@@ -8,10 +8,9 @@ import { except } from "./lib/array-extensions";
 import { createDeferredPromise, DeferredPromise } from "./lib/defer-promise";
 import { endpoints as coapEndpoints } from "./lib/endpoints";
 import { Group, GroupInfo, GroupOperation } from "./lib/group";
-import { IPSOObject } from "./lib/ipsoObject";
+import { IPSOObject, IPSOOptions } from "./lib/ipsoObject";
 import { LightOperation } from "./lib/light";
 import { log, LoggerFunction, setCustomLogger } from "./lib/logger";
-import { DictionaryLike } from "./lib/object-polyfill";
 import { OperationProvider } from "./lib/operation-provider";
 import { Scene } from "./lib/scene";
 import { TradfriError, TradfriErrorCodes } from "./lib/tradfri-error";
@@ -57,25 +56,45 @@ export declare interface TradfriClient {
 	removeAllListeners(event?: ObservableEvents): this;
 }
 
+export interface TradfriOptions {
+	customLogger?: LoggerFunction;
+	useRawCoAPValues?: boolean;
+}
+
 export class TradfriClient extends EventEmitter implements OperationProvider {
 
 	/** dictionary of CoAP observers */
 	public observedPaths: string[] = [];
 	/** dictionary of known devices */
-	public devices: DictionaryLike<Accessory> = {};
+	public devices: Record<string, Accessory> = {};
 	/** dictionary of known groups */
-	public groups: DictionaryLike<GroupInfo> = {};
+	public groups: Record<string, GroupInfo> = {};
 
 	/** Base URL for all CoAP requests */
 	private requestBase: string;
 
+	/** Options regarding IPSO objects and serialization */
+	private ipsoOptions: IPSOOptions = {};
+
+	constructor(hostname: string)
+	constructor(hostname: string, customLogger: LoggerFunction)
+	constructor(hostname: string, options: TradfriOptions)
 	constructor(
 		public readonly hostname: string,
-		customLogger?: LoggerFunction,
+		optionsOrLogger?: LoggerFunction | TradfriOptions,
 	) {
 		super();
 		this.requestBase = `coaps://${hostname}:5684/`;
-		if (customLogger != null) setCustomLogger(customLogger);
+
+		if (optionsOrLogger != null) {
+			if (typeof optionsOrLogger === "function") {
+				// Legacy version: 2nd parameter is a logger
+				setCustomLogger(optionsOrLogger);
+			} else {
+				if (optionsOrLogger.customLogger != null) setCustomLogger(optionsOrLogger.customLogger);
+				if (optionsOrLogger.useRawCoAPValues) this.ipsoOptions.skipBasicSerializers = true;
+			}
+		}
 	}
 
 	/**
@@ -310,7 +329,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		const result = parsePayload(response);
 		log(`observeDevice > ` + JSON.stringify(result), "debug");
 		// parse device info
-		const accessory = new Accessory().parse(result).createProxy();
+		const accessory = new Accessory(this.ipsoOptions).parse(result).createProxy();
 		// remember the device object, so we can later use it as a reference for updates
 		// store a clone, so we don't have to care what the calling library does
 		this.devices[instanceId] = accessory.clone();
@@ -448,7 +467,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 
 		const result = parsePayload(response);
 		// parse group info
-		const group = (new Group()).parse(result).createProxy();
+		const group = (new Group(this.ipsoOptions)).parse(result).createProxy();
 		// remember the group object, so we can later use it as a reference for updates
 		let groupInfo: GroupInfo;
 		if (!(instanceId in this.groups)) {
@@ -549,7 +568,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 
 		const result = parsePayload(response);
 		// parse scene info
-		const scene = (new Scene()).parse(result).createProxy();
+		const scene = (new Scene(this.ipsoOptions)).parse(result).createProxy();
 		// remember the scene object, so we can later use it as a reference for updates
 		// store a clone, so we don't have to care what the calling library does
 		this.groups[groupId].scenes[instanceId] = scene.clone();
@@ -611,6 +630,9 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 * @returns true if a request was sent, false otherwise
 	 */
 	private async updateResource(path: string, newObj: IPSOObject, reference: IPSOObject): Promise<boolean> {
+
+		// ensure the ipso options were not lost on the user side
+		newObj.options = this.ipsoOptions;
 
 		const serializedObj = newObj.serialize(reference);
 

@@ -1,6 +1,6 @@
 // tslint:disable:variable-name
 
-import { PropertyTransform } from "./ipsoObject";
+import { PropertyTransformKernel } from "./ipsoObject";
 import { Light } from "./light";
 import { clamp, findClosestTriangleEdge, Point, pointInTriangle, projectPointOnEdge, roundTo } from "./math";
 import { colorTemperatureRange, MAX_COLOR } from "./predefined-colors";
@@ -10,14 +10,14 @@ import { padStart } from "./strings";
 // WHITE SPECTRUM conversions
 
 // interpolate from [0..100%] to [250..454]
-const colorTemperature_out: PropertyTransform = (value) => {
+const colorTemperature_out: PropertyTransformKernel = (value) => {
 	const [min, max] = colorTemperatureRange;
 	// extrapolate 0-100% to [min..max]
 	value = clamp(value, 0, 100);
 	return roundTo(min + value / 100 * (max - min), 0);
 };
 // interpolate from [250..454] to [0..100%]
-const colorTemperature_in: PropertyTransform = (value) => {
+const colorTemperature_in: PropertyTransformKernel = (value) => {
 	const [min, max] = colorTemperatureRange;
 	// interpolate "color percentage" from the colorTemperature range of a lightbulb
 	value = (value - min) / (max - min);
@@ -171,27 +171,27 @@ function rgbFromString(rgb: string) {
 // ===========================
 // RGB serializers
 // interpolate hue from [0..360] to [0..COLOR_MAX]
-const hue_out: PropertyTransform = (value, light: Light) => {
+const hue_out: PropertyTransformKernel = (value, light: Light) => {
 	if (light != null && light.spectrum !== "rgb") return null; // hue is not supported
 
 	value = clamp(value, 0, 360);
 	return roundTo(value / 360 * MAX_COLOR, 0);
 };
 // interpolate hue from [0..COLOR_MAX] to [0..360]
-const hue_in: PropertyTransform = (value /*, light: Light*/) => {
+const hue_in: PropertyTransformKernel = (value /*, light: Light*/) => {
 	value = clamp(value / MAX_COLOR, 0, 1);
 	return roundTo(value * 360, 0);
 };
 
 // interpolate saturation from [0..100%] to [0..COLOR_MAX]
-const saturation_out: PropertyTransform = (value, light: Light) => {
+const saturation_out: PropertyTransformKernel = (value, light: Light) => {
 	if (light != null && light.spectrum !== "rgb") return null; // hue is not supported
 
 	value = clamp(value, 0, 100);
 	return roundTo(value / 100 * MAX_COLOR, 0);
 };
 // interpolate saturation from [0..COLOR_MAX] to [0..100%]
-const saturation_in: PropertyTransform = (value /*, light: Light*/) => {
+const saturation_in: PropertyTransformKernel = (value /*, light: Light*/) => {
 	value = clamp(value / MAX_COLOR, 0, 1);
 	return roundTo(value * 100, 0);
 };
@@ -200,20 +200,20 @@ const saturation_in: PropertyTransform = (value /*, light: Light*/) => {
 // TRANSITION TIME conversions
 
 // the sent value is in 10ths of seconds, we're working with seconds
-const transitionTime_out: PropertyTransform = val => val * 10;
+const transitionTime_out: PropertyTransformKernel = val => val * 10;
 // the sent value is in 10ths of seconds, we're working with seconds
-const transitionTime_in: PropertyTransform = val => val / 10;
+const transitionTime_in: PropertyTransformKernel = val => val / 10;
 
 // ===========================
 // BRIGHTNESS conversions
 
 // interpolate from [0..100%] to [0..254]
-const brightness_out: PropertyTransform = (value) => {
+const brightness_out: PropertyTransformKernel = (value) => {
 	value = clamp(value, 0, 100);
 	return Math.round(value / 100 * 254);
 };
 // interpolate from [0..254] to [0..100%]
-const brightness_in: PropertyTransform = (value) => {
+const brightness_in: PropertyTransformKernel = (value) => {
 	value = clamp(value, 0, 254);
 	if (value === 0) return 0;
 	value = value / 254 * 100;

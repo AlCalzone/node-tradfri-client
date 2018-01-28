@@ -1,17 +1,17 @@
-import { PropertyTransform } from "./ipsoObject";
+import { PropertyTransformKernel } from "./ipsoObject";
 export declare const serializers: {
-    transitionTime: PropertyTransform;
-    hue: PropertyTransform;
-    saturation: PropertyTransform;
-    brightness: PropertyTransform;
-    colorTemperature: PropertyTransform;
+    transitionTime: PropertyTransformKernel;
+    hue: PropertyTransformKernel;
+    saturation: PropertyTransformKernel;
+    brightness: PropertyTransformKernel;
+    colorTemperature: PropertyTransformKernel;
 };
 export declare const deserializers: {
-    transitionTime: PropertyTransform;
-    hue: PropertyTransform;
-    saturation: PropertyTransform;
-    brightness: PropertyTransform;
-    colorTemperature: PropertyTransform;
+    transitionTime: PropertyTransformKernel;
+    hue: PropertyTransformKernel;
+    saturation: PropertyTransformKernel;
+    brightness: PropertyTransformKernel;
+    colorTemperature: PropertyTransformKernel;
 };
 export declare const conversions: {
     rgbFromCIExyY: (x: number, y: number, Y?: number) => {

@@ -1,7 +1,6 @@
 import { DeviceInfo } from "./deviceInfo";
 import { IPSODevice } from "./ipsoDevice";
 import { Light } from "./light";
-import { OperationProvider } from "./operation-provider";
 import { Plug } from "./plug";
 import { Sensor } from "./sensor";
 export declare enum AccessoryTypes {
@@ -19,10 +18,4 @@ export declare class Accessory extends IPSODevice {
     sensorList: Sensor[];
     switchList: IPSODevice[];
     otaUpdateState: number;
-    /**
-     * Link this object to a TradfriClient for a simplified API.
-     * INTERNAL USE ONLY!
-     * @param client The client instance to link this object to
-     */
-    link(client: OperationProvider): this;
 }

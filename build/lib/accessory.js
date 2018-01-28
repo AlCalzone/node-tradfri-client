@@ -34,8 +34,8 @@ class Accessory extends ipsoDevice_1.IPSODevice {
     }
     /**
      * Link this object to a TradfriClient for a simplified API.
-     * INTERNAL USE ONLY!
      * @param client The client instance to link this object to
+     * @internal
      */
     link(client) {
         super.link(client);
@@ -68,7 +68,7 @@ __decorate([
 ], Accessory.prototype, "type", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("3"),
-    ipsoObject_1.deserializeWith(obj => new deviceInfo_1.DeviceInfo().parse(obj)),
+    ipsoObject_1.deserializeWith((obj, me) => new deviceInfo_1.DeviceInfo(me.options).parse(obj)),
     __metadata("design:type", deviceInfo_1.DeviceInfo)
 ], Accessory.prototype, "deviceInfo", void 0);
 __decorate([
@@ -81,22 +81,22 @@ __decorate([
 ], Accessory.prototype, "lastSeen", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("3311"),
-    ipsoObject_1.deserializeWith((obj, me) => new light_1.Light(me).parse(obj)),
+    ipsoObject_1.deserializeWith((obj, me) => new light_1.Light(me, me.options).parse(obj)),
     __metadata("design:type", Array)
 ], Accessory.prototype, "lightList", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("3312"),
-    ipsoObject_1.deserializeWith(obj => new plug_1.Plug().parse(obj)),
+    ipsoObject_1.deserializeWith((obj, me) => new plug_1.Plug(me.options).parse(obj)),
     __metadata("design:type", Array)
 ], Accessory.prototype, "plugList", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("3300"),
-    ipsoObject_1.deserializeWith(obj => new sensor_1.Sensor().parse(obj)),
+    ipsoObject_1.deserializeWith((obj, me) => new sensor_1.Sensor(me.options).parse(obj)),
     __metadata("design:type", Array)
 ], Accessory.prototype, "sensorList", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("15009"),
-    ipsoObject_1.deserializeWith(obj => new ipsoDevice_1.IPSODevice().parse(obj)),
+    ipsoObject_1.deserializeWith((obj, me) => new ipsoDevice_1.IPSODevice(me.options).parse(obj)),
     __metadata("design:type", Array)
 ], Accessory.prototype, "switchList", void 0);
 __decorate([

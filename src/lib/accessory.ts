@@ -20,7 +20,7 @@ export class Accessory extends IPSODevice {
 	public type: AccessoryTypes = AccessoryTypes.remote;
 
 	@ipsoKey("3")
-	@deserializeWith(obj => new DeviceInfo().parse(obj))
+	@deserializeWith((obj, me) => new DeviceInfo(me.options).parse(obj))
 	public deviceInfo: DeviceInfo = null;
 
 	@ipsoKey("9019")
@@ -30,19 +30,19 @@ export class Accessory extends IPSODevice {
 	public lastSeen: number = 0;
 
 	@ipsoKey("3311")
-	@deserializeWith((obj, me: Accessory) => new Light(me).parse(obj))
+	@deserializeWith((obj, me: Accessory) => new Light(me, me.options).parse(obj))
 	public lightList: Light[];
 
 	@ipsoKey("3312")
-	@deserializeWith(obj => new Plug().parse(obj))
+	@deserializeWith((obj, me) => new Plug(me.options).parse(obj))
 	public plugList: Plug[];
 
 	@ipsoKey("3300")
-	@deserializeWith(obj => new Sensor().parse(obj))
+	@deserializeWith((obj, me) => new Sensor(me.options).parse(obj))
 	public sensorList: Sensor[];
 
 	@ipsoKey("15009")
-	@deserializeWith(obj => new IPSODevice().parse(obj))
+	@deserializeWith((obj, me) => new IPSODevice(me.options).parse(obj))
 	public switchList: IPSODevice[]; // <[Switch]> // seems unsupported atm.
 
 	@ipsoKey("9054")
@@ -50,8 +50,8 @@ export class Accessory extends IPSODevice {
 
 	/**
 	 * Link this object to a TradfriClient for a simplified API.
-	 * INTERNAL USE ONLY!
 	 * @param client The client instance to link this object to
+	 * @internal
 	 */
 	public link(client: OperationProvider): this {
 		super.link(client);

@@ -1,7 +1,7 @@
 import { Accessory } from "./accessory";
 import { conversions, deserializers, serializers } from "./conversions";
 import { IPSODevice } from "./ipsoDevice";
-import { deserializeWith, doNotSerialize, ipsoKey, PropertyTransform, required, serializeWith } from "./ipsoObject";
+import { deserializeWith, doNotSerialize, ipsoKey, IPSOOptions, PropertyTransform, required, serializeWith } from "./ipsoObject";
 import { clamp } from "./math";
 import { MAX_COLOR, predefinedColors, whiteSpectrumHex } from "./predefined-colors";
 
@@ -16,8 +16,8 @@ export type LightOperation = Partial<Pick<Light,
 
 export class Light extends IPSODevice {
 
-	constructor(accessory?: Accessory) {
-		super();
+	constructor(accessory?: Accessory, options?: IPSOOptions) {
+		super(options);
 
 		// In order for the simplified API to work, the
 		// accessory reference must be a proxy
@@ -73,8 +73,8 @@ export class Light extends IPSODevice {
 
 	@ipsoKey("5712")
 	@required()
-	@serializeWith(serializers.transitionTime)
-	@deserializeWith(deserializers.transitionTime)
+	@serializeWith(serializers.transitionTime, {neverSkip: true})
+	@deserializeWith(deserializers.transitionTime, {neverSkip: true})
 	public transitionTime: number = 0.5; // <float>
 
 	@ipsoKey("5805")

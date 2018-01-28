@@ -2,12 +2,11 @@ import { deserializers, serializers } from "./conversions";
 import { IPSODevice } from "./ipsoDevice";
 import { deserializeWith, ipsoKey, IPSOObject, PropertyTransform, required, serializeWith } from "./ipsoObject";
 import { clamp } from "./math";
-import { DictionaryLike } from "./object-polyfill";
 import { Scene } from "./scene";
 
 export interface GroupInfo {
 	group: Group;
-	scenes: DictionaryLike<Scene>;
+	scenes: Record<string, Scene>;
 }
 
 export class Group extends IPSODevice {
@@ -26,7 +25,7 @@ export class Group extends IPSODevice {
 
 	@ipsoKey("9018")
 	@deserializeWith(obj => parseAccessoryLink(obj))
-	@serializeWith(ids => toAccessoryLink(ids), false)
+	@serializeWith(ids => toAccessoryLink(ids), {splitArrays: false})
 	public deviceIDs: number[];
 
 	// The transition time is not reported by the gateway
@@ -35,8 +34,8 @@ export class Group extends IPSODevice {
 	// force transition time to be present if brightness is
 	// all other properties don't support the transition time
 	@required((me: Group, ref: Group) => ref != null && me.dimmer !== ref.dimmer)
-	@serializeWith(serializers.transitionTime)
-	@deserializeWith(deserializers.transitionTime)
+	@serializeWith(serializers.transitionTime, {neverSkip: true})
+	@deserializeWith(deserializers.transitionTime, {neverSkip: true})
 	public transitionTime: number; // <float>
 
 	// =================================

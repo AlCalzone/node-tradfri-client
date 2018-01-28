@@ -1,9 +1,8 @@
 import { IPSODevice } from "./ipsoDevice";
-import { DictionaryLike } from "./object-polyfill";
 import { Scene } from "./scene";
 export interface GroupInfo {
     group: Group;
-    scenes: DictionaryLike<Scene>;
+    scenes: Record<string, Scene>;
 }
 export declare class Group extends IPSODevice {
     onOff: boolean;

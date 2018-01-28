@@ -1,8 +1,7 @@
 import { IPSODevice } from "./ipsoDevice";
-import { DictionaryLike } from "./object-polyfill";
 export declare class Notification extends IPSODevice {
     event: NotificationTypes;
-    details: DictionaryLike<string>;
+    details: Record<string, string>;
     state: number;
 }
 export declare enum NotificationTypes {
