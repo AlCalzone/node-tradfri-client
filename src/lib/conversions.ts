@@ -2,7 +2,7 @@
 
 import { PropertyTransformKernel } from "./ipsoObject";
 import { Light } from "./light";
-import { clamp, findClosestTriangleEdge, Point, pointInTriangle, projectPointOnEdge, roundTo } from "./math";
+import { clamp, findClosestTriangleEdge, Point, pointInTriangle, projectPointOnEdge, roundTo, Triangle } from "./math";
 import { colorTemperatureRange, MAX_COLOR } from "./predefined-colors";
 import { padStart } from "./strings";
 
@@ -92,7 +92,7 @@ const DEFAULT_GAMUT: Gamut = {
 function mapToGamut(x: number, y: number, gamut: Gamut): Point {
 	const point = {x, y};
 
-	const gamutAsTriangle: [Point, Point, Point] = [gamut.red, gamut.green, gamut.blue];
+	const gamutAsTriangle: Triangle = [gamut.red, gamut.green, gamut.blue];
 	if (!pointInTriangle(gamutAsTriangle, point)) {
 		const closestEdge = findClosestTriangleEdge(point, gamutAsTriangle);
 		const projected = projectPointOnEdge(point, closestEdge);

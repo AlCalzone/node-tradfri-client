@@ -18,11 +18,20 @@ export interface Point {
 	y: number;
 }
 export type Vector = Point;
+export interface Edge extends Array<Point> {
+	0: Point;
+	1: Point;
+}
+export interface Triangle extends Array<Point> {
+	0: Point;
+	1: Point;
+	2: Point;
+}
 
 /**
  * Tests if a point is inside a given triangle
  */
-export function pointInTriangle(triangle: [Point, Point, Point], point: Point): boolean {
+export function pointInTriangle(triangle: Triangle, point: Point): boolean {
 	// based on http://totologic.blogspot.de/2014/01/accurate-point-in-triangle-test.html
 	const [
 		{x: x1, y: y1},
@@ -42,13 +51,13 @@ export function distanceSquared(a: Point, b: Point) {
 	return (b.x - a.x) ** 2 + (b.y - a.y) ** 2;
 }
 
-export function findClosestTriangleEdge(point: Point, triangle: [Point, Point, Point]): [Point, Point] {
+export function findClosestTriangleEdge(point: Point, triangle: Triangle): Edge {
 	const distances = triangle.map(p => distanceSquared(p, point));
 	const maxDistance = Math.max(...distances);
 	for (let i = 0; i < distances.length; i++) {
 		if (distances[i] === maxDistance) {
 			triangle.splice(i, 1);
-			return triangle as [Point, Point];
+			return triangle;
 		}
 	}
 	return [triangle[0], triangle[1]];
@@ -79,7 +88,7 @@ export function scaleVector(v: Vector, factor: number): Vector {
 	};
 }
 
-export function projectPointOnEdge(point: Point, edge: [Point, Point]): Point {
+export function projectPointOnEdge(point: Point, edge: Edge): Point {
 	const [a, b] = edge;
 	const c = point;
 	const ac = subtractVector(c, a);
