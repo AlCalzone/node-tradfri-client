@@ -1,3 +1,5 @@
+/// <reference types="reflect-metadata" />
+
 import { log } from "./logger";
 import { entries } from "./object-polyfill";
 import { OperationProvider } from "./operation-provider";
