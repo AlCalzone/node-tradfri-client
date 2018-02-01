@@ -21,11 +21,7 @@ export declare const predefinedColors: Map<string, ColorDefinition>;
 /**
  * The hex colors for the white spectrum and the corresponding colorTemperature values, sorted from cold to warm
  */
-export declare const whiteSpectrumHex: {
-    f5faf6: number;
-    f1e0b5: number;
-    efd275: number;
-};
+export declare const whiteSpectrumHex: Record<string, number>;
 /**
  * The white spectrum [cold, warm] in Mireds, as defined in the app
  */

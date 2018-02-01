@@ -27,7 +27,7 @@ export enum NotificationTypes {
  * Turns a key=value-Array into a Dictionary object
  */
 function parseNotificationDetails(kvpList: string[]): Record<string, string> {
-	const ret = {};
+	const ret: Record<string, string> = {};
 	for (const kvp of kvpList) {
 		const parts = kvp.split("=");
 		ret[parts[0]] = parts[1];

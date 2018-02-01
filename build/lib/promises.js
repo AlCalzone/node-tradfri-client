@@ -30,6 +30,7 @@ function promisifyNoError(fn, context) {
     };
 }
 exports.promisifyNoError = promisifyNoError;
+// tslint:enable:ban-types
 /** Creates a promise that waits for the specified time and then resolves */
 function wait(ms) {
     return new Promise((resolve) => {

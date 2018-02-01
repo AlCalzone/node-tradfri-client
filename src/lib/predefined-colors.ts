@@ -26,7 +26,7 @@ export const predefinedColors = new Map<string, ColorDefinition>();
 /**
  * The hex colors for the white spectrum and the corresponding colorTemperature values, sorted from cold to warm
  */
-export const whiteSpectrumHex = {
+export const whiteSpectrumHex: Record<string, number> = {
 	f5faf6: 0,
 	f1e0b5: 63,
 	efd275: 100,

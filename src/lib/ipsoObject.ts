@@ -260,6 +260,9 @@ export class IPSOObject {
 		this.options = options;
 	}
 
+	// provide an index signature so TypeScript shuts up when using --noImplicitAny
+	[propName: string]: any;
+
 	/**
 	 * Reads this instance's properties from the given object
 	 */
@@ -291,7 +294,7 @@ export class IPSOObject {
 	}
 
 	// parses a value, depending on the value type and defined parsers
-	private parseValue(propKey, value, transform?: PropertyTransform, requiresArraySplitting: boolean = true): any {
+	private parseValue(propKey: string | symbol, value: any, transform?: PropertyTransform, requiresArraySplitting: boolean = true): any {
 		if (value instanceof Array && requiresArraySplitting) {
 			// Array: parse every element
 			return value.map(v => this.parseValue(propKey, v, transform, requiresArraySplitting));
@@ -323,7 +326,7 @@ export class IPSOObject {
 	}
 
 	/** serializes this object in order to transfer it via COAP */
-	public serialize(reference = null): Record<string, any> {
+	public serialize(reference: this = null): Record<string, any> {
 		// unproxy objects before serialization
 		if (this.isProxy) return this.unproxy().serialize(reference);
 		if (
@@ -332,9 +335,9 @@ export class IPSOObject {
 			reference.isProxy
 		) reference = reference.unproxy();
 
-		const ret = {};
+		const ret: Record<string, any> = {};
 
-		const serializeValue = (propName, value, refValue, transform?: PropertyTransform) => {
+		const serializeValue = (propName: string | symbol, value: any, refValue: any, transform?: PropertyTransform) => {
 			const _required = isRequired(this, reference, propName);
 			let _ret = value;
 			if (value instanceof IPSOObject) {
@@ -371,7 +374,7 @@ export class IPSOObject {
 				const key = lookupKeyOrProperty(this, propName);
 				// find value and reference (default) value
 				let value = this[propName];
-				let refValue = null;
+				let refValue: any = null;
 				if (reference != null && reference.hasOwnProperty(propName)) {
 					refValue = reference[propName];
 				}
@@ -394,7 +397,7 @@ export class IPSOObject {
 						value = value.map(v => serializeValue(propName, v, null, serializer));
 					}
 					// now remove null items
-					value = value.filter(v => v != null);
+					value = (value as any[]).filter(v => v != null);
 					if (value.length === 0) value = null;
 				} else {
 					// directly serialize the value
@@ -455,7 +458,7 @@ export class IPSOObject {
 	 */
 	public createProxy(
 		get?: (me: this, key: PropertyKey) => any,
-		set?: (me: this, key: PropertyKey, value, receiver) => boolean,
+		set?: (me: this, key: PropertyKey, value: any, receiver: any) => boolean,
 	): this {
 		// per default create a proxy that proxies all IPSOObject instances (single or array)
 		return new Proxy(this, {

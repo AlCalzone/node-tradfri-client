@@ -108,13 +108,19 @@ export class Group extends IPSODevice {
 
 export type GroupOperation = Partial<Pick<Group, "onOff" | "dimmer" | "sceneId" | "transitionTime">>;
 
+interface AccessoryLink {
+	15002: {
+		9003: number[];
+	};
+}
+
 // TODO: Type annotation
-function parseAccessoryLink(link): number[] {
+function parseAccessoryLink(link: AccessoryLink): number[] {
 	const hsLink = link["15002"];
 	const deviceIDs = hsLink["9003"];
 	return deviceIDs;
 }
-function toAccessoryLink(ids: number[]): any {
+function toAccessoryLink(ids: number[]): AccessoryLink {
 	return {
 		15002: {
 			9003: ids,

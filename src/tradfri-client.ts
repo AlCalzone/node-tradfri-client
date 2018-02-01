@@ -76,9 +76,11 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	/** Options regarding IPSO objects and serialization */
 	private ipsoOptions: IPSOOptions = {};
 
+	// tslint:disable:unified-signatures
 	constructor(hostname: string)
 	constructor(hostname: string, customLogger: LoggerFunction)
 	constructor(hostname: string, options: TradfriOptions)
+	// tslint:enable:unified-signatures
 	constructor(
 		public readonly hostname: string,
 		optionsOrLogger?: LoggerFunction | TradfriOptions,
@@ -502,7 +504,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		}
 
 		const groupInfo = this.groups[groupId];
-		const newScenes = parsePayload(response);
+		const newScenes: number[] = parsePayload(response);
 
 		log(`got all scenes in group ${groupId}: ${JSON.stringify(newScenes)}`);
 

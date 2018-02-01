@@ -323,7 +323,7 @@ function createRGBProxy<T extends Light>() {
 			default: return me[key];
 		}
 	}
-	function set(me: T, key: PropertyKey, value, receiver) {
+	function set(me: T, key: PropertyKey, value: any, receiver: any) {
 		switch (key) {
 			case "color": {
 				if (predefinedColors.has(value)) {

@@ -49,6 +49,7 @@ export interface IPSOOptions {
 }
 export declare class IPSOObject {
     constructor(options?: IPSOOptions);
+    [propName: string]: any;
     /**
      * Reads this instance's properties from the given object
      */
@@ -59,7 +60,7 @@ export declare class IPSOObject {
      */
     merge(obj: Partial<this>): this;
     /** serializes this object in order to transfer it via COAP */
-    serialize(reference?: any): Record<string, any>;
+    serialize(reference?: this): Record<string, any>;
     /**
      * Deeply clones an IPSO Object
      */
@@ -74,6 +75,6 @@ export declare class IPSOObject {
      * @param get Custom getter trap (optional). This is called after mandatory traps are in place and before default behavior
      * @param set Custom setter trap (optional). This is called after mandatory traps are in place and before default behavior
      */
-    createProxy(get?: (me: this, key: PropertyKey) => any, set?: (me: this, key: PropertyKey, value, receiver) => boolean): this;
+    createProxy(get?: (me: this, key: PropertyKey) => any, set?: (me: this, key: PropertyKey, value: any, receiver: any) => boolean): this;
     protected client: OperationProvider;
 }

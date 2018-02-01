@@ -18,7 +18,7 @@ export function entries(obj: any): KeyValuePair<any>[] {
  * @param obj Das Objekt, dessen Eigenschaftswerte iteriert werden sollen
  */
 export function values<T>(obj: Record<string, T>): T[];
-export function values(obj): any[] {
+export function values(obj: any): any[] {
 	return Object.keys(obj)
 		.map(key => obj[key])
 		;
@@ -30,8 +30,8 @@ export function values(obj): any[] {
  * @param predicate Die Filter-Funktion, die auf Eigenschaften angewendet wird
  */
 export function filter<T>(obj: Record<string, T>, predicate: Predicate<T>): Record<string, T>;
-export function filter(obj: any, predicate: Predicate<any>) {
-	const ret = {};
+export function filter(obj: any, predicate: Predicate<any>): Record<string, any> {
+	const ret: Record<string, any> = {};
 	for (const [key, val] of entries(obj)) {
 		if (predicate(val)) ret[key] = val;
 	}
@@ -44,7 +44,7 @@ export function filter(obj: any, predicate: Predicate<any>) {
  */
 export function composeObject<T>(properties: KeyValuePair<T>[]): Record<string, T>;
 export function composeObject(properties: KeyValuePair<any>[]): Record<string, any> {
-	return properties.reduce((acc, [key, value]) => {
+	return properties.reduce((acc: Record<string, any>, [key, value]) => {
 		acc[key] = value;
 		return acc;
 	}, {});
