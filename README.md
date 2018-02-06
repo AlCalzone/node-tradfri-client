@@ -435,6 +435,9 @@ A DeviceInfo object contains general information about a device. It has the foll
 
 ## Changelog
 
+#### 0.7.1 (2018-02-06)
+* (AlCalzone) Update coap/dtls libs: Fixed an error in the cipher suite definitions
+
 #### 0.7.0 (2018-01-28)
 * (AlCalzone) Support using raw CoAP values instead of the simplified scales for many properties.
 
