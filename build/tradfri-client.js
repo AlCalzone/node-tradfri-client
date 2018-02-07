@@ -53,9 +53,7 @@ class TradfriClient extends events_1.EventEmitter {
      * @param psk The pre-shared key belonging to the identity.
      */
     connect(identity, psk) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.tryToConnect(identity, psk);
-        });
+        return this.tryToConnect(identity, psk);
     }
     /**
      * Try to establish a connection to the configured gateway.
@@ -333,13 +331,13 @@ class TradfriClient extends events_1.EventEmitter {
             yield Promise.all(observeGroupPromises);
             const removedKeys = array_extensions_1.except(oldKeys, newKeys);
             logger_1.log(`removing groups with keys ${JSON.stringify(removedKeys)}`, "debug");
-            removedKeys.forEach((id) => __awaiter(this, void 0, void 0, function* () {
+            removedKeys.forEach((id) => {
                 delete this.groups[id];
                 // remove observers
                 this.stopObservingGroup(id);
                 // and notify all listeners about the removal
                 this.emit("group removed", id);
-            }));
+            });
         });
     }
     stopObservingGroups() {
@@ -479,14 +477,12 @@ class TradfriClient extends events_1.EventEmitter {
      * @returns true if a request was sent, false otherwise
      */
     updateDevice(accessory) {
-        return __awaiter(this, void 0, void 0, function* () {
-            // retrieve the original as a reference for serialization
-            if (!(accessory.instanceId in this.devices)) {
-                throw new Error(`The device with id ${accessory.instanceId} is not known and cannot be update!`);
-            }
-            const original = this.devices[accessory.instanceId];
-            return this.updateResource(`${endpoints_1.endpoints.devices}/${accessory.instanceId}`, accessory, original);
-        });
+        // retrieve the original as a reference for serialization
+        if (!(accessory.instanceId in this.devices)) {
+            throw new Error(`The device with id ${accessory.instanceId} is not known and cannot be update!`);
+        }
+        const original = this.devices[accessory.instanceId];
+        return this.updateResource(`${endpoints_1.endpoints.devices}/${accessory.instanceId}`, accessory, original);
     }
     /**
      * Updates a group object on the gateway
@@ -494,14 +490,12 @@ class TradfriClient extends events_1.EventEmitter {
      * @returns true if a request was sent, false otherwise
      */
     updateGroup(group) {
-        return __awaiter(this, void 0, void 0, function* () {
-            // retrieve the original as a reference for serialization
-            if (!(group.instanceId in this.groups)) {
-                throw new Error(`The group with id ${group.instanceId} is not known and cannot be update!`);
-            }
-            const original = this.groups[group.instanceId].group;
-            return this.updateResource(`${endpoints_1.endpoints.groups}/${group.instanceId}`, group, original);
-        });
+        // retrieve the original as a reference for serialization
+        if (!(group.instanceId in this.groups)) {
+            throw new Error(`The group with id ${group.instanceId} is not known and cannot be update!`);
+        }
+        const original = this.groups[group.instanceId].group;
+        return this.updateResource(`${endpoints_1.endpoints.groups}/${group.instanceId}`, group, original);
     }
     /**
      * Updates a generic resource on the gateway
@@ -535,11 +529,9 @@ class TradfriClient extends events_1.EventEmitter {
      * @returns true if a request was sent, false otherwise
      */
     operateGroup(group, operation) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const reference = group.clone();
-            const newGroup = reference.clone().merge(operation);
-            return this.updateResource(`${endpoints_1.endpoints.groups}/${group.instanceId}`, newGroup, reference);
-        });
+        const reference = group.clone();
+        const newGroup = reference.clone().merge(operation);
+        return this.updateResource(`${endpoints_1.endpoints.groups}/${group.instanceId}`, newGroup, reference);
     }
     /**
      * Sets some properties on a lightbulb
@@ -548,15 +540,13 @@ class TradfriClient extends events_1.EventEmitter {
      * @returns true if a request was sent, false otherwise
      */
     operateLight(accessory, operation) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (accessory.type !== accessory_1.AccessoryTypes.lightbulb) {
-                throw new Error("The parameter accessory must be a lightbulb!");
-            }
-            const reference = accessory.clone();
-            const newAccessory = reference.clone();
-            newAccessory.lightList[0].merge(operation);
-            return this.updateResource(`${endpoints_1.endpoints.devices}/${accessory.instanceId}`, newAccessory, reference);
-        });
+        if (accessory.type !== accessory_1.AccessoryTypes.lightbulb) {
+            throw new Error("The parameter accessory must be a lightbulb!");
+        }
+        const reference = accessory.clone();
+        const newAccessory = reference.clone();
+        newAccessory.lightList[0].merge(operation);
+        return this.updateResource(`${endpoints_1.endpoints.devices}/${accessory.instanceId}`, newAccessory, reference);
     }
     /**
      * Sends a custom request to a resource

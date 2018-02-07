@@ -104,7 +104,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 * @param identity A previously negotiated identity.
 	 * @param psk The pre-shared key belonging to the identity.
 	 */
-	public async connect(identity: string, psk: string): Promise<boolean> {
+	public connect(identity: string, psk: string): Promise<boolean> {
 		return this.tryToConnect(identity, psk);
 	}
 
@@ -426,7 +426,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 
 		const removedKeys = except(oldKeys, newKeys);
 		log(`removing groups with keys ${JSON.stringify(removedKeys)}`, "debug");
-		removedKeys.forEach(async (id) => {
+		removedKeys.forEach((id) => {
 			delete this.groups[id];
 			// remove observers
 			this.stopObservingGroup(id);
@@ -593,7 +593,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 * @param accessory The device to be changed
 	 * @returns true if a request was sent, false otherwise
 	 */
-	public async updateDevice(accessory: Accessory): Promise<boolean> {
+	public updateDevice(accessory: Accessory): Promise<boolean> {
 		// retrieve the original as a reference for serialization
 		if (!(accessory.instanceId in this.devices)) {
 			throw new Error(`The device with id ${accessory.instanceId} is not known and cannot be update!`);
@@ -611,7 +611,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 * @param group The group to be changed
 	 * @returns true if a request was sent, false otherwise
 	 */
-	public async updateGroup(group: Group): Promise<boolean> {
+	public updateGroup(group: Group): Promise<boolean> {
 		// retrieve the original as a reference for serialization
 		if (!(group.instanceId in this.groups)) {
 			throw new Error(`The group with id ${group.instanceId} is not known and cannot be update!`);
@@ -661,7 +661,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 * @param operation The properties to be set
 	 * @returns true if a request was sent, false otherwise
 	 */
-	public async operateGroup(group: Group, operation: GroupOperation): Promise<boolean> {
+	public operateGroup(group: Group, operation: GroupOperation): Promise<boolean> {
 
 		const reference = group.clone();
 		const newGroup = reference.clone().merge(operation);
@@ -678,7 +678,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 * @param operation The properties to be set
 	 * @returns true if a request was sent, false otherwise
 	 */
-	public async operateLight(accessory: Accessory, operation: LightOperation): Promise<boolean> {
+	public operateLight(accessory: Accessory, operation: LightOperation): Promise<boolean> {
 		if (accessory.type !== AccessoryTypes.lightbulb) {
 			throw new Error("The parameter accessory must be a lightbulb!");
 		}

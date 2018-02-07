@@ -12,7 +12,7 @@ export type LightOperation = Partial<Pick<Light,
 	"onOff" | "dimmer" |
 	"color" | "colorTemperature" | "colorX" | "colorY" | "hue" | "saturation" |
 	"transitionTime"
->>;
+	>>;
 
 export class Light extends IPSODevice {
 
@@ -73,8 +73,8 @@ export class Light extends IPSODevice {
 
 	@ipsoKey("5712")
 	@required()
-	@serializeWith(serializers.transitionTime, {neverSkip: true})
-	@deserializeWith(deserializers.transitionTime, {neverSkip: true})
+	@serializeWith(serializers.transitionTime, { neverSkip: true })
+	@deserializeWith(deserializers.transitionTime, { neverSkip: true })
 	public transitionTime: number = 0.5; // <float>
 
 	@ipsoKey("5805")
@@ -168,7 +168,7 @@ export class Light extends IPSODevice {
 	}
 
 	/** Turn this lightbulb on */
-	public async turnOn(): Promise<boolean> {
+	public turnOn(): Promise<boolean> {
 		this.ensureLink();
 		return this.client.operateLight(this._accessory, {
 			onOff: true,
@@ -176,7 +176,7 @@ export class Light extends IPSODevice {
 	}
 
 	/** Turn this lightbulb off */
-	public async turnOff(): Promise<boolean> {
+	public turnOff(): Promise<boolean> {
 		this.ensureLink();
 		return this.client.operateLight(this._accessory, {
 			onOff: false,
@@ -184,14 +184,14 @@ export class Light extends IPSODevice {
 	}
 
 	/** Toggles this lightbulb on or off */
-	public async toggle(value: boolean = !this.onOff): Promise<boolean> {
+	public toggle(value: boolean = !this.onOff): Promise<boolean> {
 		this.ensureLink();
 		return this.client.operateLight(this._accessory, {
 			onOff: value,
 		});
 	}
 
-	private async operateLight(operation: LightOperation, transitionTime?: number): Promise<boolean> {
+	private operateLight(operation: LightOperation, transitionTime?: number): Promise<boolean> {
 		if (transitionTime != null) {
 			transitionTime = Math.max(0, transitionTime);
 			operation.transitionTime = transitionTime;
@@ -203,7 +203,7 @@ export class Light extends IPSODevice {
 	 * Changes this lightbulb's brightness
 	 * @returns true if a request was sent, false otherwise
 	 */
-	public async setBrightness(value: number, transitionTime?: number): Promise<boolean> {
+	public setBrightness(value: number, transitionTime?: number): Promise<boolean> {
 		this.ensureLink();
 
 		value = clamp(value, 0, 100);
@@ -217,7 +217,7 @@ export class Light extends IPSODevice {
 	 * @param value The target color as a 6-digit hex string
 	 * @returns true if a request was sent, false otherwise
 	 */
-	public async setColor(value: string, transitionTime?: number): Promise<boolean> {
+	public setColor(value: string, transitionTime?: number): Promise<boolean> {
 		switch (this.spectrum) {
 			case "rgb": {
 				this.ensureLink();
@@ -250,7 +250,7 @@ export class Light extends IPSODevice {
 	 * @param value The target color temperature in the range 0% (cold) to 100% (warm)
 	 * @returns true if a request was sent, false otherwise
 	 */
-	public async setColorTemperature(value: number, transitionTime?: number): Promise<boolean> {
+	public setColorTemperature(value: number, transitionTime?: number): Promise<boolean> {
 		if (this.spectrum !== "white") throw new Error("setColorTemperature is only available for white spectrum lightbulbs");
 		this.ensureLink();
 
@@ -264,7 +264,7 @@ export class Light extends IPSODevice {
 	 * Changes this lightbulb's color hue
 	 * @returns true if a request was sent, false otherwise
 	 */
-	public async setHue(value: number, transitionTime?: number): Promise<boolean> {
+	public setHue(value: number, transitionTime?: number): Promise<boolean> {
 		if (this.spectrum !== "rgb") throw new Error("setHue is only available for RGB lightbulbs");
 		this.ensureLink();
 
@@ -278,7 +278,7 @@ export class Light extends IPSODevice {
 	 * Changes this lightbulb's color saturation
 	 * @returns true if a request was sent, false otherwise
 	 */
-	public async setSaturation(value: number, transitionTime?: number): Promise<boolean> {
+	public setSaturation(value: number, transitionTime?: number): Promise<boolean> {
 		if (this.spectrum !== "rgb") throw new Error("setSaturation is only available for RGB lightbulbs");
 		this.ensureLink();
 
@@ -306,18 +306,18 @@ function createRGBProxy<T extends Light>() {
 					return me.color;
 				} else {
 					// calculate it from colorX/Y
-					const {r, g, b} = conversions.rgbFromCIExyY(me.colorX / MAX_COLOR, me.colorY / MAX_COLOR);
+					const { r, g, b } = conversions.rgbFromCIExyY(me.colorX / MAX_COLOR, me.colorY / MAX_COLOR);
 					return conversions.rgbToString(r, g, b);
 				}
 			}
 			case "hue": {
-				const {r, g, b} = conversions.rgbFromString(get(me, "color"));
-				const {h} = conversions.rgbToHSV(r, g, b);
+				const { r, g, b } = conversions.rgbFromString(get(me, "color"));
+				const { h } = conversions.rgbToHSV(r, g, b);
 				return h;
 			}
 			case "saturation": {
-				const {r, g, b} = conversions.rgbFromString(get(me, "color"));
-				const {s} = conversions.rgbToHSV(r, g, b);
+				const { r, g, b } = conversions.rgbFromString(get(me, "color"));
+				const { s } = conversions.rgbToHSV(r, g, b);
 				return Math.round(s * 100);
 			}
 			default: return me[key];
@@ -335,8 +335,8 @@ function createRGBProxy<T extends Light>() {
 					// only accept HEX colors
 					if (rgbRegex.test(value)) {
 						// calculate the X/Y values
-						const {r, g, b} = conversions.rgbFromString(value);
-						const {x, y} = conversions.rgbToCIExyY(r, g, b);
+						const { r, g, b } = conversions.rgbFromString(value);
+						const { x, y } = conversions.rgbToCIExyY(r, g, b);
 						me.colorX = Math.round(x * MAX_COLOR);
 						me.colorY = Math.round(y * MAX_COLOR);
 					}
@@ -344,20 +344,20 @@ function createRGBProxy<T extends Light>() {
 				break;
 			}
 			case "hue": {
-				let {r, g, b} = conversions.rgbFromString(get(me, "color"));
+				let { r, g, b } = conversions.rgbFromString(get(me, "color"));
 				// tslint:disable-next-line:prefer-const
-				let {h, s, v} = conversions.rgbToHSV(r, g, b);
+				let { h, s, v } = conversions.rgbToHSV(r, g, b);
 				h = value;
-				({r, g, b} = conversions.rgbFromHSV(h, s, v));
+				({ r, g, b } = conversions.rgbFromHSV(h, s, v));
 				set(me, "color", conversions.rgbToString(r, g, b), receiver);
 				break;
 			}
 			case "saturation": {
-				let {r, g, b} = conversions.rgbFromString(get(me, "color"));
+				let { r, g, b } = conversions.rgbFromString(get(me, "color"));
 				// tslint:disable-next-line:prefer-const
-				let {h, s, v} = conversions.rgbToHSV(r, g, b);
+				let { h, s, v } = conversions.rgbToHSV(r, g, b);
 				s = value / 100;
-				({r, g, b} = conversions.rgbFromHSV(h, s, v));
+				({ r, g, b } = conversions.rgbFromHSV(h, s, v));
 				set(me, "color", conversions.rgbToString(r, g, b), receiver);
 				break;
 			}
@@ -366,5 +366,5 @@ function createRGBProxy<T extends Light>() {
 		return true;
 	}
 
-	return {get, set};
+	return { get, set };
 }

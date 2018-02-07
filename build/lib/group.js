@@ -8,14 +8,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const conversions_1 = require("./conversions");
 const ipsoDevice_1 = require("./ipsoDevice");
@@ -36,62 +28,50 @@ class Group extends ipsoDevice_1.IPSODevice {
     }
     /** Turn all lightbulbs on */
     turnOn() {
-        return __awaiter(this, void 0, void 0, function* () {
-            this.ensureLink();
-            return this.client.operateGroup(this, {
-                onOff: true,
-            });
+        this.ensureLink();
+        return this.client.operateGroup(this, {
+            onOff: true,
         });
     }
     /** Turn all lightbulbs off */
     turnOff() {
-        return __awaiter(this, void 0, void 0, function* () {
-            this.ensureLink();
-            return this.client.operateGroup(this, {
-                onOff: false,
-            });
+        this.ensureLink();
+        return this.client.operateGroup(this, {
+            onOff: false,
         });
     }
     /** Set all lightbulbs on/off to the given state */
     toggle(value) {
-        return __awaiter(this, void 0, void 0, function* () {
-            this.ensureLink();
-            return this.client.operateGroup(this, {
-                onOff: value,
-            });
+        this.ensureLink();
+        return this.client.operateGroup(this, {
+            onOff: value,
         });
     }
     /** Activates the given scene */
     activateScene(sceneOrId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            this.ensureLink();
-            const id = (sceneOrId instanceof scene_1.Scene) ? sceneOrId.instanceId : sceneOrId;
-            return this.client.operateGroup(this, {
-                sceneId: id,
-            });
+        this.ensureLink();
+        const id = (sceneOrId instanceof scene_1.Scene) ? sceneOrId.instanceId : sceneOrId;
+        return this.client.operateGroup(this, {
+            sceneId: id,
         });
     }
     operateGroup(operation, transitionTime) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (transitionTime != null) {
-                transitionTime = Math.max(0, transitionTime);
-                operation.transitionTime = transitionTime;
-            }
-            return this.client.operateGroup(this, operation);
-        });
+        if (transitionTime != null) {
+            transitionTime = Math.max(0, transitionTime);
+            operation.transitionTime = transitionTime;
+        }
+        return this.client.operateGroup(this, operation);
     }
     /**
      * Changes this lightbulb's brightness
      * @returns true if a request was sent, false otherwise
      */
     setBrightness(value, transitionTime) {
-        return __awaiter(this, void 0, void 0, function* () {
-            this.ensureLink();
-            value = math_1.clamp(value, 0, 100);
-            return this.operateGroup({
-                dimmer: value,
-            }, transitionTime);
-        });
+        this.ensureLink();
+        value = math_1.clamp(value, 0, 100);
+        return this.operateGroup({
+            dimmer: value,
+        }, transitionTime);
     }
 }
 __decorate([
@@ -127,7 +107,6 @@ __decorate([
     __metadata("design:type", Number)
 ], Group.prototype, "transitionTime", void 0);
 exports.Group = Group;
-// TODO: Type annotation
 function parseAccessoryLink(link) {
     const hsLink = link["15002"];
     const deviceIDs = hsLink["9003"];

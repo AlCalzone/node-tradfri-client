@@ -51,7 +51,7 @@ export class Group extends IPSODevice {
 	}
 
 	/** Turn all lightbulbs on */
-	public async turnOn(): Promise<boolean> {
+	public turnOn(): Promise<boolean> {
 		this.ensureLink();
 		return this.client.operateGroup(this, {
 			onOff: true,
@@ -59,7 +59,7 @@ export class Group extends IPSODevice {
 	}
 
 	/** Turn all lightbulbs off */
-	public async turnOff(): Promise<boolean> {
+	public turnOff(): Promise<boolean> {
 		this.ensureLink();
 		return this.client.operateGroup(this, {
 			onOff: false,
@@ -67,7 +67,7 @@ export class Group extends IPSODevice {
 	}
 
 	/** Set all lightbulbs on/off to the given state */
-	public async toggle(value: boolean): Promise<boolean> {
+	public toggle(value: boolean): Promise<boolean> {
 		this.ensureLink();
 		return this.client.operateGroup(this, {
 			onOff: value,
@@ -75,7 +75,7 @@ export class Group extends IPSODevice {
 	}
 
 	/** Activates the given scene */
-	public async activateScene(sceneOrId: Scene | number): Promise<boolean> {
+	public activateScene(sceneOrId: Scene | number): Promise<boolean> {
 		this.ensureLink();
 		const id: number = (sceneOrId instanceof Scene) ? sceneOrId.instanceId : sceneOrId;
 		return this.client.operateGroup(this, {
@@ -83,7 +83,7 @@ export class Group extends IPSODevice {
 		});
 	}
 
-	private async operateGroup(operation: GroupOperation, transitionTime?: number): Promise<boolean> {
+	private operateGroup(operation: GroupOperation, transitionTime?: number): Promise<boolean> {
 		if (transitionTime != null) {
 			transitionTime = Math.max(0, transitionTime);
 			operation.transitionTime = transitionTime;
@@ -95,7 +95,7 @@ export class Group extends IPSODevice {
 	 * Changes this lightbulb's brightness
 	 * @returns true if a request was sent, false otherwise
 	 */
-	public async setBrightness(value: number, transitionTime?: number): Promise<boolean> {
+	public setBrightness(value: number, transitionTime?: number): Promise<boolean> {
 		this.ensureLink();
 
 		value = clamp(value, 0, 100);
@@ -114,7 +114,6 @@ interface AccessoryLink {
 	};
 }
 
-// TODO: Type annotation
 function parseAccessoryLink(link: AccessoryLink): number[] {
 	const hsLink = link["15002"];
 	const deviceIDs = hsLink["9003"];

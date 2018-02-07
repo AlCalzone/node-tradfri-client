@@ -8,14 +8,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const accessory_1 = require("./accessory");
 const conversions_1 = require("./conversions");
@@ -109,52 +101,42 @@ class Light extends ipsoDevice_1.IPSODevice {
     }
     /** Turn this lightbulb on */
     turnOn() {
-        return __awaiter(this, void 0, void 0, function* () {
-            this.ensureLink();
-            return this.client.operateLight(this._accessory, {
-                onOff: true,
-            });
+        this.ensureLink();
+        return this.client.operateLight(this._accessory, {
+            onOff: true,
         });
     }
     /** Turn this lightbulb off */
     turnOff() {
-        return __awaiter(this, void 0, void 0, function* () {
-            this.ensureLink();
-            return this.client.operateLight(this._accessory, {
-                onOff: false,
-            });
+        this.ensureLink();
+        return this.client.operateLight(this._accessory, {
+            onOff: false,
         });
     }
     /** Toggles this lightbulb on or off */
     toggle(value = !this.onOff) {
-        return __awaiter(this, void 0, void 0, function* () {
-            this.ensureLink();
-            return this.client.operateLight(this._accessory, {
-                onOff: value,
-            });
+        this.ensureLink();
+        return this.client.operateLight(this._accessory, {
+            onOff: value,
         });
     }
     operateLight(operation, transitionTime) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (transitionTime != null) {
-                transitionTime = Math.max(0, transitionTime);
-                operation.transitionTime = transitionTime;
-            }
-            return this.client.operateLight(this._accessory, operation);
-        });
+        if (transitionTime != null) {
+            transitionTime = Math.max(0, transitionTime);
+            operation.transitionTime = transitionTime;
+        }
+        return this.client.operateLight(this._accessory, operation);
     }
     /**
      * Changes this lightbulb's brightness
      * @returns true if a request was sent, false otherwise
      */
     setBrightness(value, transitionTime) {
-        return __awaiter(this, void 0, void 0, function* () {
-            this.ensureLink();
-            value = math_1.clamp(value, 0, 100);
-            return this.operateLight({
-                dimmer: value,
-            }, transitionTime);
-        });
+        this.ensureLink();
+        value = math_1.clamp(value, 0, 100);
+        return this.operateLight({
+            dimmer: value,
+        }, transitionTime);
     }
     /**
      * Changes this lightbulb's color
@@ -162,30 +144,28 @@ class Light extends ipsoDevice_1.IPSODevice {
      * @returns true if a request was sent, false otherwise
      */
     setColor(value, transitionTime) {
-        return __awaiter(this, void 0, void 0, function* () {
-            switch (this.spectrum) {
-                case "rgb": {
-                    this.ensureLink();
-                    return this.operateLight({
-                        color: value,
-                    }, transitionTime);
-                }
-                case "white": {
-                    // We make an exception for the predefined white spectrum colors
-                    if (!(value in predefined_colors_1.whiteSpectrumHex)) {
-                        throw new Error("White spectrum bulbs only support the following colors: " +
-                            Object.keys(predefined_colors_1.whiteSpectrumHex).join(", "));
-                    }
-                    this.ensureLink();
-                    return this.operateLight({
-                        colorTemperature: predefined_colors_1.whiteSpectrumHex[value],
-                    }, transitionTime);
-                }
-                default: {
-                    throw new Error("setColor is only available for RGB lightbulbs");
-                }
+        switch (this.spectrum) {
+            case "rgb": {
+                this.ensureLink();
+                return this.operateLight({
+                    color: value,
+                }, transitionTime);
             }
-        });
+            case "white": {
+                // We make an exception for the predefined white spectrum colors
+                if (!(value in predefined_colors_1.whiteSpectrumHex)) {
+                    throw new Error("White spectrum bulbs only support the following colors: " +
+                        Object.keys(predefined_colors_1.whiteSpectrumHex).join(", "));
+                }
+                this.ensureLink();
+                return this.operateLight({
+                    colorTemperature: predefined_colors_1.whiteSpectrumHex[value],
+                }, transitionTime);
+            }
+            default: {
+                throw new Error("setColor is only available for RGB lightbulbs");
+            }
+        }
     }
     /**
      * Changes this lightbulb's color temperature
@@ -193,45 +173,39 @@ class Light extends ipsoDevice_1.IPSODevice {
      * @returns true if a request was sent, false otherwise
      */
     setColorTemperature(value, transitionTime) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (this.spectrum !== "white")
-                throw new Error("setColorTemperature is only available for white spectrum lightbulbs");
-            this.ensureLink();
-            value = math_1.clamp(value, 0, 100);
-            return this.operateLight({
-                colorTemperature: value,
-            }, transitionTime);
-        });
+        if (this.spectrum !== "white")
+            throw new Error("setColorTemperature is only available for white spectrum lightbulbs");
+        this.ensureLink();
+        value = math_1.clamp(value, 0, 100);
+        return this.operateLight({
+            colorTemperature: value,
+        }, transitionTime);
     }
     /**
      * Changes this lightbulb's color hue
      * @returns true if a request was sent, false otherwise
      */
     setHue(value, transitionTime) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (this.spectrum !== "rgb")
-                throw new Error("setHue is only available for RGB lightbulbs");
-            this.ensureLink();
-            value = math_1.clamp(value, 0, 360);
-            return this.operateLight({
-                hue: value,
-            }, transitionTime);
-        });
+        if (this.spectrum !== "rgb")
+            throw new Error("setHue is only available for RGB lightbulbs");
+        this.ensureLink();
+        value = math_1.clamp(value, 0, 360);
+        return this.operateLight({
+            hue: value,
+        }, transitionTime);
     }
     /**
      * Changes this lightbulb's color saturation
      * @returns true if a request was sent, false otherwise
      */
     setSaturation(value, transitionTime) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (this.spectrum !== "rgb")
-                throw new Error("setSaturation is only available for RGB lightbulbs");
-            this.ensureLink();
-            value = math_1.clamp(value, 0, 100);
-            return this.operateLight({
-                saturation: value,
-            }, transitionTime);
-        });
+        if (this.spectrum !== "rgb")
+            throw new Error("setSaturation is only available for RGB lightbulbs");
+        this.ensureLink();
+        value = math_1.clamp(value, 0, 100);
+        return this.operateLight({
+            saturation: value,
+        }, transitionTime);
     }
 }
 __decorate([
