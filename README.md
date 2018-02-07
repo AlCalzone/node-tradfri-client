@@ -435,6 +435,9 @@ A DeviceInfo object contains general information about a device. It has the foll
 
 ## Changelog
 
+#### 0.7.2 (2018-02-07)
+* (AlCalzone) Attempt to fix `TypeError: generator already running` in ioBroker.tradfri
+
 #### 0.7.1 (2018-02-06)
 * (AlCalzone) Update coap/dtls libs: Fixed an error in the cipher suite definitions
 
