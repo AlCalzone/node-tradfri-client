@@ -102,6 +102,8 @@ describe("ipso/accessory => ", () => {
 		// compare all lights
 		const ignoredProperties = [
 			"5706", // we don't send the RGB hex string
+			"5709", // we also don't send colorX/Y anymore
+			"5710", // we also don't send colorX/Y anymore
 		];
 		expect(serialized["3311"].length).to.equal(template["3311"].length);
 		for (let i = 0; i < serialized["3311"].length; i++) {

@@ -1,3 +1,4 @@
+// tslint:disable:no-console
 // tslint:disable:no-unused-expression
 // tslint:disable:variable-name
 
@@ -235,7 +236,7 @@ describe("tradfri-client => ", () => {
 
 // // tslint:disable-next-line:only-arrow-functions
 // describe.only("raw coap tests => ", function() {
-// 	const params = {host: "gw-b072bf257a41", securityCode: "", identity: "tradfri_1509642359115", psk: "gzqZY5HUlFOOVu9f"};
+// 	const params = {host: "gw-B072bf257a41", securityCode: "", identity: "tradfri_1509642359115", psk: "gzqZY5HUlFOOVu9f"};
 // 	const tradfri = new TradfriClient(params.host, {useRawCoAPValues: true});
 // 	this.timeout(60000);
 // 	it("should work", async () => {

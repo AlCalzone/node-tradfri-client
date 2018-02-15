@@ -37,7 +37,7 @@ function defineColor(rgbHex: string, x: number, y: number, hue: number, saturati
 		colorX: Math.round(x * MAX_COLOR),
 		colorY: Math.round(y * MAX_COLOR),
 		hue: hue * 360 / MAX_COLOR,
-		saturation: saturation / MAX_COLOR,
+		saturation: saturation * 100 / MAX_COLOR,
 		rgbHex,
 	};
 	if (temperature != null) definition.temperature = temperature;

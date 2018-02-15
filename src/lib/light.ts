@@ -40,9 +40,10 @@ export class Light extends IPSODevice {
 	@doNotSerialize private _accessory: Accessory;
 
 	@ipsoKey("5706")
-	@doNotSerialize // this is done through colorX / colorY
+	@doNotSerialize // this is done through hue/saturation
 	public color: string = "f1e0b5"; // hex string
 
+	// As of Gateway version v1.3.14, this is finally supported too
 	@ipsoKey("5707")
 	@serializeWith(serializers.hue)
 	@deserializeWith(deserializers.hue)
@@ -53,10 +54,11 @@ export class Light extends IPSODevice {
 	public saturation: number; // 0-100%
 
 	@ipsoKey("5709")
+	@doNotSerialize
 	public colorX: number; // int
 
 	@ipsoKey("5710")
-	@required((me: Light, ref: Light) => ref != null && me.colorX !== ref.colorX) // force colorY to be present if colorX is
+	@doNotSerialize
 	public colorY: number; // int
 
 	// As of Gateway version v1.3.14, this is finally supported
@@ -305,20 +307,10 @@ function createRGBProxy<T extends Light>() {
 					// predefined color, return it
 					return me.color;
 				} else {
-					// calculate it from colorX/Y
-					const { r, g, b } = conversions.rgbFromCIExyY(me.colorX / MAX_COLOR, me.colorY / MAX_COLOR);
+					// calculate it from hue/saturation
+					const { r, g, b } = conversions.rgbFromHSV(me.hue, me.saturation, 1);
 					return conversions.rgbToString(r, g, b);
 				}
-			}
-			case "hue": {
-				const { r, g, b } = conversions.rgbFromString(get(me, "color"));
-				const { h } = conversions.rgbToHSV(r, g, b);
-				return h;
-			}
-			case "saturation": {
-				const { r, g, b } = conversions.rgbFromString(get(me, "color"));
-				const { s } = conversions.rgbToHSV(r, g, b);
-				return Math.round(s * 100);
 			}
 			default: return me[key];
 		}
@@ -329,36 +321,18 @@ function createRGBProxy<T extends Light>() {
 				if (predefinedColors.has(value)) {
 					// its a predefined color, use the predefined values
 					const definition = predefinedColors.get(value);
-					me.colorX = definition.colorX;
-					me.colorY = definition.colorY;
+					me.hue = definition.hue;
+					me.saturation = definition.saturation;
 				} else {
 					// only accept HEX colors
 					if (rgbRegex.test(value)) {
 						// calculate the X/Y values
 						const { r, g, b } = conversions.rgbFromString(value);
-						const { x, y } = conversions.rgbToCIExyY(r, g, b);
-						me.colorX = Math.round(x * MAX_COLOR);
-						me.colorY = Math.round(y * MAX_COLOR);
+						const { h, s, v } = conversions.rgbToHSV(r, g, b);
+						me.hue = h;
+						me.saturation = s;
 					}
 				}
-				break;
-			}
-			case "hue": {
-				let { r, g, b } = conversions.rgbFromString(get(me, "color"));
-				// tslint:disable-next-line:prefer-const
-				let { h, s, v } = conversions.rgbToHSV(r, g, b);
-				h = value;
-				({ r, g, b } = conversions.rgbFromHSV(h, s, v));
-				set(me, "color", conversions.rgbToString(r, g, b), receiver);
-				break;
-			}
-			case "saturation": {
-				let { r, g, b } = conversions.rgbFromString(get(me, "color"));
-				// tslint:disable-next-line:prefer-const
-				let { h, s, v } = conversions.rgbToHSV(r, g, b);
-				s = value / 100;
-				({ r, g, b } = conversions.rgbFromHSV(h, s, v));
-				set(me, "color", conversions.rgbToString(r, g, b), receiver);
 				break;
 			}
 			default: me[key] = value;

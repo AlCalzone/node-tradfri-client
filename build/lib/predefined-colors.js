@@ -21,7 +21,7 @@ function defineColor(rgbHex, x, y, hue, saturation, temperature) {
         colorX: Math.round(x * exports.MAX_COLOR),
         colorY: Math.round(y * exports.MAX_COLOR),
         hue: hue * 360 / exports.MAX_COLOR,
-        saturation: saturation / exports.MAX_COLOR,
+        saturation: saturation * 100 / exports.MAX_COLOR,
         rgbHex,
     };
     if (temperature != null)

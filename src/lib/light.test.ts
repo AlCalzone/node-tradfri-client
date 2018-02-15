@@ -5,7 +5,7 @@ require("reflect-metadata");
 import { expect } from "chai";
 import { Accessory } from "./accessory";
 import { Spectrum } from "./light";
-import { predefinedColors } from "./predefined-colors";
+import { MAX_COLOR, predefinedColors } from "./predefined-colors";
 
 function buildAccessory(modelName: string) {
 	return {
@@ -18,11 +18,11 @@ function buildAccessory(modelName: string) {
 		},
 		3311: [
 			{
-				5706: "f5faf6",
-				5707: 0,
-				5708: 0,
-				5709: 24930,
-				5710: 24694,
+				5706: "010203",
+				5707: 38079,
+				5708: 43737,
+				5709: 0,
+				5710: 0,
 				5711: 0,
 				5850: 1,
 				5851: 254,
@@ -90,20 +90,20 @@ describe("ipso/light => feature tests =>", () => {
 		}
 	});
 
-	it("setting the hex color on an RGB bulb should update colorX and colorY", () => {
+	it("setting the hex color on an RGB bulb should update hue and saturation", () => {
 		const rgb = new Accessory()
 			.parse(buildAccessory("TRADFRI bulb E27 C/WS opal 600lm"))
 			.createProxy()
 			;
 		const light = rgb.lightList[0];
 
-		light.merge({colorX: 0, colorY: 0});
+		light.merge({hue: 0, saturation: 0});
 		light.color = "BADA55";
-		expect(light.colorX).to.not.equal(0);
-		expect(light.colorY).to.not.equal(0);
+		expect(light.hue).to.not.equal(0);
+		expect(light.saturation).to.not.equal(0);
 	});
 
-	it("the payload to set RGB color should include colorX/Y and transitionTime", () => {
+	it("the payload to set RGB color should include hue/saturation and transitionTime", () => {
 		const rgb = new Accessory()
 			.parse(buildAccessory("TRADFRI bulb E27 C/WS opal 600lm"))
 			.createProxy()
@@ -115,12 +115,12 @@ describe("ipso/light => feature tests =>", () => {
 		const serialized = rgb.serialize(original);
 		expect(serialized).to.haveOwnProperty("3311");
 		expect(serialized["3311"]).to.have.length(1);
-		expect(serialized["3311"][0]).to.haveOwnProperty("5709");
-		expect(serialized["3311"][0]).to.haveOwnProperty("5710");
+		expect(serialized["3311"][0]).to.haveOwnProperty("5707");
+		expect(serialized["3311"][0]).to.haveOwnProperty("5708");
 		expect(serialized["3311"][0]).to.haveOwnProperty("5712");
 	});
 
-	it("updating RGB to a predefined color should send the predefined colorX/Y values", () => {
+	it("updating RGB to a predefined color should send the predefined hue/saturation values", () => {
 		const rgb = new Accessory()
 			.parse(buildAccessory("TRADFRI bulb E27 C/WS opal 600lm"))
 			.createProxy()
@@ -134,8 +134,8 @@ describe("ipso/light => feature tests =>", () => {
 			const serialized = rgb.serialize(original);
 			expect(serialized).to.deep.equal({
 				3311: [{
-					5709: predefined.colorX,
-					5710: predefined.colorY,
+					5707: Math.round(predefined.hue / 360 * MAX_COLOR),
+					5708: Math.round(predefined.saturation / 100 * MAX_COLOR),
 					5712: 5,
 				}],
 			});

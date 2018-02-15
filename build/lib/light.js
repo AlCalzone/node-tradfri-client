@@ -218,7 +218,7 @@ __decorate([
 ], Light.prototype, "_accessory", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("5706"),
-    ipsoObject_1.doNotSerialize // this is done through colorX / colorY
+    ipsoObject_1.doNotSerialize // this is done through hue/saturation
     ,
     __metadata("design:type", String)
 ], Light.prototype, "color", void 0);
@@ -236,12 +236,12 @@ __decorate([
 ], Light.prototype, "saturation", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("5709"),
+    ipsoObject_1.doNotSerialize,
     __metadata("design:type", Number)
 ], Light.prototype, "colorX", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("5710"),
-    ipsoObject_1.required((me, ref) => ref != null && me.colorX !== ref.colorX) // force colorY to be present if colorX is
-    ,
+    ipsoObject_1.doNotSerialize,
     __metadata("design:type", Number)
 ], Light.prototype, "colorY", void 0);
 __decorate([
@@ -302,20 +302,10 @@ function createRGBProxy() {
                     return me.color;
                 }
                 else {
-                    // calculate it from colorX/Y
-                    const { r, g, b } = conversions_1.conversions.rgbFromCIExyY(me.colorX / predefined_colors_1.MAX_COLOR, me.colorY / predefined_colors_1.MAX_COLOR);
+                    // calculate it from hue/saturation
+                    const { r, g, b } = conversions_1.conversions.rgbFromHSV(me.hue, me.saturation, 1);
                     return conversions_1.conversions.rgbToString(r, g, b);
                 }
-            }
-            case "hue": {
-                const { r, g, b } = conversions_1.conversions.rgbFromString(get(me, "color"));
-                const { h } = conversions_1.conversions.rgbToHSV(r, g, b);
-                return h;
-            }
-            case "saturation": {
-                const { r, g, b } = conversions_1.conversions.rgbFromString(get(me, "color"));
-                const { s } = conversions_1.conversions.rgbToHSV(r, g, b);
-                return Math.round(s * 100);
             }
             default: return me[key];
         }
@@ -326,37 +316,19 @@ function createRGBProxy() {
                 if (predefined_colors_1.predefinedColors.has(value)) {
                     // its a predefined color, use the predefined values
                     const definition = predefined_colors_1.predefinedColors.get(value);
-                    me.colorX = definition.colorX;
-                    me.colorY = definition.colorY;
+                    me.hue = definition.hue;
+                    me.saturation = definition.saturation;
                 }
                 else {
                     // only accept HEX colors
                     if (rgbRegex.test(value)) {
                         // calculate the X/Y values
                         const { r, g, b } = conversions_1.conversions.rgbFromString(value);
-                        const { x, y } = conversions_1.conversions.rgbToCIExyY(r, g, b);
-                        me.colorX = Math.round(x * predefined_colors_1.MAX_COLOR);
-                        me.colorY = Math.round(y * predefined_colors_1.MAX_COLOR);
+                        const { h, s, v } = conversions_1.conversions.rgbToHSV(r, g, b);
+                        me.hue = h;
+                        me.saturation = s;
                     }
                 }
-                break;
-            }
-            case "hue": {
-                let { r, g, b } = conversions_1.conversions.rgbFromString(get(me, "color"));
-                // tslint:disable-next-line:prefer-const
-                let { h, s, v } = conversions_1.conversions.rgbToHSV(r, g, b);
-                h = value;
-                ({ r, g, b } = conversions_1.conversions.rgbFromHSV(h, s, v));
-                set(me, "color", conversions_1.conversions.rgbToString(r, g, b), receiver);
-                break;
-            }
-            case "saturation": {
-                let { r, g, b } = conversions_1.conversions.rgbFromString(get(me, "color"));
-                // tslint:disable-next-line:prefer-const
-                let { h, s, v } = conversions_1.conversions.rgbToHSV(r, g, b);
-                s = value / 100;
-                ({ r, g, b } = conversions_1.conversions.rgbFromHSV(h, s, v));
-                set(me, "color", conversions_1.conversions.rgbToString(r, g, b), receiver);
                 break;
             }
             default: me[key] = value;
