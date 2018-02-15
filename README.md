@@ -435,6 +435,9 @@ A DeviceInfo object contains general information about a device. It has the foll
 
 ## Changelog
 
+#### 0.8.0 (2018-02-15)
+* (AlCalzone) Use the `hue` and `saturation` CoAP properties directly instead of `colorX/Y`
+
 #### 0.7.2 (2018-02-07)
 * (AlCalzone) Attempt to fix `TypeError: generator already running` in ioBroker.tradfri
 
