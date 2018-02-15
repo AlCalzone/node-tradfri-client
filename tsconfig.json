@@ -9,12 +9,13 @@
         "outDir": "build/",
         "removeComments": false,
         "experimentalDecorators": true,
-        "emitDecoratorMetadata": true,        
+        "emitDecoratorMetadata": true,
         "sourceMap": false,
         "inlineSourceMap": false,
         "stripInternal": true,
         "target": "es2015",
-        "strictPropertyInitialization": true
+        "strictPropertyInitialization": true,
+        "watch": true
     },
     "include": [
         "src/**/*.ts"
