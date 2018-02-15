@@ -56,7 +56,7 @@
 	},
 	"scripts": {
 		"watch": "tsc --watch",
-		"test:ts": "node node_modules/mocha/bin/mocha --require ts-node/register --require source-map-support/register src/**/*.test.ts --exit",
+		"test:ts": "node node_modules/mocha/bin/mocha --require ts-node/register --require source-map-support/register src/**/*.test.ts",
 		"test": "npm run test:ts",
 		"coverage": "node node_modules/nyc/bin/nyc npm run test",
 		"lint:ts": "tslint",
