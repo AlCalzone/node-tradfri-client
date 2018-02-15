@@ -19,7 +19,7 @@ const colorTemperature_in = (value) => {
     // interpolate "color percentage" from the colorTemperature range of a lightbulb
     value = (value - min) / (max - min);
     value = math_1.clamp(value, 0, 1);
-    return math_1.roundTo(value * 100, 0);
+    return math_1.roundTo(value * 100, 1);
 };
 // ==========================
 // RGB conversions
@@ -175,7 +175,7 @@ const hue_out = (value, light) => {
 // interpolate hue from [0..COLOR_MAX] to [0..360]
 const hue_in = (value /*, light: Light*/) => {
     value = math_1.clamp(value / predefined_colors_1.MAX_COLOR, 0, 1);
-    return math_1.roundTo(value * 360, 0);
+    return math_1.roundTo(value * 360, 1);
 };
 // interpolate saturation from [0..100%] to [0..COLOR_MAX]
 const saturation_out = (value, light) => {
@@ -187,7 +187,7 @@ const saturation_out = (value, light) => {
 // interpolate saturation from [0..COLOR_MAX] to [0..100%]
 const saturation_in = (value /*, light: Light*/) => {
     value = math_1.clamp(value / predefined_colors_1.MAX_COLOR, 0, 1);
-    return math_1.roundTo(value * 100, 0);
+    return math_1.roundTo(value * 100, 1);
 };
 // ===========================
 // TRANSITION TIME conversions
@@ -200,7 +200,7 @@ const transitionTime_in = val => val / 10;
 // interpolate from [0..100%] to [0..254]
 const brightness_out = (value) => {
     value = math_1.clamp(value, 0, 100);
-    return Math.round(value / 100 * 254);
+    return math_1.roundTo(value / 100 * 254, 0);
 };
 // interpolate from [0..254] to [0..100%]
 const brightness_in = (value) => {
@@ -211,7 +211,7 @@ const brightness_in = (value) => {
     // Any value > 0 should equal at least 1% brightness
     if (value < 1)
         return 1;
-    return Math.round(value);
+    return math_1.roundTo(value, 1);
 };
 exports.serializers = {
     transitionTime: transitionTime_out,

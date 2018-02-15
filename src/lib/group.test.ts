@@ -4,6 +4,7 @@ require("reflect-metadata");
 
 import { expect } from "chai";
 import { Group } from "./group";
+import { roundTo } from "./math";
 // tslint:disable:no-unused-expression
 
 const template = {
@@ -30,7 +31,7 @@ describe("ipso/group =>", () => {
 
 	it("should parse correctly", () => {
 		expect(group.onOff).to.equal(template["5850"] === 1);
-		expect(group.dimmer).to.equal(Math.ceil(template["5851"] / 254 * 100));
+		expect(group.dimmer).to.equal(roundTo(template["5851"] / 254 * 100, 1));
 		expect(group.sceneId).to.equal(template["9039"]);
 		expect(group.deviceIDs).to.equal(template["9018"]["15002"]["9003"]);
 	});

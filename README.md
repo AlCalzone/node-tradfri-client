@@ -435,6 +435,9 @@ A DeviceInfo object contains general information about a device. It has the foll
 
 ## Changelog
 
+#### 0.8.1 (2018-02-15)
+* (AlCalzone) Support floating point numbers as property values
+
 #### 0.8.0 (2018-02-15)
 * (AlCalzone) Use the `hue` and `saturation` CoAP properties directly instead of `colorX/Y`
 

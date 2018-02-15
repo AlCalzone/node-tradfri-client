@@ -22,7 +22,7 @@ const colorTemperature_in: PropertyTransformKernel = (value) => {
 	// interpolate "color percentage" from the colorTemperature range of a lightbulb
 	value = (value - min) / (max - min);
 	value = clamp(value, 0, 1);
-	return roundTo(value * 100, 0);
+	return roundTo(value * 100, 1);
 };
 
 // ==========================
@@ -180,7 +180,7 @@ const hue_out: PropertyTransformKernel = (value, light: Light) => {
 // interpolate hue from [0..COLOR_MAX] to [0..360]
 const hue_in: PropertyTransformKernel = (value /*, light: Light*/) => {
 	value = clamp(value / MAX_COLOR, 0, 1);
-	return roundTo(value * 360, 0);
+	return roundTo(value * 360, 1);
 };
 
 // interpolate saturation from [0..100%] to [0..COLOR_MAX]
@@ -193,7 +193,7 @@ const saturation_out: PropertyTransformKernel = (value, light: Light) => {
 // interpolate saturation from [0..COLOR_MAX] to [0..100%]
 const saturation_in: PropertyTransformKernel = (value /*, light: Light*/) => {
 	value = clamp(value / MAX_COLOR, 0, 1);
-	return roundTo(value * 100, 0);
+	return roundTo(value * 100, 1);
 };
 
 // ===========================
@@ -210,7 +210,7 @@ const transitionTime_in: PropertyTransformKernel = val => val / 10;
 // interpolate from [0..100%] to [0..254]
 const brightness_out: PropertyTransformKernel = (value) => {
 	value = clamp(value, 0, 100);
-	return Math.round(value / 100 * 254);
+	return roundTo(value / 100 * 254, 0);
 };
 // interpolate from [0..254] to [0..100%]
 const brightness_in: PropertyTransformKernel = (value) => {
@@ -219,7 +219,7 @@ const brightness_in: PropertyTransformKernel = (value) => {
 	value = value / 254 * 100;
 	// Any value > 0 should equal at least 1% brightness
 	if (value < 1) return 1;
-	return Math.round(value);
+	return roundTo(value, 1);
 };
 
 export const serializers = {

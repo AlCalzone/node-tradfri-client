@@ -167,4 +167,14 @@ describe("ipso/light => feature tests =>", () => {
 		expect(/^[a-fA-F0-9]{6}$/.test(rgb.lightList[0].color));
 	});
 
+	it("floating point values should be supported", () => {
+		const source = buildAccessory("TRADFRI bulb E27 C/WS opal 600lm");
+		source["3311"][0]["5851"] = 179;
+		const rgb = new Accessory()
+			.parse(source)
+			.createProxy()
+			;
+		expect(rgb.lightList[0].dimmer).to.equal(70.5);
+	});
+
 });
