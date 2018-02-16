@@ -4,5 +4,9 @@ node_js:
   - '8'
 os:
   - linux
+script: 
+  - npm run coverage
+after_success: 
+  - npm run coveralls
 notifications:
   email: false
