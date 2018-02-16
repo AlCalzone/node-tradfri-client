@@ -21,69 +21,77 @@ const colorTemperature_in = (value) => {
     value = math_1.clamp(value, 0, 1);
     return math_1.roundTo(value * 100, 1);
 };
-// ==========================
-// RGB conversions
-// Tradfri lights seem to be Philips Hue Gamut B, see
-// https://developers.meethue.com/documentation/core-concepts#color_gets_more_complicated
-// Conversion based on
-// https://github.com/Q42/Q42.HueApi/blob/master/src/Q42.HueApi.ColorConverters/OriginalWithModel/HueColorConverter.cs
-function rgbToCIExyY(r, g, b) {
-    // transform [0..255] => [0..1]
-    [r, g, b] = [r, g, b].map(c => c / 255);
-    // gamma correction
-    [r, g, b] = [r, g, b].map(c => (c > 0.04045) ? Math.pow(((c + 0.055) / 1.055), 2.4) : c / 12.92);
-    // transform using custom RGB->XYZ matrix. See comment in Q42
-    const X = r * 0.664511 + g * 0.154324 + b * 0.162028;
-    const Y = r * 0.283881 + g * 0.668433 + b * 0.047685;
-    const Z = r * 0.000088 + g * 0.072310 + b * 0.986039;
-    let [x, y] = [0, 0];
-    if (X + Y + Z > 0) {
-        // calculate CIE xy
-        x = X / (X + Y + Z);
-        y = Y / (X + Y + Z);
-    }
-    ({ x, y } = mapToGamut(x, y, DEFAULT_GAMUT));
-    return { x, y, Y };
-}
-function rgbFromCIExyY(x, y, Y = 1) {
-    // Map the given point to lie inside the bulb gamut
-    ({ x, y } = mapToGamut(x, y, DEFAULT_GAMUT));
-    // calculate X/Y/Z
-    const z = 1 - x - y;
-    const X = (Y / y) * x;
-    const Z = (Y / y) * z;
-    // convert to RGB
-    let r = X * 1.656492 - Y * 0.354851 - Z * 0.255038;
-    let g = -X * 0.707196 + Y * 1.655397 + Z * 0.036152;
-    let b = X * 0.051713 - Y * 0.121364 + Z * 1.011530;
-    // downscale so the maximum component is not > 1
-    const maxRGB = Math.max(r, g, b);
-    if (maxRGB > 1) {
-        [r, g, b] = [r, g, b].map(c => c / maxRGB);
-    }
-    // reverse gamma correction
-    [r, g, b] = [r, g, b].map(c => c <= 0.0031308 ? 12.92 * c : (1.0 + 0.055) * Math.pow(c, (1.0 / 2.4)) - 0.055);
-    // transform back to [0..255]
-    [r, g, b] = [r, g, b].map(c => Math.round(math_1.clamp(c, 0, 1) * 255));
-    return { r, g, b };
-}
-const DEFAULT_GAMUT = {
-    red: { x: 0.700607, y: 0.299301 },
-    green: { x: 0.172416, y: 0.746797 },
-    blue: { x: 0.135503, y: 0.039879 },
-};
-function mapToGamut(x, y, gamut) {
-    const point = { x, y };
-    const gamutAsTriangle = [gamut.red, gamut.green, gamut.blue];
-    if (!math_1.pointInTriangle(gamutAsTriangle, point)) {
-        const closestEdge = math_1.findClosestTriangleEdge(point, gamutAsTriangle);
-        const projected = math_1.projectPointOnEdge(point, closestEdge);
-        return projected;
-    }
-    else {
-        return { x, y };
-    }
-}
+// // ==========================
+// // RGB conversions
+// // Tradfri lights seem to be Philips Hue Gamut B, see
+// // https://developers.meethue.com/documentation/core-concepts#color_gets_more_complicated
+// // Conversion based on
+// // https://github.com/Q42/Q42.HueApi/blob/master/src/Q42.HueApi.ColorConverters/OriginalWithModel/HueColorConverter.cs
+// function rgbToCIExyY(r: number, g: number, b: number) {
+// 	// transform [0..255] => [0..1]
+// 	[r, g, b] = [r, g, b].map(c => c / 255);
+// 	// gamma correction
+// 	[r, g, b] = [r, g, b].map(c => (c > 0.04045) ? ((c + 0.055) / 1.055) ** 2.4 : c / 12.92);
+// 	// transform using custom RGB->XYZ matrix. See comment in Q42
+// 	const X = r * 0.664511 + g * 0.154324 + b * 0.162028;
+// 	const Y = r * 0.283881 + g * 0.668433 + b * 0.047685;
+// 	const Z = r * 0.000088 + g * 0.072310 + b * 0.986039;
+// 	let [x, y] = [0, 0];
+// 	if (X + Y + Z > 0) {
+// 		// calculate CIE xy
+// 		x = X / (X + Y + Z);
+// 		y = Y / (X + Y + Z);
+// 	}
+// 	({x, y} = mapToGamut(x, y, DEFAULT_GAMUT));
+// 	return {x, y, Y};
+// }
+// function rgbFromCIExyY(x: number, y: number, Y: number = 1) {
+// 	// Map the given point to lie inside the bulb gamut
+// 	({x, y} = mapToGamut(x, y, DEFAULT_GAMUT));
+// 	// calculate X/Y/Z
+// 	const z = 1 - x - y;
+// 	const X = (Y / y) * x;
+// 	const Z = (Y / y) * z;
+// 	// convert to RGB
+// 	let r = X * 1.656492 - Y * 0.354851 - Z * 0.255038;
+// 	let g = -X * 0.707196 + Y * 1.655397 + Z * 0.036152;
+// 	let b = X * 0.051713 - Y * 0.121364 + Z * 1.011530;
+// 	// downscale so the maximum component is not > 1
+// 	const maxRGB = Math.max(r, g, b);
+// 	if (maxRGB > 1) {
+// 		[r, g, b] = [r, g, b].map(c => c / maxRGB);
+// 	}
+// 	// reverse gamma correction
+// 	[r, g, b] = [r, g, b].map(c => c <= 0.0031308 ? 12.92 * c : (1.0 + 0.055) * c ** (1.0 / 2.4) - 0.055);
+// 	// transform back to [0..255]
+// 	[r, g, b] = [r, g, b].map(c => Math.round(clamp(c, 0, 1) * 255));
+// 	return {r, g, b};
+// }
+// /**
+//  * Describes the RGB triangle supported by a lightbulb
+//  * in x-y coordinates
+//  */
+// interface Gamut {
+// 	red: Point;
+// 	green: Point;
+// 	blue: Point;
+// }
+// const DEFAULT_GAMUT: Gamut = {
+// 	red:   {x: 0.700607, y: 0.299301},
+// 	green: {x: 0.172416, y: 0.746797},
+// 	blue:  {x: 0.135503, y: 0.039879},
+// };
+// function mapToGamut(x: number, y: number, gamut: Gamut): Point {
+// 	const point = {x, y};
+// 	const gamutAsTriangle: Triangle = [gamut.red, gamut.green, gamut.blue];
+// 	if (!pointInTriangle(gamutAsTriangle, point)) {
+// 		const closestEdge = findClosestTriangleEdge(point, gamutAsTriangle);
+// 		const projected = projectPointOnEdge(point, closestEdge);
+// 		return projected;
+// 	} else {
+// 		return {x, y};
+// 	}
+// }
 function rgbToHSV(r, g, b) {
     // transform [0..255] => [0..1]
     [r, g, b] = [r, g, b].map(c => c / 255);
@@ -228,8 +236,8 @@ exports.deserializers = {
     colorTemperature: colorTemperature_in,
 };
 exports.conversions = {
-    rgbFromCIExyY,
-    rgbToCIExyY,
+    // rgbFromCIExyY,
+    // rgbToCIExyY,
     rgbFromHSV,
     rgbToHSV,
     rgbToString,
