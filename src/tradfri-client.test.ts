@@ -167,47 +167,6 @@ describe("tradfri-client => ", () => {
 
 });
 
-// function dump(obj: object, propName: string = null, indent: number = 0) {
-// 	if (obj == null) return;
-// 	if (propName == null) {
-// 		console.log(padStart("", indent * 4) + "{");
-// 	} else {
-// 		console.log(padStart("", indent * 4) + propName + ": {");
-// 	}
-// 	for (const key of Object.keys(obj)) {
-// 		if (key.startsWith("_")) continue;
-// 		const val = obj[key];
-// 		if (typeof val === "object") {
-// 			dump(val, key, indent + 1);
-// 		} else {
-// 			console.log(padStart("", (indent + 1) * 4) + `${key}: ${JSON.stringify(val)}`);
-// 		}
-// 	}
-// 	console.log(padStart("", indent * 4) + "}");
-// }
+// describe("simplified API => ", () => {
 
-// // tslint:disable-next-line:only-arrow-functions
-// describe.only("raw coap tests => ", function() {
-// 	const params = {host: "gw-B072bf257a41", securityCode: "", identity: "tradfri_1509642359115", psk: "gzqZY5HUlFOOVu9f"};
-// 	const tradfri = new TradfriClient(params.host, {useRawCoAPValues: true});
-// 	this.timeout(60000);
-// 	it("should work", async () => {
-// 		await tradfri.connect(params.identity, params.psk);
-
-// 		const devices = new Map<number, Accessory>();
-
-// 		tradfri.on("device updated", (acc) => {
-// 			devices.set(acc.instanceId, acc);
-// 			console.log("===================");
-// 			console.log("got device: ");
-// 			dump(acc);
-// 		});
-// 		await tradfri.observeDevices();
-
-// 		const light = devices.get(65537).lightList[0];
-// 		console.log("GOGOGO!");
-// 		await tradfri.operateLight(devices.get(65537), {
-// 			onOff: false,
-// 		});
-// 	});
 // });

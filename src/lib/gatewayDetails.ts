@@ -1,6 +1,7 @@
 import { deserializeWith, ipsoKey, IPSOObject, PropertyTransform, required, serializeWith } from "./ipsoObject";
 
 /** contains information about the gateway */
+/* istanbul ignore next */
 export class GatewayDetails extends IPSOObject {
 
 	@ipsoKey("9023")

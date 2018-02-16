@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const ipsoObject_1 = require("./ipsoObject");
 /** contains information about the gateway */
+/* istanbul ignore next */
 class GatewayDetails extends ipsoObject_1.IPSOObject {
     constructor() {
         super(...arguments);

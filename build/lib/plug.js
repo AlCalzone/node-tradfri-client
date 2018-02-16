@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const conversions_1 = require("./conversions");
 const ipsoDevice_1 = require("./ipsoDevice");
 const ipsoObject_1 = require("./ipsoObject");
+/* istanbul ignore next */
 class Plug extends ipsoDevice_1.IPSODevice {
     constructor() {
         super(...arguments);
