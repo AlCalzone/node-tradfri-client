@@ -13,6 +13,7 @@ import { MessageCode } from "node-coap-client/build/Message";
 import * as sinonChai from "sinon-chai";
 import { Accessory } from "./lib/accessory";
 import { padStart } from "./lib/strings";
+import { createNetworkMock, createResponse, createEmptyAccessoryResponse, errorResponse } from "../test/mocks";
 
 // enable the should interface with sinon
 should();
@@ -20,68 +21,19 @@ use(sinonChai);
 
 describe("tradfri-client => ", () => {
 
-	const tradfri = new TradfriClient("localhost");
-
-	const devicesUrl = `coaps://localhost:5684/15001`;
-
-	const fakeCoap: Record<string, sinon.SinonStub> = {
-		observe: null,
-		request: null,
-		stopObserving: null,
-		reset: null,
-	};
-	let observeDevices_callback: (response: CoapResponse) => Promise<void>;
-	const observeDevice_callbacks: Record<string, (response: CoapResponse) => Promise<void>> = {};
-	const emptyAccessory = new Accessory().serialize();
-	/**
-	 * Remembers a callback for later tests
-	 */
-	function rememberCallback(path: string, cb) {
-		if (path === devicesUrl) {
-			observeDevices_callback = cb;
-		} else if (path.indexOf(devicesUrl) > -1) {
-			const instanceId = path.substr(path.lastIndexOf("/") + 1);
-			observeDevice_callbacks[instanceId] = cb;
-		}
-	}
-
-	function createResponse(json: string | any): CoapResponse {
-		if (typeof json !== "string") json = JSON.stringify(json);
-		return {
-			code: new MessageCode(2, 5),
-			format: ContentFormats.application_json,
-			payload: Buffer.from(json, "utf8"),
-		};
-	}
-	const errorResponse: CoapResponse = {
-		code: new MessageCode(4, 1),
-		format: ContentFormats.text_plain,
-		payload: null,
-	};
-
-	before(() => {
-		// coap.observe should resolve
-		fakeCoap.observe = stub(coap, "observe")
-			.callsFake((path: string, method, cb) => {
-				rememberCallback(path, cb);
-				return Promise.resolve();
-			});
-		fakeCoap.request = stub(coap, "request");
-		fakeCoap.stopObserving = stub(coap, "stopObserving");
-		fakeCoap.reset = stub(coap, "reset");
-	});
-
-	after(() => {
-		for (const method of Object.keys(fakeCoap)) {
-			fakeCoap[method].restore();
-		}
-	});
-
-	afterEach(() => {
-		for (const method of Object.keys(fakeCoap)) {
-			fakeCoap[method].resetHistory();
-		}
-	});
+	// Setup the mock
+	const {
+		tradfri,
+		devicesUrl,
+		fakeCoap,
+		callbacks,
+		createStubs,
+		restoreStubs,
+		resetStubHistory,
+	} = createNetworkMock();
+	before(createStubs);
+	after(restoreStubs);
+	afterEach(resetStubHistory);
 
 	describe("observeResource => ", () => {
 		it("should call coap.observe with the correct arguments", async () => {
@@ -138,7 +90,7 @@ describe("tradfri-client => ", () => {
 			fakeCoap.observe.resetHistory();
 
 			const devices = [65536, 65537];
-			await observeDevices_callback(createResponse(devices));
+			await callbacks.observeDevices(createResponse(devices));
 
 			fakeCoap.observe.should.have.been.calledTwice;
 			fakeCoap.observe.should.have.been.calledWith(`${devicesUrl}/65536`);
@@ -146,8 +98,8 @@ describe("tradfri-client => ", () => {
 
 			// we intercepted the device_callback, so we need to manually call it
 			// now for the following tests to work
-			await observeDevice_callbacks[65536](createResponse(emptyAccessory));
-			await observeDevice_callbacks[65537](createResponse(emptyAccessory));
+			await callbacks.observeDevice[65536](createEmptyAccessoryResponse(65536));
+			await callbacks.observeDevice[65537](createEmptyAccessoryResponse(65537));
 
 			// now the deferred promise should have resolved
 			await devicesPromise;
@@ -155,14 +107,14 @@ describe("tradfri-client => ", () => {
 
 		it("when a device is added, it should only call observe for that one", async () => {
 			const devices = [65536, 65537, 65538];
-			await observeDevices_callback(createResponse(devices));
+			await callbacks.observeDevices(createResponse(devices));
 
 			fakeCoap.observe.should.have.been.calledOnce;
 			fakeCoap.observe.should.have.been.calledWith(`${devicesUrl}/65538`);
 
 			// we intercepted the device_callback, so we need to manually call it
 			// now for the following tests to work
-			await observeDevice_callbacks[65538](createResponse(emptyAccessory));
+			await callbacks.observeDevice[65538](createEmptyAccessoryResponse(65538));
 		});
 
 		it(`when a device is removed, on("device removed") should be called with its id`, async () => {
@@ -171,7 +123,7 @@ describe("tradfri-client => ", () => {
 			tradfri.on("device removed", leSpy);
 
 			const devices = [65537, 65538];
-			await observeDevices_callback(createResponse(devices));
+			await callbacks.observeDevices(createResponse(devices));
 
 			fakeCoap.observe.should.not.have.been.called;
 			leSpy.should.have.been.calledOnce;
@@ -189,7 +141,7 @@ describe("tradfri-client => ", () => {
 				.on("error", errorSpy)
 			;
 
-			await observeDevices_callback(errorResponse);
+			await callbacks.observeDevices(errorResponse);
 
 			fakeCoap.observe.should.not.have.been.called;
 			removedSpy.should.not.have.been.called;
