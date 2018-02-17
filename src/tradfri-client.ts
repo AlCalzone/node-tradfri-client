@@ -61,6 +61,28 @@ export interface TradfriOptions {
 	useRawCoAPValues?: boolean;
 }
 
+/** Computes the path part for a request. Does not contain the request base. */
+function getPath(endpoint: keyof typeof coapEndpoints, ...pathParts: (string | number)[]): string {
+	pathParts = pathParts.map(p => typeof p === "number" ? p.toString() : p);
+	return `${coapEndpoints[endpoint]}/${pathParts.join("/")}`;
+}
+
+function mergePayload(payload: Record<string, any>, pendingUpdates: Record<string, any>): Record<string, any> {
+	// TODO: revisit this at some point to make it more flexible
+	let ret = Object.assign({}, pendingUpdates);
+	// remove transitionTime
+	if ("3311" in ret) {
+		let light = ret["3311"][0];
+		if ("5712" in light) delete light["5712"];
+		light = Object.assign(light, payload["3311"][0]);
+		ret["3311"][0] = light;
+	} else {
+		if ("5712" in ret) delete ret["5712"];
+		ret = Object.assign(ret, payload);
+	}
+	return ret;
+}
+
 export class TradfriClient extends EventEmitter implements OperationProvider {
 
 	/** dictionary of CoAP observers */
@@ -69,6 +91,8 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	public devices: Record<string, Accessory> = {};
 	/** dictionary of known groups */
 	public groups: Record<string, GroupInfo> = {};
+	/** dictionary of updates that haven't been ack-ed by the gateway yet */
+	public pendingUpdates = new Map<string /* path */, Record<string, any>>();
 
 	/** Base URL for all CoAP requests */
 	private requestBase: string;
@@ -295,7 +319,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 				}
 			};
 			return this.observeResource(
-				`${coapEndpoints.devices}/${id}`,
+				getPath("devices", id),
 				handleResponse,
 			);
 		});
@@ -304,9 +328,12 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		const removedKeys = except(oldKeys, newKeys);
 		log(`removing devices with keys ${JSON.stringify(removedKeys)}`, "debug");
 		for (const id of removedKeys) {
+			const resourcePath = getPath("devices", id);
+			// remove device from dictionary
 			delete this.devices[id];
+			if (this.pendingUpdates.has(resourcePath)) this.pendingUpdates.delete(resourcePath);
 			// remove observer
-			this.stopObservingResource(`${coapEndpoints.devices}/${id}`);
+			this.stopObservingResource(resourcePath);
 			// and notify all listeners about the removal
 			this.emit("device removed", id);
 		}
@@ -335,6 +362,9 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		// remember the device object, so we can later use it as a reference for updates
 		// store a clone, so we don't have to care what the calling library does
 		this.devices[instanceId] = accessory.clone();
+		// if we have un-acked updates for this device, delete them so we won't send them again
+		const resourcePath = getPath("devices", instanceId);
+		if (this.pendingUpdates.has(resourcePath)) this.pendingUpdates.delete(resourcePath);
 		// and notify all listeners about the update
 		this.emit("device updated", accessory.link(this));
 		return true;
@@ -418,7 +448,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 				}
 			};
 			return this.observeResource(
-				`${coapEndpoints.groups}/${id}`,
+				getPath("groups", id),
 				handleResponse,
 			);
 		});
@@ -427,7 +457,10 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		const removedKeys = except(oldKeys, newKeys);
 		log(`removing groups with keys ${JSON.stringify(removedKeys)}`, "debug");
 		removedKeys.forEach((id) => {
+			const resourcePath = getPath("groups", id);
+			// remove group from dictionary
 			delete this.groups[id];
+			if (this.pendingUpdates.has(resourcePath)) this.pendingUpdates.delete(resourcePath);
 			// remove observers
 			this.stopObservingGroup(id);
 			// and notify all listeners about the removal
@@ -442,8 +475,8 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	}
 
 	private stopObservingGroup(instanceId: number) {
-		this.stopObservingResource(`${coapEndpoints.groups}/${instanceId}`);
-		const scenesPrefix = `${coapEndpoints.scenes}/${instanceId}`;
+		this.stopObservingResource(getPath("groups", instanceId));
+		const scenesPrefix = getPath("scenes", instanceId);
 		for (const path of this.observedPaths) {
 			if (path.startsWith(scenesPrefix)) {
 				this.stopObservingResource(path);
@@ -483,13 +516,16 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		// remember the group object, so we can later use it as a reference for updates
 		// store a clone, so we don't have to care what the calling library does
 		groupInfo.group = group.clone();
+		// if we have un-acked updates for this group, delete them so we won't send them again
+		const resourcePath = getPath("groups", instanceId);
+		if (this.pendingUpdates.has(resourcePath)) this.pendingUpdates.delete(resourcePath);
 
 		// notify all listeners about the update
 		this.emit("group updated", group.link(this));
 
 		// load scene information
 		this.observeResource(
-			`${coapEndpoints.scenes}/${instanceId}`,
+			getPath("scenes", instanceId),
 			(resp) => this.observeScenes_callback(instanceId, resp),
 		);
 
@@ -534,7 +570,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 				}
 			};
 			return this.observeResource(
-				`${coapEndpoints.scenes}/${groupId}/${id}`,
+				getPath("scenes", groupId, id),
 				handleResponse,
 			);
 		});
@@ -543,10 +579,12 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		const removedKeys = except(oldKeys, newKeys);
 		log(`removing scenes with keys ${JSON.stringify(removedKeys)} from group ${groupId}`, "debug");
 		removedKeys.forEach(id => {
+			const resourcePath = getPath("scenes", groupId, id);
 			// remove scene from dictionary
 			delete groupInfo.scenes[id];
+			if (this.pendingUpdates.has(resourcePath)) this.pendingUpdates.delete(resourcePath);
 			// remove observers
-			this.stopObservingResource(`${coapEndpoints.scenes}/${groupId}/${id}`);
+			this.stopObservingResource(resourcePath);
 			// and notify all listeners about the removal
 			this.emit("scene removed", groupId, id);
 		});
@@ -574,6 +612,9 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		// remember the scene object, so we can later use it as a reference for updates
 		// store a clone, so we don't have to care what the calling library does
 		this.groups[groupId].scenes[instanceId] = scene.clone();
+		// if we have un-acked updates for this scene, delete them so we won't send them again
+		const resourcePath = getPath("scenes", groupId, instanceId);
+		if (this.pendingUpdates.has(resourcePath)) this.pendingUpdates.delete(resourcePath);
 		// and notify all listeners about the update
 		this.emit("scene updated", groupId, scene.link(this));
 
@@ -601,7 +642,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		const original = this.devices[accessory.instanceId];
 
 		return this.updateResource(
-			`${coapEndpoints.devices}/${accessory.instanceId}`,
+			getPath("devices", accessory.instanceId),
 			accessory, original,
 		);
 	}
@@ -619,7 +660,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		const original = this.groups[group.instanceId].group;
 
 		return this.updateResource(
-			`${coapEndpoints.groups}/${group.instanceId}`,
+			getPath("groups", group.instanceId),
 			group, original,
 		);
 	}
@@ -636,13 +677,19 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		// ensure the ipso options were not lost on the user side
 		newObj.options = this.ipsoOptions;
 
-		const serializedObj = newObj.serialize(reference);
+		let serializedObj = newObj.serialize(reference);
 
 		// If the serialized object contains no properties, we don't need to send anything
 		if (!serializedObj || Object.keys(serializedObj).length === 0) {
 			log(`updateResource(${path}) > empty object, not sending any payload`, "debug");
 			return false;
 		}
+
+		if (this.pendingUpdates.has(path)) {
+			// try to include pending updates so we dont nullify them
+			serializedObj = mergePayload(serializedObj, this.pendingUpdates.get(path));
+		}
+		this.pendingUpdates.set(path, serializedObj);
 
 		// get the payload
 		let payload: string | Buffer = JSON.stringify(serializedObj);
@@ -667,7 +714,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		const newGroup = reference.clone().merge(operation);
 
 		return this.updateResource(
-			`${coapEndpoints.groups}/${group.instanceId}`,
+			getPath("groups", group.instanceId),
 			newGroup, reference,
 		);
 	}
@@ -688,7 +735,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		newAccessory.lightList[0].merge(operation);
 
 		return this.updateResource(
-			`${coapEndpoints.devices}/${accessory.instanceId}`,
+			getPath("devices", accessory.instanceId),
 			newAccessory, reference,
 		);
 	}
