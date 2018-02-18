@@ -3,8 +3,8 @@
 // tslint:disable:variable-name
 
 import { assert, expect, should, use } from "chai";
-import * as sinonChai from "sinon-chai";
 import { spy, stub } from "sinon";
+import * as sinonChai from "sinon-chai";
 
 // enable the should interface with sinon
 should();
@@ -13,8 +13,7 @@ use(sinonChai);
 import { CoapClient as coap, CoapResponse } from "node-coap-client";
 import { ContentFormats } from "node-coap-client/build/ContentFormats";
 import { MessageCode } from "node-coap-client/build/Message";
-import { TradfriClient } from "../src/tradfri-client";
-import { Accessory, Light } from "../src";
+import { Accessory, Light, TradfriClient } from "../src";
 
 export function createResponse(json: string | any): CoapResponse {
 	if (typeof json !== "string") json = JSON.stringify(json);
@@ -52,6 +51,7 @@ export function createNetworkMock(
 		observeDevices: null as (response: CoapResponse) => Promise<void>,
 		observeDevice: {} as Record<string, (response: CoapResponse) => Promise<void>>,
 	};
+	const devices = new Map<number, Accessory>();
 
 	/**
 	 * Remembers a callback for later tests
@@ -97,7 +97,7 @@ export function createNetworkMock(
 		createStubs,
 		restoreStubs,
 		resetStubHistory,
-	}
+	};
 }
 
 export function createEmptyAccessory(instanceId: number = 65536) {
@@ -151,7 +151,7 @@ export function createRGBBulb(instanceId: number = 65536) {
 			9020: 1507456927,
 			9054: 0,
 		};
-	}	
+	}
 }
 
 export function createWSBulb(instanceId: number = 65536) {
@@ -185,5 +185,5 @@ export function createWSBulb(instanceId: number = 65536) {
 			9020: 1507456927,
 			9054: 0,
 		};
-	}	
+	}
 }

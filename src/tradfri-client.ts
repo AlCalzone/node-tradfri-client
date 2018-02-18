@@ -231,6 +231,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	public stopObservingResource(path: string): void {
 
 		path = normalizeResourcePath(path);
+		if (this.pendingUpdates.has(path)) this.pendingUpdates.delete(path);
 
 		// remove observer
 		const observerUrl = path.startsWith(this.requestBase) ? path : `${this.requestBase}${path}`;
@@ -262,6 +263,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 * This does not stop observing the resources if the observers are still active
 	 */
 	private clearObservers(): void {
+		this.pendingUpdates.clear();
 		this.observedPaths = [];
 	}
 
@@ -328,12 +330,10 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		const removedKeys = except(oldKeys, newKeys);
 		log(`removing devices with keys ${JSON.stringify(removedKeys)}`, "debug");
 		for (const id of removedKeys) {
-			const resourcePath = getPath("devices", id);
 			// remove device from dictionary
 			delete this.devices[id];
-			if (this.pendingUpdates.has(resourcePath)) this.pendingUpdates.delete(resourcePath);
 			// remove observer
-			this.stopObservingResource(resourcePath);
+			this.stopObservingResource(getPath("devices", id));
 			// and notify all listeners about the removal
 			this.emit("device removed", id);
 		}
@@ -457,10 +457,8 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		const removedKeys = except(oldKeys, newKeys);
 		log(`removing groups with keys ${JSON.stringify(removedKeys)}`, "debug");
 		removedKeys.forEach((id) => {
-			const resourcePath = getPath("groups", id);
 			// remove group from dictionary
 			delete this.groups[id];
-			if (this.pendingUpdates.has(resourcePath)) this.pendingUpdates.delete(resourcePath);
 			// remove observers
 			this.stopObservingGroup(id);
 			// and notify all listeners about the removal
@@ -579,12 +577,10 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		const removedKeys = except(oldKeys, newKeys);
 		log(`removing scenes with keys ${JSON.stringify(removedKeys)} from group ${groupId}`, "debug");
 		removedKeys.forEach(id => {
-			const resourcePath = getPath("scenes", groupId, id);
 			// remove scene from dictionary
 			delete groupInfo.scenes[id];
-			if (this.pendingUpdates.has(resourcePath)) this.pendingUpdates.delete(resourcePath);
 			// remove observers
-			this.stopObservingResource(resourcePath);
+			this.stopObservingResource(getPath("scenes", groupId, id));
 			// and notify all listeners about the removal
 			this.emit("scene removed", groupId, id);
 		});
