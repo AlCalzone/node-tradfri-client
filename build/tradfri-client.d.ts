@@ -46,6 +46,8 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
     devices: Record<string, Accessory>;
     /** dictionary of known groups */
     groups: Record<string, GroupInfo>;
+    /** dictionary of updates that haven't been ack-ed by the gateway yet */
+    pendingUpdates: Map<string, Record<string, any>>;
     /** Base URL for all CoAP requests */
     private requestBase;
     /** Options regarding IPSO objects and serialization */

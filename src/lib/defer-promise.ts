@@ -3,7 +3,7 @@ export interface DeferredPromise<T> extends Promise<T> {
 	reject(reason?: any): void;
 }
 
-export function createDeferredPromise<T>(): DeferredPromise<T> {
+export function createDeferredPromise<T = void>(): DeferredPromise<T> {
 	let res: (value?: T | PromiseLike<T>) => void;
 	let rej: (reason?: any) => void;
 

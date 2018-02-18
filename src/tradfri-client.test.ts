@@ -11,13 +11,51 @@ import { TradfriClient } from "./tradfri-client";
 import { ContentFormats } from "node-coap-client/build/ContentFormats";
 import { MessageCode } from "node-coap-client/build/Message";
 import * as sinonChai from "sinon-chai";
-import { Accessory } from "./lib/accessory";
+import { createEmptyAccessoryResponse, createNetworkMock, createResponse, createRGBBulb, errorResponse } from "../test/mocks";
+import { Accessory, Light } from "./";
+import { createDeferredPromise, DeferredPromise } from "./lib/defer-promise";
 import { padStart } from "./lib/strings";
-import { createNetworkMock, createResponse, createEmptyAccessoryResponse, errorResponse } from "../test/mocks";
 
 // enable the should interface with sinon
 should();
 use(sinonChai);
+
+function assertPayload(actual: any, expected: {}) {
+	expect(actual).to.be.an.instanceof(Buffer);
+	expect(JSON.parse(actual.toString())).to.deep.equal(expected);
+}
+
+describe("tradfri-client => ", () => {
+
+	// Setup the mock
+	const {
+		tradfri,
+		devicesUrl,
+		fakeCoap,
+		callbacks,
+		createStubs,
+		restoreStubs,
+		resetStubHistory,
+	} = createNetworkMock();
+	before(createStubs);
+	after(restoreStubs);
+	afterEach(resetStubHistory);
+
+	describe("reset => ", () => {
+		it("should call coap.reset", () => {
+			tradfri.reset();
+			fakeCoap.reset.should.have.been.called;
+		});
+	});
+
+	describe("destroy => ", () => {
+		it("should call coap.reset", () => {
+			tradfri.destroy();
+			fakeCoap.reset.should.have.been.called;
+		});
+	});
+
+});
 
 describe("tradfri-client => ", () => {
 
@@ -49,6 +87,13 @@ describe("tradfri-client => ", () => {
 			await tradfri.observeResource("15001", cb);
 			fakeCoap.observe.should.not.have.been.called;
 		});
+
+		it("after resetting the client, coap.observe should be called again", async () => {
+			tradfri.reset();
+			const cb = spy();
+			await tradfri.observeResource("15001", cb);
+			fakeCoap.observe.should.have.been.called;
+		});
 	});
 
 	describe("stopObservingResource => ", () => {
@@ -62,26 +107,36 @@ describe("tradfri-client => ", () => {
 			tradfri.stopObservingResource("15001");
 			fakeCoap.stopObserving.should.not.have.been.called;
 		});
-	});
 
-	describe("reset => ", () => {
-		it("should call coap.reset", () => {
-			tradfri.reset();
-			fakeCoap.reset.should.have.been.called;
+		it("after observing a resource, coap.stopObserving should be called again", async () => {
+			await tradfri.observeResource("15001", null);
+			tradfri.stopObservingResource("15001");
+			fakeCoap.stopObserving.should.have.been.called;
 		});
 	});
 
-	describe("destroy => ", () => {
-		it("should call coap.reset", () => {
-			tradfri.destroy();
-			fakeCoap.reset.should.have.been.called;
-		});
-	});
+});
+
+describe("tradfri-client => ", () => {
+
+	// Setup a fresh mock
+	const {
+		tradfri,
+		devicesUrl,
+		fakeCoap,
+		callbacks,
+		createStubs,
+		restoreStubs,
+		resetStubHistory,
+	} = createNetworkMock();
+	before(createStubs);
+	after(restoreStubs);
+	afterEach(resetStubHistory);
 
 	describe("observeDevices => ", () => {
 
 		it("should call coap.observe for the devices endpoint and for each observed device", async () => {
-			// remember the deferred promise
+			// remember the deferred promise as this only resolves after all responses have been received
 			const devicesPromise = tradfri.observeDevices();
 
 			fakeCoap.observe.should.have.been.calledOnce;
@@ -167,6 +222,145 @@ describe("tradfri-client => ", () => {
 
 });
 
-// describe("simplified API => ", () => {
+describe("tradfri-client => ", () => {
 
-// });
+	// Setup a fresh mock
+	const {
+		tradfri,
+		devicesUrl,
+		fakeCoap,
+		callbacks,
+		createStubs,
+		restoreStubs,
+		resetStubHistory,
+	} = createNetworkMock();
+	before(createStubs);
+	after(restoreStubs);
+	afterEach(resetStubHistory);
+
+	let lightAccessory: Accessory;
+	let light: Light;
+
+	async function resetDeviceInfrastructure() {
+		tradfri.reset();
+		tradfri.removeAllListeners();
+
+		const lightPromise = createDeferredPromise<Accessory>();
+		tradfri.on("device updated", acc => {
+			if (acc.instanceId === 65536) lightPromise.resolve(acc);
+		});
+
+		// remember the deferred promise as this only resolves after all responses have been received
+		const devicesPromise = tradfri.observeDevices();
+
+		await callbacks.observeDevices(createResponse([65536]));
+		await callbacks.observeDevice[65536](createResponse(createRGBBulb(65536)));
+
+		// now the deferred promise should have resolved
+		await devicesPromise;
+		// wait for the light response too
+		lightAccessory = await lightPromise;
+		light = lightAccessory.lightList[0];
+	}
+
+	describe("updateResource => ", () => {
+
+		beforeEach(resetDeviceInfrastructure);
+
+		it("calling it with an unchanged resource should NOT call coap.request", async () => {
+			await tradfri.updateDevice(lightAccessory).should.become(false);
+			fakeCoap.request.should.not.have.been.called;
+		});
+
+		it("calling it with a changed resource should call coap.request with a correct payload", async () => {
+			light.onOff = false;
+			await tradfri.updateDevice(lightAccessory).should.become(true);
+
+			fakeCoap.request.should.have.been.calledOnce;
+			const callArgs = fakeCoap.request.getCall(0).args;
+			expect(callArgs[0]).to.be.a("string").and.to.satisfy((s: string) => s.endsWith("15001/65536"));
+			expect(callArgs[1]).to.equal("put");
+			assertPayload(callArgs[2], {
+				3311: [{
+					5850: 0,
+					5712: 5,
+				}],
+			});
+
+		});
+
+		it("calling it twice with the same changed resource should call coap.request only once", async () => {
+			light.onOff = false;
+
+			await tradfri.updateDevice(lightAccessory).should.become(true);
+
+			// we need to wait for the observe response before issueing the next request
+			const updatedBulb = createRGBBulb(65536);
+			updatedBulb["3311"][0]["5850"] = 0;
+			await callbacks.observeDevice[65536](createResponse(updatedBulb));
+
+			await tradfri.updateDevice(lightAccessory).should.become(false);
+
+			fakeCoap.request.should.have.been.calledOnce;
+		});
+
+		it("calling it twice in quick succession with different changes should merge the changes", async () => {
+			const acc1 = new Accessory().parse(createRGBBulb(65536));
+			const acc2 = new Accessory().parse(createRGBBulb(65536));
+
+			acc1.lightList[0].hue = 360;
+			await tradfri.updateDevice(acc1).should.become(true);
+
+			acc2.lightList[0].saturation = 100;
+			await tradfri.updateDevice(acc2).should.become(true);
+
+			fakeCoap.request.should.have.been.calledTwice;
+			assertPayload(fakeCoap.request.getCall(0).args[2], {
+				3311: [{
+					5707: 65279,
+					5712: 5,
+				}],
+			});
+			assertPayload(fakeCoap.request.getCall(1).args[2], {
+				3311: [{
+					5707: 65279,
+					5708: 65279,
+					5712: 5,
+				}],
+			});
+
+		});
+
+		it("calling it a third time after the response should NOT include the previous changes", async () => {
+			const acc1 = new Accessory().parse(createRGBBulb(65536));
+			const acc2 = new Accessory().parse(createRGBBulb(65536));
+
+			acc1.lightList[0].hue = 360;
+			await tradfri.updateDevice(acc1).should.become(true);
+
+			acc2.lightList[0].saturation = 100;
+			await tradfri.updateDevice(acc2).should.become(true);
+
+			// create the combined response so the pending changes get reset
+			const updatedBulb = createRGBBulb(65536);
+			updatedBulb["3311"][0]["5707"] = 65279;
+			updatedBulb["3311"][0]["5708"] = 65279;
+			await callbacks.observeDevice[65536](createResponse(updatedBulb));
+
+			const acc3 = new Accessory().parse(updatedBulb);
+			acc3.lightList[0].dimmer = 0.5;
+			await tradfri.updateDevice(acc3).should.become(true);
+
+			fakeCoap.request.should.have.been.calledThrice;
+			assertPayload(fakeCoap.request.getCall(2).args[2], {
+				3311: [{
+					5851: 1,
+					5712: 5,
+				}],
+			});
+
+		});
+
+	});
+
+});
