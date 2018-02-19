@@ -76,5 +76,7 @@ export declare class Light extends IPSODevice {
      * @returns true if a request was sent, false otherwise
      */
     setSaturation(value: number, transitionTime?: number): Promise<boolean>;
+    /** Turns this object into JSON while leaving out the potential circular reference */
+    toJSON(): {};
 }
 export declare type Spectrum = "none" | "white" | "rgb";

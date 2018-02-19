@@ -140,7 +140,40 @@ describe("ipso/light => feature tests =>", () => {
 				}],
 			});
 		}
+	});
 
+	it("when updating hue, saturation should be sent as well", () => {
+		const rgb = new Accessory()
+			.parse(buildAccessory("TRADFRI bulb E27 C/WS opal 600lm"))
+			.createProxy()
+			;
+		const original = rgb.clone();
+		const light = rgb.lightList[0];
+
+		light.hue = 123;
+
+		const serialized = rgb.serialize(original);
+		expect(serialized).to.haveOwnProperty("3311");
+		expect(serialized["3311"]).to.have.length(1);
+		expect(serialized["3311"][0]).to.haveOwnProperty("5707");
+		expect(serialized["3311"][0]).to.haveOwnProperty("5708");
+	});
+
+	it("when updating saturation, hue should be sent as well", () => {
+		const rgb = new Accessory()
+			.parse(buildAccessory("TRADFRI bulb E27 C/WS opal 600lm"))
+			.createProxy()
+			;
+		const original = rgb.clone();
+		const light = rgb.lightList[0];
+
+		light.saturation = 67.8;
+
+		const serialized = rgb.serialize(original);
+		expect(serialized).to.haveOwnProperty("3311");
+		expect(serialized["3311"]).to.have.length(1);
+		expect(serialized["3311"][0]).to.haveOwnProperty("5707");
+		expect(serialized["3311"][0]).to.haveOwnProperty("5708");
 	});
 
 	it("parsing an RGB light should result in a valid hex color", () => {

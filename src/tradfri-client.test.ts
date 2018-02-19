@@ -308,23 +308,23 @@ describe("tradfri-client => ", () => {
 			const acc1 = new Accessory().parse(createRGBBulb(65536));
 			const acc2 = new Accessory().parse(createRGBBulb(65536));
 
-			acc1.lightList[0].hue = 360;
+			acc1.lightList[0].dimmer = 50;
 			await tradfri.updateDevice(acc1).should.become(true);
 
-			acc2.lightList[0].saturation = 100;
+			acc2.lightList[0].colorTemperature = 50;
 			await tradfri.updateDevice(acc2).should.become(true);
 
 			fakeCoap.request.should.have.been.calledTwice;
 			assertPayload(fakeCoap.request.getCall(0).args[2], {
 				3311: [{
-					5707: 65279,
+					5851: 127,
 					5712: 5,
 				}],
 			});
 			assertPayload(fakeCoap.request.getCall(1).args[2], {
 				3311: [{
-					5707: 65279,
-					5708: 65279,
+					5851: 127,
+					5711: 352,
 					5712: 5,
 				}],
 			});
@@ -335,26 +335,26 @@ describe("tradfri-client => ", () => {
 			const acc1 = new Accessory().parse(createRGBBulb(65536));
 			const acc2 = new Accessory().parse(createRGBBulb(65536));
 
-			acc1.lightList[0].hue = 360;
+			acc1.lightList[0].dimmer = 50;
 			await tradfri.updateDevice(acc1).should.become(true);
 
-			acc2.lightList[0].saturation = 100;
+			acc2.lightList[0].colorTemperature = 50;
 			await tradfri.updateDevice(acc2).should.become(true);
 
 			// create the combined response so the pending changes get reset
 			const updatedBulb = createRGBBulb(65536);
-			updatedBulb["3311"][0]["5707"] = 65279;
-			updatedBulb["3311"][0]["5708"] = 65279;
+			updatedBulb["3311"][0]["5851"] = 127;
+			updatedBulb["3311"][0]["5711"] = 352;
 			await callbacks.observeDevice[65536](createResponse(updatedBulb));
 
 			const acc3 = new Accessory().parse(updatedBulb);
-			acc3.lightList[0].dimmer = 0.5;
+			acc3.lightList[0].onOff = false;
 			await tradfri.updateDevice(acc3).should.become(true);
 
 			fakeCoap.request.should.have.been.calledThrice;
 			assertPayload(fakeCoap.request.getCall(2).args[2], {
 				3311: [{
-					5851: 1,
+					5850: 0,
 					5712: 5,
 				}],
 			});

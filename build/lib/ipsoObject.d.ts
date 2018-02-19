@@ -65,7 +65,7 @@ export declare class IPSOObject {
      * Deeply clones an IPSO Object
      */
     clone(): this;
-    private isSerializedObjectEmpty(obj, refObj);
+    private isSerializedObjectEmpty(obj);
     /** If this object was proxied or not */
     readonly isProxy: boolean;
     /** Returns the raw object without a wrapping proxy */

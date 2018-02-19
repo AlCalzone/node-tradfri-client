@@ -207,6 +207,20 @@ class Light extends ipsoDevice_1.IPSODevice {
             saturation: value,
         }, transitionTime);
     }
+    /** Turns this object into JSON while leaving out the potential circular reference */
+    toJSON() {
+        return {
+            onOff: this.onOff,
+            dimmer: this.dimmer,
+            color: this.color,
+            colorTemperature: this.colorTemperature,
+            colorX: this.colorX,
+            colorY: this.colorY,
+            hue: this.hue,
+            saturation: this.saturation,
+            transitionTime: this.transitionTime,
+        };
+    }
 }
 __decorate([
     ipsoObject_1.doNotSerialize,
@@ -226,12 +240,16 @@ __decorate([
     ipsoObject_1.ipsoKey("5707"),
     ipsoObject_1.serializeWith(conversions_1.serializers.hue),
     ipsoObject_1.deserializeWith(conversions_1.deserializers.hue),
+    ipsoObject_1.required((me, ref) => ref != null && me.saturation !== ref.saturation) // force hue to be present if saturation is
+    ,
     __metadata("design:type", Number)
 ], Light.prototype, "hue", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("5708"),
     ipsoObject_1.serializeWith(conversions_1.serializers.saturation),
     ipsoObject_1.deserializeWith(conversions_1.deserializers.saturation),
+    ipsoObject_1.required((me, ref) => ref != null && me.hue !== ref.hue) // force saturation to be present if hue is
+    ,
     __metadata("design:type", Number)
 ], Light.prototype, "saturation", void 0);
 __decorate([

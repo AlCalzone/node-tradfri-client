@@ -106,6 +106,24 @@ function isRequired(target: object, reference: object, property: string | symbol
 }
 
 /**
+ * Checks if a property is required to be present in a serialized CoAP object.
+ * In contrast to `isRequired`, this leaves out properties that depend on others.
+ * @param property - property name to lookup
+ */
+function isAlwaysRequired(target: object, property: string | symbol): boolean {
+	// get the class constructor
+	const constr = target.constructor;
+	log(`${constr.name}: checking if ${property} is always required...`, "silly");
+	// retrieve the current metadata
+	const metadata = Reflect.getMetadata(METADATA_required, constr) || {};
+	if (metadata.hasOwnProperty(property)) {
+		const ret = metadata[property];
+		if (typeof ret === "boolean") return ret;
+	}
+	return false;
+}
+
+/**
  * Defines the required transformations to serialize a property to a CoAP object
  * @param transform: The transformation to apply during serialization
  * @param options: Some options regarding the behavior of the property transform
@@ -344,7 +362,7 @@ export class IPSOObject {
 				// if the value is another IPSOObject, then serialize that
 				_ret = value.serialize(refValue);
 				// if the serialized object contains no required properties, don't remember it
-				if (value.isSerializedObjectEmpty(_ret, reference)) return null;
+				if (value.isSerializedObjectEmpty(_ret)) return null;
 			} else {
 				// if the value is not the default one, then remember it
 				if (refValue != null) {
@@ -428,11 +446,11 @@ export class IPSOObject {
 		return (ret as IPSOObject).parse(serialized) as this;
 	}
 
-	private isSerializedObjectEmpty(obj: Record<string, any>, refObj: Record<string, any>): boolean {
+	private isSerializedObjectEmpty(obj: Record<string, any>): boolean {
 		// Prüfen, ob eine nicht-benötigte Eigenschaft angegeben ist. => nicht leer
 		for (const key of Object.keys(obj)) {
 			const propName = lookupKeyOrProperty(this, key);
-			if (!isRequired(this, refObj, propName)) {
+			if (!isAlwaysRequired(this, propName)) {
 				return false;
 			}
 		}

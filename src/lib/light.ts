@@ -44,13 +44,16 @@ export class Light extends IPSODevice {
 	public color: string = "f1e0b5"; // hex string
 
 	// As of Gateway version v1.3.14, this is finally supported too
+	// They both have to be given in the same payload or the other one is considered = 0
 	@ipsoKey("5707")
 	@serializeWith(serializers.hue)
 	@deserializeWith(deserializers.hue)
+	@required((me: Light, ref: Light) => ref != null && me.saturation !== ref.saturation) // force hue to be present if saturation is
 	public hue: number; // 0-360
 	@ipsoKey("5708")
 	@serializeWith(serializers.saturation)
 	@deserializeWith(deserializers.saturation)
+	@required((me: Light, ref: Light) => ref != null && me.hue !== ref.hue) // force saturation to be present if hue is
 	public saturation: number; // 0-100%
 
 	@ipsoKey("5709")
@@ -288,6 +291,21 @@ export class Light extends IPSODevice {
 		return this.operateLight({
 			saturation: value,
 		}, transitionTime);
+	}
+
+	/** Turns this object into JSON while leaving out the potential circular reference */
+	public toJSON(): {} {
+		return {
+			onOff: this.onOff,
+			dimmer: this.dimmer,
+			color: this.color,
+			colorTemperature: this.colorTemperature,
+			colorX: this.colorX,
+			colorY: this.colorY,
+			hue: this.hue,
+			saturation: this.saturation,
+			transitionTime: this.transitionTime,
+		};
 	}
 }
 
