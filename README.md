@@ -436,6 +436,9 @@ A DeviceInfo object contains general information about a device. It has the foll
 
 ## Changelog
 
+#### 0.8.2 (2018-02-19)
+* (AlCalzone) Force `hue` and `saturation` to appear in pairs in the sent payload
+
 #### 0.8.1 (2018-02-15)
 * (AlCalzone) Support floating point numbers as property values
 
