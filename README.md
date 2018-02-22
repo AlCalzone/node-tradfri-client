@@ -436,6 +436,10 @@ A DeviceInfo object contains general information about a device. It has the foll
 
 ## Changelog
 
+#### 0.8.3 (2018-02-22)
+* (AlCalzone) Removed the recently-added payload merging because it did more harm than good
+* (AlCalzone) Fixed `Group.activateScene` when the lights are turned off
+
 #### 0.8.2 (2018-02-19)
 * (AlCalzone) Force `hue` and `saturation` to appear in pairs in the sent payload
 
