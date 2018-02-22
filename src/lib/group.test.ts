@@ -25,10 +25,10 @@ const template = {
 	9039: 201141,
 };
 
-const group = new Group().parse(template);
-
 describe("ipso/group =>", () => {
 
+	const group = new Group().parse(template);
+	
 	it("should parse correctly", () => {
 		expect(group.onOff).to.equal(template["5850"] === 1);
 		expect(group.dimmer).to.equal(roundTo(template["5851"] / 254 * 100, 1));
@@ -37,9 +37,7 @@ describe("ipso/group =>", () => {
 	});
 
 	it("should serialize correctly", () => {
-		// we cheat a bit, because we don't want to have the transition time
-		// in the output, since that doesn't exist on the source object
-		expect(group.serialize({transitionTime: 0})).to.deep.equal(template);
+		expect(group.serialize()).to.deep.equal(template);
 	});
 
 });

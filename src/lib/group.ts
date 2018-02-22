@@ -80,6 +80,7 @@ export class Group extends IPSODevice {
 		const id: number = (sceneOrId instanceof Scene) ? sceneOrId.instanceId : sceneOrId;
 		return this.client.operateGroup(this, {
 			sceneId: id,
+			onOff: true, // this has to be true when changing a scene
 		});
 	}
 
