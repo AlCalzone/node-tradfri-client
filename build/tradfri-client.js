@@ -20,29 +20,6 @@ const group_1 = require("./lib/group");
 const logger_1 = require("./lib/logger");
 const scene_1 = require("./lib/scene");
 const tradfri_error_1 = require("./lib/tradfri-error");
-/** Computes the path part for a request. Does not contain the request base. */
-function getPath(endpoint, ...pathParts) {
-    pathParts = pathParts.map(p => typeof p === "number" ? p.toString() : p);
-    return `${endpoints_1.endpoints[endpoint]}/${pathParts.join("/")}`;
-}
-function mergePayload(payload, pendingUpdates) {
-    // TODO: revisit this at some point to make it more flexible
-    let ret = Object.assign({}, pendingUpdates);
-    // remove transitionTime
-    if ("3311" in ret) {
-        let light = ret["3311"][0];
-        if ("5712" in light)
-            delete light["5712"];
-        light = Object.assign(light, payload["3311"][0]);
-        ret["3311"][0] = light;
-    }
-    else {
-        if ("5712" in ret)
-            delete ret["5712"];
-        ret = Object.assign(ret, payload);
-    }
-    return ret;
-}
 class TradfriClient extends events_1.EventEmitter {
     // tslint:enable:unified-signatures
     constructor(hostname, optionsOrLogger) {
@@ -54,8 +31,6 @@ class TradfriClient extends events_1.EventEmitter {
         this.devices = {};
         /** dictionary of known groups */
         this.groups = {};
-        /** dictionary of updates that haven't been ack-ed by the gateway yet */
-        this.pendingUpdates = new Map();
         /** Options regarding IPSO objects and serialization */
         this.ipsoOptions = {};
         this.requestBase = `coaps://${hostname}:5684/`;
@@ -166,8 +141,6 @@ class TradfriClient extends events_1.EventEmitter {
      */
     stopObservingResource(path) {
         path = normalizeResourcePath(path);
-        if (this.pendingUpdates.has(path))
-            this.pendingUpdates.delete(path);
         // remove observer
         const observerUrl = path.startsWith(this.requestBase) ? path : `${this.requestBase}${path}`;
         const index = this.observedPaths.indexOf(observerUrl);
@@ -195,7 +168,6 @@ class TradfriClient extends events_1.EventEmitter {
      * This does not stop observing the resources if the observers are still active
      */
     clearObservers() {
-        this.pendingUpdates.clear();
         this.observedPaths = [];
     }
     /**
@@ -247,7 +219,7 @@ class TradfriClient extends events_1.EventEmitter {
                         }
                     }
                 };
-                return this.observeResource(getPath("devices", id), handleResponse);
+                return this.observeResource(`${endpoints_1.endpoints.devices}/${id}`, handleResponse);
             });
             yield Promise.all(observeDevicePromises);
             const removedKeys = array_extensions_1.except(oldKeys, newKeys);
@@ -256,7 +228,7 @@ class TradfriClient extends events_1.EventEmitter {
                 // remove device from dictionary
                 delete this.devices[id];
                 // remove observer
-                this.stopObservingResource(getPath("devices", id));
+                this.stopObservingResource(`${endpoints_1.endpoints.devices}/${id}`);
                 // and notify all listeners about the removal
                 this.emit("device removed", id);
             }
@@ -283,10 +255,6 @@ class TradfriClient extends events_1.EventEmitter {
         // remember the device object, so we can later use it as a reference for updates
         // store a clone, so we don't have to care what the calling library does
         this.devices[instanceId] = accessory.clone();
-        // if we have un-acked updates for this device, delete them so we won't send them again
-        const resourcePath = getPath("devices", instanceId);
-        if (this.pendingUpdates.has(resourcePath))
-            this.pendingUpdates.delete(resourcePath);
         // and notify all listeners about the update
         this.emit("device updated", accessory.link(this));
         return true;
@@ -359,7 +327,7 @@ class TradfriClient extends events_1.EventEmitter {
                         }
                     }
                 };
-                return this.observeResource(getPath("groups", id), handleResponse);
+                return this.observeResource(`${endpoints_1.endpoints.groups}/${id}`, handleResponse);
             });
             yield Promise.all(observeGroupPromises);
             const removedKeys = array_extensions_1.except(oldKeys, newKeys);
@@ -380,8 +348,8 @@ class TradfriClient extends events_1.EventEmitter {
         }
     }
     stopObservingGroup(instanceId) {
-        this.stopObservingResource(getPath("groups", instanceId));
-        const scenesPrefix = getPath("scenes", instanceId);
+        this.stopObservingResource(`${endpoints_1.endpoints.groups}/${instanceId}`);
+        const scenesPrefix = `${endpoints_1.endpoints.scenes}/${instanceId}`;
         for (const path of this.observedPaths) {
             if (path.startsWith(scenesPrefix)) {
                 this.stopObservingResource(path);
@@ -418,14 +386,10 @@ class TradfriClient extends events_1.EventEmitter {
         // remember the group object, so we can later use it as a reference for updates
         // store a clone, so we don't have to care what the calling library does
         groupInfo.group = group.clone();
-        // if we have un-acked updates for this group, delete them so we won't send them again
-        const resourcePath = getPath("groups", instanceId);
-        if (this.pendingUpdates.has(resourcePath))
-            this.pendingUpdates.delete(resourcePath);
         // notify all listeners about the update
         this.emit("group updated", group.link(this));
         // load scene information
-        this.observeResource(getPath("scenes", instanceId), (resp) => this.observeScenes_callback(instanceId, resp));
+        this.observeResource(`${endpoints_1.endpoints.scenes}/${instanceId}`, (resp) => this.observeScenes_callback(instanceId, resp));
         return true;
     }
     // gets called whenever "get /15005/<groupId>" updates
@@ -463,7 +427,7 @@ class TradfriClient extends events_1.EventEmitter {
                         }
                     }
                 };
-                return this.observeResource(getPath("scenes", groupId, id), handleResponse);
+                return this.observeResource(`${endpoints_1.endpoints.scenes}/${groupId}/${id}`, handleResponse);
             });
             yield Promise.all(observeScenePromises);
             const removedKeys = array_extensions_1.except(oldKeys, newKeys);
@@ -472,7 +436,7 @@ class TradfriClient extends events_1.EventEmitter {
                 // remove scene from dictionary
                 delete groupInfo.scenes[id];
                 // remove observers
-                this.stopObservingResource(getPath("scenes", groupId, id));
+                this.stopObservingResource(`${endpoints_1.endpoints.scenes}/${groupId}/${id}`);
                 // and notify all listeners about the removal
                 this.emit("scene removed", groupId, id);
             });
@@ -498,10 +462,6 @@ class TradfriClient extends events_1.EventEmitter {
         // remember the scene object, so we can later use it as a reference for updates
         // store a clone, so we don't have to care what the calling library does
         this.groups[groupId].scenes[instanceId] = scene.clone();
-        // if we have un-acked updates for this scene, delete them so we won't send them again
-        const resourcePath = getPath("scenes", groupId, instanceId);
-        if (this.pendingUpdates.has(resourcePath))
-            this.pendingUpdates.delete(resourcePath);
         // and notify all listeners about the update
         this.emit("scene updated", groupId, scene.link(this));
         return true;
@@ -524,7 +484,7 @@ class TradfriClient extends events_1.EventEmitter {
             throw new Error(`The device with id ${accessory.instanceId} is not known and cannot be update!`);
         }
         const original = this.devices[accessory.instanceId];
-        return this.updateResource(getPath("devices", accessory.instanceId), accessory, original);
+        return this.updateResource(`${endpoints_1.endpoints.devices}/${accessory.instanceId}`, accessory, original);
     }
     /**
      * Updates a group object on the gateway
@@ -537,7 +497,7 @@ class TradfriClient extends events_1.EventEmitter {
             throw new Error(`The group with id ${group.instanceId} is not known and cannot be update!`);
         }
         const original = this.groups[group.instanceId].group;
-        return this.updateResource(getPath("groups", group.instanceId), group, original);
+        return this.updateResource(`${endpoints_1.endpoints.groups}/${group.instanceId}`, group, original);
     }
     /**
      * Updates a generic resource on the gateway
@@ -551,17 +511,12 @@ class TradfriClient extends events_1.EventEmitter {
             // ensure the ipso options were not lost on the user side
             newObj.options = this.ipsoOptions;
             logger_1.log(`updateResource(${path}) > comparing ${JSON.stringify(newObj)} with the reference ${JSON.stringify(reference)}`, "debug");
-            let serializedObj = newObj.serialize(reference);
+            const serializedObj = newObj.serialize(reference);
             // If the serialized object contains no properties, we don't need to send anything
             if (!serializedObj || Object.keys(serializedObj).length === 0) {
                 logger_1.log(`updateResource(${path}) > empty object, not sending any payload`, "debug");
                 return false;
             }
-            if (this.pendingUpdates.has(path)) {
-                // try to include pending updates so we dont nullify them
-                serializedObj = mergePayload(serializedObj, this.pendingUpdates.get(path));
-            }
-            this.pendingUpdates.set(path, serializedObj);
             // get the payload
             let payload = JSON.stringify(serializedObj);
             logger_1.log(`updateResource(${path}) > sending payload: ${payload}`, "debug");
@@ -579,7 +534,7 @@ class TradfriClient extends events_1.EventEmitter {
     operateGroup(group, operation) {
         const reference = group.clone();
         const newGroup = reference.clone().merge(operation);
-        return this.updateResource(getPath("groups", group.instanceId), newGroup, reference);
+        return this.updateResource(`${endpoints_1.endpoints.groups}/${group.instanceId}`, newGroup, reference);
     }
     /**
      * Sets some properties on a lightbulb
@@ -594,7 +549,7 @@ class TradfriClient extends events_1.EventEmitter {
         const reference = accessory.clone();
         const newAccessory = reference.clone();
         newAccessory.lightList[0].merge(operation);
-        return this.updateResource(getPath("devices", accessory.instanceId), newAccessory, reference);
+        return this.updateResource(`${endpoints_1.endpoints.devices}/${accessory.instanceId}`, newAccessory, reference);
     }
     /**
      * Sends a custom request to a resource
