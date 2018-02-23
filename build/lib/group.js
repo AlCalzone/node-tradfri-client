@@ -51,7 +51,11 @@ class Group extends ipsoDevice_1.IPSODevice {
     activateScene(sceneOrId) {
         this.ensureLink();
         const id = (sceneOrId instanceof scene_1.Scene) ? sceneOrId.instanceId : sceneOrId;
-        return this.client.operateGroup(this, {
+        // we need to make sure the scene ID always gets sent, so we cheat a bit
+        const reference = this.clone();
+        reference.sceneId = Number.NaN;
+        reference.onOff = false;
+        return this.client.operateGroup(reference, {
             sceneId: id,
             onOff: true,
         });

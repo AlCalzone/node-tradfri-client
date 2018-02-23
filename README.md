@@ -436,6 +436,9 @@ A DeviceInfo object contains general information about a device. It has the foll
 
 ## Changelog
 
+#### 0.8.4 (2018-02-23)
+* (AlCalzone) Fixed `Group.activateScene` when the scene was already selected
+
 #### 0.8.3 (2018-02-22)
 * (AlCalzone) Removed the recently-added payload merging because it did more harm than good
 * (AlCalzone) Fixed `Group.activateScene` when the lights are turned off

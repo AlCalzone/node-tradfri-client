@@ -78,7 +78,11 @@ export class Group extends IPSODevice {
 	public activateScene(sceneOrId: Scene | number): Promise<boolean> {
 		this.ensureLink();
 		const id: number = (sceneOrId instanceof Scene) ? sceneOrId.instanceId : sceneOrId;
-		return this.client.operateGroup(this, {
+		// we need to make sure the scene ID always gets sent, so we cheat a bit
+		const reference = this.clone();
+		reference.sceneId = Number.NaN;
+		reference.onOff = false;
+		return this.client.operateGroup(reference, {
 			sceneId: id,
 			onOff: true, // this has to be true when changing a scene
 		});
