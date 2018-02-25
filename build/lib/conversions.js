@@ -119,7 +119,7 @@ function rgbToHSV(r, g, b) {
         s = 0;
     }
     else {
-        s = math_1.roundTo((max - min) / max, 2);
+        s = math_1.roundTo((max - min) / max, 3);
     }
     return { h, s, v };
 }

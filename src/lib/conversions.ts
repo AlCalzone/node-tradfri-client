@@ -125,7 +125,7 @@ function rgbToHSV(r: number, g: number, b: number) {
 	if (max === 0) {
 		s = 0;
 	} else {
-		s = roundTo((max - min) / max, 2);
+		s = roundTo((max - min) / max, 3);
 	}
 	return {h, s, v};
 }

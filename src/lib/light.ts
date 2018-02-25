@@ -223,9 +223,10 @@ export class Light extends IPSODevice {
 	 * @returns true if a request was sent, false otherwise
 	 */
 	public setColor(value: string, transitionTime?: number): Promise<boolean> {
+		this.ensureLink();
+
 		switch (this.spectrum) {
 			case "rgb": {
-				this.ensureLink();
 				return this.operateLight({
 					color: value,
 				}, transitionTime);
@@ -239,7 +240,6 @@ export class Light extends IPSODevice {
 						Object.keys(whiteSpectrumHex).join(", "),
 					);
 				}
-				this.ensureLink();
 				return this.operateLight({
 					colorTemperature: whiteSpectrumHex[value],
 				}, transitionTime);
@@ -256,8 +256,8 @@ export class Light extends IPSODevice {
 	 * @returns true if a request was sent, false otherwise
 	 */
 	public setColorTemperature(value: number, transitionTime?: number): Promise<boolean> {
-		if (this.spectrum !== "white") throw new Error("setColorTemperature is only available for white spectrum lightbulbs");
 		this.ensureLink();
+		if (this.spectrum !== "white") throw new Error("setColorTemperature is only available for white spectrum lightbulbs");
 
 		value = clamp(value, 0, 100);
 		return this.operateLight({
@@ -270,8 +270,8 @@ export class Light extends IPSODevice {
 	 * @returns true if a request was sent, false otherwise
 	 */
 	public setHue(value: number, transitionTime?: number): Promise<boolean> {
-		if (this.spectrum !== "rgb") throw new Error("setHue is only available for RGB lightbulbs");
 		this.ensureLink();
+		if (this.spectrum !== "rgb") throw new Error("setHue is only available for RGB lightbulbs");
 
 		value = clamp(value, 0, 360);
 		return this.operateLight({
@@ -284,8 +284,8 @@ export class Light extends IPSODevice {
 	 * @returns true if a request was sent, false otherwise
 	 */
 	public setSaturation(value: number, transitionTime?: number): Promise<boolean> {
-		if (this.spectrum !== "rgb") throw new Error("setSaturation is only available for RGB lightbulbs");
 		this.ensureLink();
+		if (this.spectrum !== "rgb") throw new Error("setSaturation is only available for RGB lightbulbs");
 
 		value = clamp(value, 0, 100);
 		return this.operateLight({
@@ -326,7 +326,7 @@ function createRGBProxy<T extends Light>() {
 					return me.color;
 				} else {
 					// calculate it from hue/saturation
-					const { r, g, b } = conversions.rgbFromHSV(me.hue, me.saturation, 1);
+					const { r, g, b } = conversions.rgbFromHSV(me.hue, me.saturation / 100, 1);
 					return conversions.rgbToString(r, g, b);
 				}
 			}
@@ -348,7 +348,7 @@ function createRGBProxy<T extends Light>() {
 						const { r, g, b } = conversions.rgbFromString(value);
 						const { h, s, v } = conversions.rgbToHSV(r, g, b);
 						me.hue = h;
-						me.saturation = s;
+						me.saturation = s * 100;
 					}
 				}
 				break;

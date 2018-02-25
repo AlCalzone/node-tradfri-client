@@ -144,9 +144,9 @@ class Light extends ipsoDevice_1.IPSODevice {
      * @returns true if a request was sent, false otherwise
      */
     setColor(value, transitionTime) {
+        this.ensureLink();
         switch (this.spectrum) {
             case "rgb": {
-                this.ensureLink();
                 return this.operateLight({
                     color: value,
                 }, transitionTime);
@@ -157,7 +157,6 @@ class Light extends ipsoDevice_1.IPSODevice {
                     throw new Error("White spectrum bulbs only support the following colors: " +
                         Object.keys(predefined_colors_1.whiteSpectrumHex).join(", "));
                 }
-                this.ensureLink();
                 return this.operateLight({
                     colorTemperature: predefined_colors_1.whiteSpectrumHex[value],
                 }, transitionTime);
@@ -173,9 +172,9 @@ class Light extends ipsoDevice_1.IPSODevice {
      * @returns true if a request was sent, false otherwise
      */
     setColorTemperature(value, transitionTime) {
+        this.ensureLink();
         if (this.spectrum !== "white")
             throw new Error("setColorTemperature is only available for white spectrum lightbulbs");
-        this.ensureLink();
         value = math_1.clamp(value, 0, 100);
         return this.operateLight({
             colorTemperature: value,
@@ -186,9 +185,9 @@ class Light extends ipsoDevice_1.IPSODevice {
      * @returns true if a request was sent, false otherwise
      */
     setHue(value, transitionTime) {
+        this.ensureLink();
         if (this.spectrum !== "rgb")
             throw new Error("setHue is only available for RGB lightbulbs");
-        this.ensureLink();
         value = math_1.clamp(value, 0, 360);
         return this.operateLight({
             hue: value,
@@ -199,9 +198,9 @@ class Light extends ipsoDevice_1.IPSODevice {
      * @returns true if a request was sent, false otherwise
      */
     setSaturation(value, transitionTime) {
+        this.ensureLink();
         if (this.spectrum !== "rgb")
             throw new Error("setSaturation is only available for RGB lightbulbs");
-        this.ensureLink();
         value = math_1.clamp(value, 0, 100);
         return this.operateLight({
             saturation: value,
@@ -321,7 +320,7 @@ function createRGBProxy() {
                 }
                 else {
                     // calculate it from hue/saturation
-                    const { r, g, b } = conversions_1.conversions.rgbFromHSV(me.hue, me.saturation, 1);
+                    const { r, g, b } = conversions_1.conversions.rgbFromHSV(me.hue, me.saturation / 100, 1);
                     return conversions_1.conversions.rgbToString(r, g, b);
                 }
             }
@@ -344,7 +343,7 @@ function createRGBProxy() {
                         const { r, g, b } = conversions_1.conversions.rgbFromString(value);
                         const { h, s, v } = conversions_1.conversions.rgbToHSV(r, g, b);
                         me.hue = h;
-                        me.saturation = s;
+                        me.saturation = s * 100;
                     }
                 }
                 break;
