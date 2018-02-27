@@ -436,6 +436,9 @@ A DeviceInfo object contains general information about a device. It has the foll
 
 ## Changelog
 
+#### 0.8.5 (2018-02-27)
+* (AlCalzone) Updated `node-coap-client`
+
 #### 0.8.4 (2018-02-23)
 * (AlCalzone) Fixed `Group.activateScene` when the scene was already selected
 
