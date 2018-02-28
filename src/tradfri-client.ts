@@ -668,7 +668,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	public operateGroup(group: Group, operation: GroupOperation): Promise<boolean> {
 
 		const reference = group.clone();
-		const newGroup = reference.clone().merge(operation);
+		const newGroup = reference.clone().merge(operation, true /* all props */);
 
 		return this.updateResource(
 			`${coapEndpoints.groups}/${group.instanceId}`,

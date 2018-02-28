@@ -3,6 +3,8 @@
 require("reflect-metadata");
 
 import { expect } from "chai";
+import { Scene } from "..";
+import { createNetworkMock } from "../../test/mocks";
 import { Group } from "./group";
 import { roundTo } from "./math";
 // tslint:disable:no-unused-expression
@@ -25,10 +27,15 @@ const template = {
 	9039: 201141,
 };
 
-describe("ipso/group =>", () => {
+function assertPayload(actual: any, expected: {}, message?: string) {
+	expect(actual).to.be.an.instanceof(Buffer, "the payload was no Buffer");
+	expect(JSON.parse(actual.toString())).to.deep.equal(expected, message);
+}
+
+describe("ipso/group => basic functionality => ", () => {
 
 	const group = new Group().parse(template);
-	
+
 	it("should parse correctly", () => {
 		expect(group.onOff).to.equal(template["5850"] === 1);
 		expect(group.dimmer).to.equal(roundTo(template["5851"] / 254 * 100, 1));
@@ -40,4 +47,152 @@ describe("ipso/group =>", () => {
 		expect(group.serialize()).to.deep.equal(template);
 	});
 
+});
+
+describe("ipso/group => simplified API => ", () => {
+
+	// Setup a fresh mock
+	const {
+		tradfri,
+		devicesUrl,
+		fakeCoap,
+		callbacks,
+		createStubs,
+		restoreStubs,
+		resetStubHistory,
+	} = createNetworkMock();
+	before(createStubs);
+	after(restoreStubs);
+	afterEach(resetStubHistory);
+
+	const apiMethods = [
+		"turnOn", "turnOff", "toggle",
+		"activateScene", "setBrightness",
+	];
+
+	describe("all methods should fail when no client instance has been linked", () => {
+		// Create a new light without a linked client instance
+		const unlinked = new Group();
+		for (const method of apiMethods) {
+			it(method, () => {
+				expect(unlinked[method].bind(unlinked)).to.throw("linked to a client");
+			});
+		}
+	});
+
+	const group = new Group().parse(template).link(tradfri);
+
+	describe("the methods should send the correct payload =>", () => {
+
+		it("turnOn() when the group is off", async () => {
+			group.onOff = false;
+			await group.turnOn().should.become(true);
+			assertPayload(fakeCoap.request.getCall(0).args[2], {
+				5850: 1,
+			});
+		});
+
+		it("turnOn() when the group is on", async () => {
+			group.onOff = true;
+			await group.turnOn().should.become(false);
+			fakeCoap.request.should.not.have.been.called;
+		});
+
+		it("turnOff() when the group is on", async () => {
+			group.onOff = true;
+			await group.turnOff().should.become(true);
+			assertPayload(fakeCoap.request.getCall(0).args[2], {
+				5850: 0,
+			});
+		});
+
+		it("turnOff() when the group is off", async () => {
+			group.onOff = false;
+			await group.turnOff().should.become(false);
+			fakeCoap.request.should.not.have.been.called;
+		});
+
+		it("toggle(true) when the group is off", async () => {
+			group.onOff = false;
+			await group.toggle(true).should.become(true);
+			assertPayload(fakeCoap.request.getCall(0).args[2], {
+				5850: 1,
+			});
+		});
+
+		it("toggle(true) when the group is on", async () => {
+			group.onOff = true;
+			await group.toggle(true).should.become(false);
+			fakeCoap.request.should.not.have.been.called;
+		});
+
+		it("toggle(false) when the group is on", async () => {
+			group.onOff = true;
+			await group.toggle(false).should.become(true);
+			assertPayload(fakeCoap.request.getCall(0).args[2], {
+				5850: 0,
+			});
+		});
+
+		it("toggle(false) when the group is off", async () => {
+			group.onOff = false;
+			await group.toggle(false).should.become(false);
+			fakeCoap.request.should.not.have.been.called;
+		});
+
+		it("setBrightness() without transition time", async () => {
+			group.dimmer = 0;
+			await group.setBrightness(100).should.become(true);
+			assertPayload(fakeCoap.request.getCall(0).args[2], {
+				5851: 254,
+			});
+		});
+
+		it("setBrightness() with transition time", async () => {
+			group.dimmer = 0;
+			await group.setBrightness(100, 2).should.become(true);
+			assertPayload(fakeCoap.request.getCall(0).args[2], {
+				5851: 254,
+				5712: 20,
+			});
+		});
+
+		it("activateScene() when the scene is NOT the active one", async () => {
+			// with the scene ID
+			await group.activateScene(123456).should.become(true);
+			assertPayload(fakeCoap.request.getCall(0).args[2], {
+				9039: 123456,
+				5850: 1,
+			});
+
+			// with an actual scene
+			const scene = new Scene();
+			scene.instanceId = 654321;
+			await group.activateScene(scene).should.become(true);
+			assertPayload(fakeCoap.request.getCall(1).args[2], {
+				9039: scene.instanceId,
+				5850: 1,
+			});
+		});
+
+		it("activateScene() when the scene IS the active one", async () => {
+			// with the scene ID
+			group.sceneId = 123456;
+			await group.activateScene(123456).should.become(true);
+			assertPayload(fakeCoap.request.getCall(0).args[2], {
+				9039: 123456,
+				5850: 1,
+			});
+
+			// with an actual scene
+			const scene = new Scene();
+			scene.instanceId = 123456;
+			await group.activateScene(scene).should.become(true);
+			assertPayload(fakeCoap.request.getCall(1).args[2], {
+				9039: scene.instanceId,
+				5850: 1,
+			});
+		});
+
+	});
 });
