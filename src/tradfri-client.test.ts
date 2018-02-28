@@ -57,7 +57,7 @@ describe("tradfri-client => ", () => {
 
 });
 
-describe("tradfri-client => ", () => {
+describe("tradfri-client => observing resources => ", () => {
 
 	// Setup the mock
 	const {
@@ -117,9 +117,9 @@ describe("tradfri-client => ", () => {
 
 });
 
-describe("tradfri-client => ", () => {
+describe("tradfri-client => observing devices => ", () => {
 
-	// Setup a fresh mock
+	// Setup the mock
 	const {
 		tradfri,
 		devicesUrl,
@@ -222,7 +222,7 @@ describe("tradfri-client => ", () => {
 
 });
 
-describe("tradfri-client => ", () => {
+describe("tradfri-client => updating resources => ", () => {
 
 	// Setup a fresh mock
 	const {
@@ -286,7 +286,6 @@ describe("tradfri-client => ", () => {
 					5712: 5,
 				}],
 			});
-
 		});
 	});
 

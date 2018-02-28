@@ -334,9 +334,9 @@ export class IPSOObject {
 	/**
 	 * Overrides this object's properties with those from another partial one
 	 */
-	public merge(obj: Partial<this>): this {
+	public merge(obj: Partial<this>, allProperties: boolean = false): this {
 		for (const [key, value] of entries(obj as Record<string, any>)) {
-			if (this.hasOwnProperty(key)) {
+			if (allProperties || this.hasOwnProperty(key)) {
 				this[key] = value;
 			}
 		}

@@ -58,7 +58,7 @@ export declare class IPSOObject {
     /**
      * Overrides this object's properties with those from another partial one
      */
-    merge(obj: Partial<this>): this;
+    merge(obj: Partial<this>, allProperties?: boolean): this;
     /** serializes this object in order to transfer it via COAP */
     serialize(reference?: this): Record<string, any>;
     /**

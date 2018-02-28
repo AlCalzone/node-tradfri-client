@@ -287,9 +287,9 @@ class IPSOObject {
     /**
      * Overrides this object's properties with those from another partial one
      */
-    merge(obj) {
+    merge(obj, allProperties = false) {
         for (const [key, value] of object_polyfill_1.entries(obj)) {
-            if (this.hasOwnProperty(key)) {
+            if (allProperties || this.hasOwnProperty(key)) {
                 this[key] = value;
             }
         }

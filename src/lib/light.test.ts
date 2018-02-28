@@ -2,10 +2,19 @@
 // tslint:disable-next-line:no-var-requires
 require("reflect-metadata");
 
-import { expect } from "chai";
+// tslint:disable:no-unused-expression
+
+import { assert, expect, should, use } from "chai";
+import { spy, stub } from "sinon";
+
+import { TradfriClient } from "..";
+import { createNetworkMock } from "../../test/mocks";
 import { Accessory } from "./accessory";
-import { Spectrum } from "./light";
+import { Light, LightOperation, Spectrum } from "./light";
 import { MAX_COLOR, predefinedColors } from "./predefined-colors";
+
+// enable the should interface with sinon
+should();
 
 function buildAccessory(modelName: string) {
 	return {
@@ -39,7 +48,12 @@ function buildAccessory(modelName: string) {
 	};
 }
 
-describe("ipso/light => feature tests =>", () => {
+function assertPayload(actual: any, expected: {}, message?: string) {
+	expect(actual).to.be.an.instanceof(Buffer, "the payload was no Buffer");
+	expect(JSON.parse(actual.toString())).to.deep.equal(expected, message);
+}
+
+describe("ipso/light => basic functionality =>", () => {
 
 	// setup feature table
 	interface Device {
@@ -208,6 +222,333 @@ describe("ipso/light => feature tests =>", () => {
 			.createProxy()
 			;
 		expect(rgb.lightList[0].dimmer).to.equal(70.5);
+	});
+
+});
+
+describe("ipso/light => simplified API => ", () => {
+
+	// Setup a fresh mock
+	const {
+		tradfri,
+		devicesUrl,
+		fakeCoap,
+		callbacks,
+		createStubs,
+		restoreStubs,
+		resetStubHistory,
+	} = createNetworkMock();
+	before(createStubs);
+	after(restoreStubs);
+	afterEach(resetStubHistory);
+
+	const apiMethods = [
+		"turnOn", "turnOff", "toggle",
+		"setBrightness", "setColor",
+		"setColorTemperature", "setHue", "setSaturation",
+	];
+
+	describe("all methods should fail when no client instance has been linked", () => {
+		// Create a new light without a linked client instance
+		const unlinked = new Light();
+		for (const method of apiMethods) {
+			it(method, () => {
+				expect(unlinked[method].bind(unlinked)).to.throw("linked to a client");
+			});
+		}
+	});
+
+	describe("all methods should fail when no accessory instance has been linked", () => {
+		// Create a new light without a linked accessory instance
+		const linked = new Light();
+		linked.link(tradfri);
+
+		for (const method of apiMethods) {
+			it(method, () => {
+				expect(linked[method].bind(linked)).to.throw("linked to an Accessory");
+			});
+		}
+	});
+
+	const accNoSpectrum = new Accessory().parse(
+		buildAccessory("TRADFRI bulb E26 opal 1000lm"),
+	).link(tradfri);
+	const lightNoSpectrum = accNoSpectrum.lightList[0];
+	const accWhiteSpectrum = new Accessory().parse(
+		buildAccessory("TRADFRI bulb E27 WS clear 950lm"),
+	).link(tradfri);
+	const lightWhiteSpectrum = accWhiteSpectrum.lightList[0];
+	const accRGBSpectrum = new Accessory().parse(
+		buildAccessory("TRADFRI bulb E27 C/WS opal 600lm"),
+	).link(tradfri);
+	const lightRGBSpectrum = accRGBSpectrum.lightList[0];
+	const allLights = [
+		lightNoSpectrum, lightWhiteSpectrum, lightRGBSpectrum,
+	];
+
+	describe("the methods should send the correct payload (all spectrums) =>", () => {
+
+		it("turnOn() when the lights are off", async () => {
+			for (let i = 0, light = allLights[i]; i < allLights.length; i++) {
+				light.onOff = false;
+				await light.turnOn().should.become(true);
+				assertPayload(fakeCoap.request.getCall(i).args[2], {
+					3311: [{
+						5850: 1,
+						5712: 5,
+					}],
+				});
+			}
+		});
+
+		it("turnOn() when the lights are on", async () => {
+			for (let i = 0, light = allLights[i]; i < allLights.length; i++) {
+				light.onOff = true;
+				await light.turnOn().should.become(false);
+			}
+			fakeCoap.request.should.not.have.been.called;
+		});
+
+		it("turnOff() when the lights are on", async () => {
+			for (let i = 0, light = allLights[i]; i < allLights.length; i++) {
+				light.onOff = true;
+				await light.turnOff().should.become(true);
+				assertPayload(fakeCoap.request.getCall(i).args[2], {
+					3311: [{
+						5850: 0,
+						5712: 5,
+					}],
+				});
+			}
+		});
+
+		it("turnOff() when the lights are off", async () => {
+			for (let i = 0, light = allLights[i]; i < allLights.length; i++) {
+				light.onOff = false;
+				await light.turnOff().should.become(false);
+			}
+			fakeCoap.request.should.not.have.been.called;
+		});
+
+		it("toggle(true) when the lights are off", async () => {
+			for (let i = 0, light = allLights[i]; i < allLights.length; i++) {
+				light.onOff = false;
+				await light.toggle(true).should.become(true);
+				assertPayload(fakeCoap.request.getCall(i).args[2], {
+					3311: [{
+						5850: 1,
+						5712: 5,
+					}],
+				});
+			}
+		});
+
+		it("toggle(true) when the lights are on", async () => {
+			for (let i = 0, light = allLights[i]; i < allLights.length; i++) {
+				light.onOff = true;
+				await light.toggle(true).should.become(false);
+			}
+			fakeCoap.request.should.not.have.been.called;
+		});
+
+		it("toggle(false) when the lights are on", async () => {
+			for (let i = 0, light = allLights[i]; i < allLights.length; i++) {
+				light.onOff = true;
+				await light.toggle(false).should.become(true);
+				assertPayload(fakeCoap.request.getCall(i).args[2], {
+					3311: [{
+						5850: 0,
+						5712: 5,
+					}],
+				});
+			}
+		});
+
+		it("toggle(false) when the lights are off", async () => {
+			for (let i = 0, light = allLights[i]; i < allLights.length; i++) {
+				light.onOff = false;
+				await light.toggle(false).should.become(false);
+			}
+			fakeCoap.request.should.not.have.been.called;
+		});
+
+		it("toggle() when the lights are off", async () => {
+			for (let i = 0, light = allLights[i]; i < allLights.length; i++) {
+				light.onOff = false;
+				await light.toggle().should.become(true);
+				assertPayload(fakeCoap.request.getCall(i).args[2], {
+					3311: [{
+						5850: 1,
+						5712: 5,
+					}],
+				});
+			}
+		});
+
+		it("toggle() when the lights are on", async () => {
+			for (let i = 0, light = allLights[i]; i < allLights.length; i++) {
+				light.onOff = true;
+				await light.toggle().should.become(true);
+				assertPayload(fakeCoap.request.getCall(i).args[2], {
+					3311: [{
+						5850: 0,
+						5712: 5,
+					}],
+				});
+			}
+		});
+
+		it("setBrightness() without transition time", async () => {
+			for (let i = 0, light = allLights[i]; i < allLights.length; i++) {
+				light.dimmer = 0;
+				await light.setBrightness(100).should.become(true);
+				assertPayload(fakeCoap.request.getCall(i).args[2], {
+					3311: [{
+						5851: 254,
+						5712: 5,
+					}],
+				});
+			}
+		});
+
+		it("setBrightness() with transition time", async () => {
+			for (let i = 0, light = allLights[i]; i < allLights.length; i++) {
+				light.dimmer = 0;
+				await light.setBrightness(100, 2).should.become(true);
+				assertPayload(fakeCoap.request.getCall(i).args[2], {
+					3311: [{
+						5851: 254,
+						5712: 20,
+					}],
+				});
+			}
+		});
+
+	});
+
+	describe("the methods should send the correct payload (RGB) =>", () => {
+
+		it("setColor() should throw for no-spectrum bulbs", async () => {
+			expect(() => lightNoSpectrum.setColor("abcdef")).to.throw("RGB lightbulbs");
+		});
+
+		it("setColor() should only accept predefined values for white spectrum bulbs", async () => {
+			expect(() => lightWhiteSpectrum.setColor("abcdef")).to.throw("support the following colors");
+			expect(() => lightWhiteSpectrum.setColor("f5faf6")).not.to.throw;
+			expect(() => lightWhiteSpectrum.setColor("f1e0b5")).not.to.throw;
+			expect(() => lightWhiteSpectrum.setColor("efd275")).not.to.throw;
+		});
+
+		it("setColor() without transition time", async () => {
+			await lightRGBSpectrum.setColor("FF0000").should.become(true);
+			assertPayload(fakeCoap.request.getCall(0).args[2], {
+				3311: [{
+					5707: 0,
+					5708: 65279,
+					5712: 5,
+				}],
+			});
+		});
+
+		it("setColor() with transition time", async () => {
+			await lightRGBSpectrum.setColor("FF0000", 2).should.become(true);
+			assertPayload(fakeCoap.request.getCall(0).args[2], {
+				3311: [{
+					5707: 0,
+					5708: 65279,
+					5712: 20,
+				}],
+			});
+		});
+
+		it("setHue() should throw for non-RGB bulbs", async () => {
+			expect(() => lightNoSpectrum.setHue(100)).to.throw("RGB lightbulbs");
+			expect(() => lightWhiteSpectrum.setHue(100)).to.throw("RGB lightbulbs");
+		});
+
+		it("setHue() without transition time", async () => {
+			lightRGBSpectrum.merge({hue: 0, saturation: 100});
+			await lightRGBSpectrum.setHue(180).should.become(true);
+			assertPayload(fakeCoap.request.getCall(0).args[2], {
+				3311: [{
+					5707: 32640,
+					5708: 65279,
+					5712: 5,
+				}],
+			});
+		});
+
+		it("setHue() with transition time", async () => {
+			lightRGBSpectrum.merge({hue: 0, saturation: 100});
+			await lightRGBSpectrum.setHue(180, 2).should.become(true);
+			assertPayload(fakeCoap.request.getCall(0).args[2], {
+				3311: [{
+					5707: 32640,
+					5708: 65279,
+					5712: 20,
+				}],
+			});
+		});
+
+		it("setSaturation() should throw for non-RGB bulbs", async () => {
+			expect(() => lightNoSpectrum.setSaturation(100)).to.throw("RGB lightbulbs");
+			expect(() => lightWhiteSpectrum.setSaturation(100)).to.throw("RGB lightbulbs");
+		});
+
+		it("setSaturation() without transition time", async () => {
+			lightRGBSpectrum.merge({hue: 0, saturation: 100});
+			await lightRGBSpectrum.setSaturation(50).should.become(true);
+			assertPayload(fakeCoap.request.getCall(0).args[2], {
+				3311: [{
+					5707: 0,
+					5708: 32640,
+					5712: 5,
+				}],
+			});
+		});
+
+		it("setSaturation() with transition time", async () => {
+			lightRGBSpectrum.merge({hue: 0, saturation: 100});
+			await lightRGBSpectrum.setSaturation(50, 2).should.become(true);
+			assertPayload(fakeCoap.request.getCall(0).args[2], {
+				3311: [{
+					5707: 0,
+					5708: 32640,
+					5712: 20,
+				}],
+			});
+		});
+
+	});
+
+	describe("the methods should send the correct payload (white spectrum) =>", () => {
+
+		it("setColorTemperature() should throw for non-white spectrum bulbs", async () => {
+			expect(() => lightNoSpectrum.setColorTemperature(50)).to.throw("white spectrum");
+			expect(() => lightRGBSpectrum.setColorTemperature(50)).to.throw("white spectrum");
+		});
+
+		it("setColorTemperature() without transition time", async () => {
+			lightWhiteSpectrum.colorTemperature = 0;
+			await lightWhiteSpectrum.setColorTemperature(50).should.become(true);
+			assertPayload(fakeCoap.request.getCall(0).args[2], {
+				3311: [{
+					5711: 352,
+					5712: 5,
+				}],
+			});
+		});
+
+		it("setColorTemperature() with transition time", async () => {
+			lightWhiteSpectrum.colorTemperature = 0;
+			await lightWhiteSpectrum.setColorTemperature(50, 2).should.become(true);
+			assertPayload(fakeCoap.request.getCall(0).args[2], {
+				3311: [{
+					5711: 352,
+					5712: 20,
+				}],
+			});
+		});
 	});
 
 });

@@ -533,7 +533,7 @@ class TradfriClient extends events_1.EventEmitter {
      */
     operateGroup(group, operation) {
         const reference = group.clone();
-        const newGroup = reference.clone().merge(operation);
+        const newGroup = reference.clone().merge(operation, true /* all props */);
         return this.updateResource(`${endpoints_1.endpoints.groups}/${group.instanceId}`, newGroup, reference);
     }
     /**
