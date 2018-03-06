@@ -2,7 +2,7 @@
 Library to talk to IKEA Trådfri Gateways without external binaries
 
 [![Build Status](https://travis-ci.org/AlCalzone/node-tradfri-client.svg?branch=master)](https://travis-ci.org/AlCalzone/node-tradfri-client)
-[![Coverage Status](https://coveralls.io/repos/github/AlCalzone/node-tradfri-client/badge.svg?branch=master)](https://coveralls.io/github/AlCalzone/node-tradfri-client?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/AlCalzone/node-tradfri-client/badge.svg)](https://coveralls.io/github/AlCalzone/node-tradfri-client)
 
 *Requires NodeJS >= 6.x*
 
