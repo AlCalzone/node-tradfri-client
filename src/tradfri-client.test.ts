@@ -25,7 +25,7 @@ function assertPayload(actual: any, expected: {}) {
 	expect(JSON.parse(actual.toString())).to.deep.equal(expected);
 }
 
-describe("tradfri-client => ", () => {
+describe.only("tradfri-client => ", () => {
 
 	// Setup the mock
 	const {
