@@ -224,6 +224,16 @@ describe("ipso/light => basic functionality =>", () => {
 		expect(rgb.lightList[0].dimmer).to.equal(70.5);
 	});
 
+	it("cloning a light should correctly copy the model name", () => {
+		const source = buildAccessory("TRADFRI bulb E27 C/WS opal 600lm");
+		const acc = new Accessory().parse(source);
+		const light = acc.lightList[0];
+		const clone = light.clone();
+		// the model name is internally responsible for detecting the spectrum
+		// so we use that to test
+		expect(light.spectrum).to.equal(clone.spectrum);
+	})
+
 });
 
 describe("ipso/light => simplified API => ", () => {

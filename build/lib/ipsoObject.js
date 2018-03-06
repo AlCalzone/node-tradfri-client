@@ -384,9 +384,9 @@ class IPSOObject {
     /**
      * Deeply clones an IPSO Object
      */
-    clone() {
+    clone(...constructorArgs) {
         const constructor = this.constructor;
-        const ret = new constructor(this.options);
+        const ret = new constructor(this.options, ...constructorArgs);
         // serialize the old values
         const serialized = this.serialize();
         // and parse them back

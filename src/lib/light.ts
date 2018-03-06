@@ -16,7 +16,7 @@ export type LightOperation = Partial<Pick<Light,
 
 export class Light extends IPSODevice {
 
-	constructor(accessory?: Accessory, options?: IPSOOptions) {
+	constructor(options?: IPSOOptions, accessory?: Accessory) {
 		super(options);
 
 		// In order for the simplified API to work, the
@@ -117,7 +117,7 @@ export class Light extends IPSODevice {
 	}
 
 	public clone(): this {
-		const ret = super.clone() as this;
+		const ret = super.clone(this._accessory) as this;
 		ret._modelName = this._modelName;
 		return ret;
 	}

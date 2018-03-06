@@ -16,7 +16,7 @@ const ipsoObject_1 = require("./ipsoObject");
 const math_1 = require("./math");
 const predefined_colors_1 = require("./predefined-colors");
 class Light extends ipsoDevice_1.IPSODevice {
-    constructor(accessory, options) {
+    constructor(options, accessory) {
         super(options);
         this.color = "f1e0b5"; // hex string
         this.transitionTime = 0.5; // <float>
@@ -51,7 +51,7 @@ class Light extends ipsoDevice_1.IPSODevice {
         return true; // we know no lightbulbs that aren't switchable
     }
     clone() {
-        const ret = super.clone();
+        const ret = super.clone(this._accessory);
         ret._modelName = this._modelName;
         return ret;
     }

@@ -62,6 +62,7 @@
     "test:ts": "node_modules/.bin/mocha",
     "test": "npm run test:ts",
     "coverage": "node_modules/.bin/nyc npm test",
+    "show-coverage": "npm run coverage && start ./coverage/index.html",
     "coveralls": "node_modules/.bin/nyc report --reporter=text-lcov | coveralls",
     "lint:ts": "tslint",
     "lint": "npm run lint:ts \"src/**/*.ts\"",

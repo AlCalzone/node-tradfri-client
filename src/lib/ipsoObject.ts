@@ -433,13 +433,13 @@ export class IPSOObject {
 	/**
 	 * Deeply clones an IPSO Object
 	 */
-	public clone(): this {
+	public clone(...constructorArgs: any[]): this {
 		// create a new instance of the same object as this
 		interface Constructable<T> {
-			new(options?: IPSOOptions): T;
+			new(options?: IPSOOptions, ...constructorArgs: any[]): T;
 		}
 		const constructor = this.constructor as Constructable<this>;
-		const ret = new constructor(this.options);
+		const ret = new constructor(this.options, ...constructorArgs);
 		// serialize the old values
 		const serialized = this.serialize();
 		// and parse them back

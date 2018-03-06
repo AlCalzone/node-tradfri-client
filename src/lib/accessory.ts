@@ -21,7 +21,7 @@ export class Accessory extends IPSODevice {
 
 	@ipsoKey("3")
 	@deserializeWith((obj, me) => new DeviceInfo(me.options).parse(obj))
-	public deviceInfo: DeviceInfo = null;
+	public deviceInfo: DeviceInfo;
 
 	@ipsoKey("9019")
 	public alive: boolean = false;
@@ -30,7 +30,7 @@ export class Accessory extends IPSODevice {
 	public lastSeen: number = 0;
 
 	@ipsoKey("3311")
-	@deserializeWith((obj, me: Accessory) => new Light(me, me.options).parse(obj))
+	@deserializeWith((obj, me: Accessory) => new Light(me.options, me).parse(obj))
 	public lightList: Light[];
 
 	@ipsoKey("3312")
@@ -60,16 +60,19 @@ export class Accessory extends IPSODevice {
 				light.link(client);
 			}
 		}
+		/* istanbul ignore next */
 		if (this.plugList != null) {
 			for (const plug of this.plugList) {
 				plug.link(client);
 			}
 		}
+		/* istanbul ignore next */
 		if (this.sensorList != null) {
 			for (const sensor of this.sensorList) {
 				sensor.link(client);
 			}
 		}
+		/* istanbul ignore next */
 		if (this.switchList != null) {
 			for (const swtch of this.switchList) {
 				swtch.link(client);

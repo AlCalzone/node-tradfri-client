@@ -27,7 +27,6 @@ class Accessory extends ipsoDevice_1.IPSODevice {
     constructor() {
         super(...arguments);
         this.type = AccessoryTypes.remote;
-        this.deviceInfo = null;
         this.alive = false;
         this.lastSeen = 0;
         this.otaUpdateState = 0; // boolean?
@@ -44,16 +43,19 @@ class Accessory extends ipsoDevice_1.IPSODevice {
                 light.link(client);
             }
         }
+        /* istanbul ignore next */
         if (this.plugList != null) {
             for (const plug of this.plugList) {
                 plug.link(client);
             }
         }
+        /* istanbul ignore next */
         if (this.sensorList != null) {
             for (const sensor of this.sensorList) {
                 sensor.link(client);
             }
         }
+        /* istanbul ignore next */
         if (this.switchList != null) {
             for (const swtch of this.switchList) {
                 swtch.link(client);
@@ -81,7 +83,7 @@ __decorate([
 ], Accessory.prototype, "lastSeen", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("3311"),
-    ipsoObject_1.deserializeWith((obj, me) => new light_1.Light(me, me.options).parse(obj)),
+    ipsoObject_1.deserializeWith((obj, me) => new light_1.Light(me.options, me).parse(obj)),
     __metadata("design:type", Array)
 ], Accessory.prototype, "lightList", void 0);
 __decorate([
