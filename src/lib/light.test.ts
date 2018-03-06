@@ -11,7 +11,7 @@ import { TradfriClient } from "..";
 import { createNetworkMock } from "../../test/mocks";
 import { Accessory } from "./accessory";
 import { Light, LightOperation, Spectrum } from "./light";
-import { MAX_COLOR, predefinedColors } from "./predefined-colors";
+import { MAX_COLOR, predefinedColors, whiteSpectrumHex } from "./predefined-colors";
 
 // enable the should interface with sinon
 should();
@@ -232,7 +232,7 @@ describe("ipso/light => basic functionality =>", () => {
 		// the model name is internally responsible for detecting the spectrum
 		// so we use that to test
 		expect(light.spectrum).to.equal(clone.spectrum);
-	})
+	});
 
 });
 
@@ -447,6 +447,23 @@ describe("ipso/light => simplified API => ", () => {
 			expect(() => lightWhiteSpectrum.setColor("f5faf6")).not.to.throw;
 			expect(() => lightWhiteSpectrum.setColor("f1e0b5")).not.to.throw;
 			expect(() => lightWhiteSpectrum.setColor("efd275")).not.to.throw;
+		});
+
+		it("setColor() for a white spectrum bulb should send the correct payload", async () => {
+			const keys = Object.keys(whiteSpectrumHex);
+
+			for (let i = 0, hex = keys[i]; i < keys.length; i++) {
+				lightWhiteSpectrum.colorTemperature = 1;
+				const expected = predefinedColors.get(hex).temperature;
+
+				await lightWhiteSpectrum.setColor(hex).should.become(true);
+				assertPayload(fakeCoap.request.getCall(i).args[2], {
+					3311: [{
+						5711: expected,
+						5712: 5,
+					}],
+				}, `color temperature for "${hex}" did not equal ${expected}`);
+			}
 		});
 
 		it("setColor() without transition time", async () => {
