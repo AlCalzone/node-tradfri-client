@@ -63,7 +63,7 @@
     "test": "npm run test:ts",
     "coverage": "node_modules/.bin/nyc npm test",
     "show-coverage": "npm run coverage && start ./coverage/index.html",
-    "coveralls": "node_modules/.bin/nyc report --reporter=text-lcov | coveralls",
+    "coveralls": "node_modules/.bin/nyc report --reporter=text-lcov | coveralls -v",
     "lint:ts": "tslint",
     "lint": "npm run lint:ts \"src/**/*.ts\"",
     "find-unused-exports": "node --require ts-node/register ./maintenance/find-unused-exports.ts"
