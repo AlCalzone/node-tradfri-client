@@ -91,7 +91,20 @@ describe("tradfri/conversions => rgbToHSV() <=> rgbFromHSV()", () => {
 			{rgb: {r: 92, g: 46, b: 23}, hsv: {h: 20, s: 0.75, v: 0.36}},
 			{rgb: {r: 255, g: 255, b: 255}, hsv: {h: 0, s: 0, v: 1}},
 			{rgb: {r: 191, g: 0, b: 255}, hsv: {h: 285, s: 1, v: 1}},
-			// TODO: Extend this to the predefined colors
+			{rgb: {r: 255, g: 0, b: 0}, hsv: { h: 0, s: 1, v: 1}},
+			{rgb: {r: 0, g: 255, b: 0}, hsv: { h: 120, s: 1, v: 1}},
+			{rgb: {r: 0, g: 0, b: 255}, hsv: { h: 240, s: 1, v: 1}},
+			{rgb: {r: 255, g: 255, b: 0}, hsv: { h: 60, s: 1, v: 1}},
+			{rgb: {r: 0, g: 255, b: 255}, hsv: { h: 180, s: 1, v: 1}},
+			{rgb: {r: 255, g: 0, b: 255}, hsv: { h: 300, s: 1, v: 1}},
+			{rgb: {r: 191, g: 191, b: 191}, hsv: {h: 0, s: 0, v: 0.75}},
+			{rgb: {r: 128, g: 128, b: 128}, hsv: {h: 0, s: 0, v: 0.50}},
+			{rgb: {r: 128, g: 0, b: 0}, hsv: {h: 0, s: 1, v: 0.50}},
+			{rgb: {r: 128, g: 128, b: 0}, hsv: {h: 60, s: 1, v: 0.50}},
+			{rgb: {r: 0, g: 128, b: 0}, hsv: {h: 120, s: 1, v: 0.50}},
+			{rgb: {r: 128, g: 0, b: 128}, hsv: {h: 300, s: 1, v: 0.50}},
+			{rgb: {r: 0, g: 128, b: 128}, hsv: {h: 180, s: 1, v: 0.50}},
+			{rgb: {r: 0, g: 0, b: 128}, hsv: {h: 240, s: 1, v: 0.50}},
 		];
 		for (const set of testSets) {
 			const {r, g, b} = set.rgb;
