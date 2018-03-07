@@ -9,10 +9,10 @@ import "./"; // dummy-import so index.ts is covered
 import { TradfriClient } from "./tradfri-client";
 
 import { ContentFormats } from "node-coap-client/build/ContentFormats";
-import { MessageCode } from "node-coap-client/build/Message";
+import { MessageCode, MessageCodes } from "node-coap-client/build/Message";
 import * as sinonChai from "sinon-chai";
 import { createEmptyAccessoryResponse, createNetworkMock, createResponse, createRGBBulb, errorResponse } from "../test/mocks";
-import { Accessory, Light } from "./";
+import { Accessory, Light, TradfriError, TradfriErrorCodes } from "./";
 import { createDeferredPromise, DeferredPromise } from "./lib/defer-promise";
 import { padStart } from "./lib/strings";
 
@@ -60,21 +60,77 @@ describe("tradfri-client => ", () => {
 		const psk = "PSK";
 
 		it("should reset the CoAP client, provide new security params and return the result from tryToConnect", async () => {
+			// test if both possible responses are passed through
 			fakeCoap.tryToConnect.returns(Promise.resolve(true));
 			await tradfri.connect(identity, psk).should.become(true);
 
 			fakeCoap.tryToConnect.returns(Promise.resolve(false));
 			await tradfri.connect(identity, psk).should.become(false);
-			
+
 			fakeCoap.reset.should.have.been.called;
 			fakeCoap.setSecurityParams.should.have.been.called;
 			fakeCoap.setSecurityParams.getCall(0).args[1].should.deep.equal({
-				psk: {[identity]: psk},
+				psk: { [identity]: psk },
 			});
 			fakeCoap.tryToConnect.should.have.been.called;
 
 			fakeCoap.tryToConnect.resetBehavior();
 		});
+	})
+
+	describe("authenticate => ", () => {
+
+		function createAuthResponse(code: MessageCode, payload?: {}): CoapResponse {
+			return {
+				code,
+				format: ContentFormats.application_json,
+				payload: payload ? Buffer.from(JSON.stringify(payload)) : undefined,
+			};
+		}
+
+		const dummyIdentity = "IDENTITY";
+		const generatedPSK = "ABCDEFG";
+		const failedAuthResponse = createAuthResponse(MessageCodes.clientError.unauthorized);
+		const authResponse = createAuthResponse(MessageCodes.success.created, { 9091: generatedPSK });
+		
+		afterEach(() => {
+			fakeCoap.tryToConnect.resetBehavior();
+			fakeCoap.request.resetBehavior();
+		});
+
+		it(`detects failure to connect with "Client_identity" as a wrong security code`, async () => {
+			fakeCoap.tryToConnect.returns(Promise.resolve(false));
+			await tradfri.authenticate(null).should.be.rejectedWith("security code");
+		});
+
+		it(`should call coap.request with the correct endpoint and payload and return the identity and psk`, async () => {
+			fakeCoap.tryToConnect.returns(Promise.resolve(true));
+			fakeCoap.request.returns(Promise.resolve(authResponse));
+			let generatedIdentity: string;
+			await tradfri.authenticate(dummyIdentity).should.be.fulfilled.then(({ identity, psk }) => {
+				expect(identity.startsWith("tradfri_")).to.be.true;
+				generatedIdentity = identity;
+				expect(psk).to.equal(generatedPSK);
+			});
+
+			fakeCoap.request.should.have.been.called;
+			fakeCoap.request.getCall(0).args[0].should.equal(`coaps://localhost:5684/15011/9063`);
+			fakeCoap.request.getCall(0).args[1].should.equal("post");
+			assertPayload(
+				fakeCoap.request.getCall(0).args[2], 
+				{ 9090: generatedIdentity }
+			);
+		});
+
+		it(`if coap.request returns an error, throw AuthenticationFailed`, async () => {
+			fakeCoap.tryToConnect.returns(Promise.resolve(true));
+			fakeCoap.request.returns(Promise.resolve(failedAuthResponse));
+			await tradfri.authenticate(dummyIdentity).should.be.rejected.then(err => {
+				expect(err).to.be.an.instanceof(TradfriError);
+				expect((err as TradfriError).code).to.equal(TradfriErrorCodes.AuthenticationFailed);
+			});
+		});
+
 	})
 
 });
@@ -216,7 +272,7 @@ describe("tradfri-client => observing devices => ", () => {
 			tradfri
 				.on("device removed", removedSpy)
 				.on("error", errorSpy)
-			;
+				;
 
 			await callbacks.observeDevices(errorResponse);
 
