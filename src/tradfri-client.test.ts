@@ -55,6 +55,28 @@ describe("tradfri-client => ", () => {
 		});
 	});
 
+	describe("connect => ", () => {
+		const identity = "IDENTITY";
+		const psk = "PSK";
+
+		it("should reset the CoAP client, provide new security params and return the result from tryToConnect", async () => {
+			fakeCoap.tryToConnect.returns(Promise.resolve(true));
+			await tradfri.connect(identity, psk).should.become(true);
+
+			fakeCoap.tryToConnect.returns(Promise.resolve(false));
+			await tradfri.connect(identity, psk).should.become(false);
+			
+			fakeCoap.reset.should.have.been.called;
+			fakeCoap.setSecurityParams.should.have.been.called;
+			fakeCoap.setSecurityParams.getCall(0).args[1].should.deep.equal({
+				psk: {[identity]: psk},
+			});
+			fakeCoap.tryToConnect.should.have.been.called;
+
+			fakeCoap.tryToConnect.resetBehavior();
+		});
+	})
+
 });
 
 describe("tradfri-client => observing resources => ", () => {

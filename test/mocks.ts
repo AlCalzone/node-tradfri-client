@@ -41,11 +41,13 @@ export function createNetworkMock(
 
 	const devicesUrl = `coaps://${hostname}:5684/15001`;
 
-	const fakeCoap: Record<string, sinon.SinonStub> = {
-		observe: null,
-		request: null,
-		stopObserving: null,
-		reset: null,
+	const fakeCoap = {
+		observe: null as sinon.SinonStub,
+		request: null as sinon.SinonStub,
+		stopObserving: null as sinon.SinonStub,
+		reset: null as sinon.SinonStub,
+		setSecurityParams: null as sinon.SinonStub,
+		tryToConnect: null as sinon.SinonStub,
 	};
 	const callbacks = {
 		observeDevices: null as (response: CoapResponse) => Promise<void>,
@@ -75,6 +77,8 @@ export function createNetworkMock(
 		fakeCoap.request = stub(coap, "request");
 		fakeCoap.stopObserving = stub(coap, "stopObserving");
 		fakeCoap.reset = stub(coap, "reset");
+		fakeCoap.setSecurityParams = stub(coap, "setSecurityParams");
+		fakeCoap.tryToConnect = stub(coap, "tryToConnect");
 	}
 
 	function restoreStubs() {
@@ -111,7 +115,7 @@ export function createEmptyAccessoryResponse(instanceId?: number) {
 
 export function createEmptyLight(instanceId: number = 65536) {
 	const ret = new Accessory();
-	const light = new Light(ret);
+	const light = new Light(null, ret);
 	ret.instanceId = instanceId;
 	ret.lightList = [light];
 	return ret.serialize();
