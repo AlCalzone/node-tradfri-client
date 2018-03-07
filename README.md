@@ -436,6 +436,9 @@ A DeviceInfo object contains general information about a device. It has the foll
 
 ## Changelog
 
+#### 0.8.6 (2018-03-07)
+* (AlCalzone) Published bugfixes that should have been live already.
+
 #### 0.8.5 (2018-02-27)
 * (AlCalzone) Updated `node-coap-client`
 
