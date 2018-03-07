@@ -76,23 +76,15 @@ describe("tradfri-client => ", () => {
 
 			fakeCoap.tryToConnect.resetBehavior();
 		});
-	})
+	});
 
 	describe("authenticate => ", () => {
 
-		function createAuthResponse(code: MessageCode, payload?: {}): CoapResponse {
-			return {
-				code,
-				format: ContentFormats.application_json,
-				payload: payload ? Buffer.from(JSON.stringify(payload)) : undefined,
-			};
-		}
-
 		const dummyIdentity = "IDENTITY";
 		const generatedPSK = "ABCDEFG";
-		const failedAuthResponse = createAuthResponse(MessageCodes.clientError.unauthorized);
-		const authResponse = createAuthResponse(MessageCodes.success.created, { 9091: generatedPSK });
-		
+		const failedAuthResponse = createResponse(null, MessageCodes.clientError.unauthorized);
+		const authResponse = createResponse({ 9091: generatedPSK }, MessageCodes.success.created);
+
 		afterEach(() => {
 			fakeCoap.tryToConnect.resetBehavior();
 			fakeCoap.request.resetBehavior();
@@ -117,8 +109,8 @@ describe("tradfri-client => ", () => {
 			fakeCoap.request.getCall(0).args[0].should.equal(`coaps://localhost:5684/15011/9063`);
 			fakeCoap.request.getCall(0).args[1].should.equal("post");
 			assertPayload(
-				fakeCoap.request.getCall(0).args[2], 
-				{ 9090: generatedIdentity }
+				fakeCoap.request.getCall(0).args[2],
+				{ 9090: generatedIdentity },
 			);
 		});
 
@@ -131,7 +123,7 @@ describe("tradfri-client => ", () => {
 			});
 		});
 
-	})
+	});
 
 });
 
@@ -367,4 +359,62 @@ describe("tradfri-client => updating resources => ", () => {
 		});
 	});
 
+});
+
+describe("tradfri-client => custom requests => ", () => {
+
+	// Setup the mock
+	const {
+		tradfri,
+		devicesUrl,
+		fakeCoap,
+		callbacks,
+		createStubs,
+		restoreStubs,
+		resetStubHistory,
+	} = createNetworkMock();
+	before(createStubs);
+	after(restoreStubs);
+	afterEach(resetStubHistory);
+
+	describe("request => ", () => {
+
+		const path = "testpath";
+		const method = "delete";
+		const payload = { foo: "bar" };
+		const responsePayload = { test: "blub" };
+		const response = createResponse(responsePayload, MessageCodes.clientError.badOption);
+		let actualResponse: {
+			code: string,
+			payload: any,
+		};
+
+		before(() => fakeCoap.request.returns(Promise.resolve(response)));
+		after(() => fakeCoap.request.resetBehavior());
+
+		it("should call coap.request with the payload converted to a JSON Buffer", async () => {
+			await tradfri.request(path, method, payload).should.be.fulfilled.then(resp => {
+				actualResponse = resp;
+			});
+
+			fakeCoap.request.should.have.been.calledOnce;
+			fakeCoap.request.getCall(0).args[0].should.equal(`coaps://localhost:5684/${path}`);
+			fakeCoap.request.getCall(0).args[1].should.equal(method);
+			assertPayload(fakeCoap.request.getCall(0).args[2], payload);
+		});
+
+		it("should also work without a payload", async () => {
+			await tradfri.request(path, method).should.be.fulfilled;
+
+			fakeCoap.request.should.have.been.calledOnce;
+			fakeCoap.request.getCall(0).args[0].should.equal(`coaps://localhost:5684/${path}`);
+			fakeCoap.request.getCall(0).args[1].should.equal(method);
+			expect(fakeCoap.request.getCall(0).args[2] === undefined).to.be.true;
+		});
+
+		it("the response should be passed through", () => {
+			actualResponse.code.should.equal(response.code.toString());
+			actualResponse.payload.should.deep.equal(responsePayload);
+		});
+	});
 });

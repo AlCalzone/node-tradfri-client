@@ -12,15 +12,17 @@ use(sinonChai);
 
 import { CoapClient as coap, CoapResponse } from "node-coap-client";
 import { ContentFormats } from "node-coap-client/build/ContentFormats";
-import { MessageCode } from "node-coap-client/build/Message";
+import { MessageCode, MessageCodes } from "node-coap-client/build/Message";
 import { Accessory, Light, TradfriClient } from "../src";
 
-export function createResponse(json: string | any): CoapResponse {
-	if (typeof json !== "string") json = JSON.stringify(json);
+export function createResponse(json: string | any | null, code: MessageCode = MessageCodes.success.content): CoapResponse {
+	if (typeof json !== "string" && typeof json !== "undefined") {
+		json = JSON.stringify(json);
+	}
 	return {
-		code: new MessageCode(2, 5),
+		code,
 		format: ContentFormats.application_json,
-		payload: Buffer.from(json, "utf8"),
+		payload: json != null ? Buffer.from(json, "utf8") : undefined,
 	};
 }
 export const errorResponse: CoapResponse = {
