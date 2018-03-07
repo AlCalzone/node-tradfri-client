@@ -187,9 +187,10 @@ class TradfriClient extends events_1.EventEmitter {
     }
     observeDevices_callback(response) {
         return __awaiter(this, void 0, void 0, function* () {
+            // check response code
             if (response.code.toString() !== "2.05") {
-                this.emit("error", new Error(`unexpected response (${response.code.toString()}) to observeDevices.`));
-                return;
+                if (!this.handleNonSuccessfulResponse(response, `observeDevices()`))
+                    return;
             }
             const newDevices = parsePayload(response);
             logger_1.log(`got all devices: ${JSON.stringify(newDevices)}`);
@@ -244,9 +245,10 @@ class TradfriClient extends events_1.EventEmitter {
     // gets called whenever "get /15001/<instanceId>" updates
     // returns true when the device was received successfully
     observeDevice_callback(instanceId, response) {
+        // check response code
         if (response.code.toString() !== "2.05") {
-            this.emit("error", new Error(`unexpected response (${response.code.toString()}) to observeDevice(${instanceId}).`));
-            return false;
+            if (!this.handleNonSuccessfulResponse(response, `observeDevice(${instanceId})`))
+                return;
         }
         const result = parsePayload(response);
         logger_1.log(`observeDevice > ` + JSON.stringify(result), "debug");
@@ -277,9 +279,10 @@ class TradfriClient extends events_1.EventEmitter {
     // gets called whenever "get /15004" updates
     observeGroups_callback(response) {
         return __awaiter(this, void 0, void 0, function* () {
+            // check response code
             if (response.code.toString() !== "2.05") {
-                this.emit("error", new Error(`unexpected response (${response.code.toString()}) to getAllGroups.`));
-                return;
+                if (!this.handleNonSuccessfulResponse(response, `observeGroups()`))
+                    return;
             }
             const newGroups = parsePayload(response);
             logger_1.log(`got all groups: ${JSON.stringify(newGroups)}`);
@@ -359,16 +362,9 @@ class TradfriClient extends events_1.EventEmitter {
     // gets called whenever "get /15004/<instanceId>" updates
     observeGroup_callback(instanceId, response) {
         // check response code
-        switch (response.code.toString()) {
-            case "2.05": break; // all good
-            case "4.04":// not found
-                // We know this group existed or we wouldn't have requested it
-                // This means it has been deleted
-                // TODO: Should we delete it here or where its being handled right now?
-                return false;
-            default:
-                this.emit("error", new Error(`unexpected response (${response.code.toString()}) to getGroup(${instanceId}).`));
-                return false;
+        if (response.code.toString() !== "2.05") {
+            if (!this.handleNonSuccessfulResponse(response, `observeGroup(${instanceId})`))
+                return;
         }
         const result = parsePayload(response);
         // parse group info
@@ -395,9 +391,10 @@ class TradfriClient extends events_1.EventEmitter {
     // gets called whenever "get /15005/<groupId>" updates
     observeScenes_callback(groupId, response) {
         return __awaiter(this, void 0, void 0, function* () {
+            // check response code
             if (response.code.toString() !== "2.05") {
-                this.emit("error", new Error(`unexpected response (${response.code.toString()}) to observeScenes(${groupId}).`));
-                return;
+                if (!this.handleNonSuccessfulResponse(response, `observeScenes(${groupId})`))
+                    return;
             }
             const groupInfo = this.groups[groupId];
             const newScenes = parsePayload(response);
@@ -445,16 +442,9 @@ class TradfriClient extends events_1.EventEmitter {
     // gets called whenever "get /15005/<groupId>/<instanceId>" updates
     observeScene_callback(groupId, instanceId, response) {
         // check response code
-        switch (response.code.toString()) {
-            case "2.05": break; // all good
-            case "4.04":// not found
-                // We know this scene existed or we wouldn't have requested it
-                // This means it has been deleted
-                // TODO: Should we delete it here or where its being handled right now?
-                return false;
-            default:
-                this.emit("error", new Error(`unexpected response (${response.code.toString()}) to observeScene(${groupId}, ${instanceId}).`));
-                return false;
+        if (response.code.toString() !== "2.05") {
+            if (!this.handleNonSuccessfulResponse(response, `observeScene(${groupId}, ${instanceId})`))
+                return;
         }
         const result = parsePayload(response);
         // parse scene info
@@ -465,6 +455,26 @@ class TradfriClient extends events_1.EventEmitter {
         // and notify all listeners about the update
         this.emit("scene updated", groupId, scene.link(this));
         return true;
+    }
+    /**
+     * Handles a non-successful response, e.g. by error logging
+     * @param resp The response with a code that indicates an unsuccessful request
+     * @param context Some logging context to identify where the error comes from
+     * @returns true if the calling method may proceed, false if it should break
+     */
+    handleNonSuccessfulResponse(resp, context) {
+        // check response code
+        const code = resp.code.toString();
+        const payload = parsePayload(resp) || "";
+        switch (code) {
+            case "4.04":// not found
+                // An observed resource has been deleted - all good
+                // The observer will be removed soon
+                return false;
+            default:
+                this.emit("error", new Error(`unexpected response (${code}) to ${context}: ${payload}`));
+                return false;
+        }
     }
     /**
      * Pings the gateway to check if it is alive
@@ -586,6 +596,8 @@ function normalizeResourcePath(path) {
     return path;
 }
 function parsePayload(response) {
+    if (response.payload == null)
+        return null;
     switch (response.format) {
         case 0: // text/plain
         case null:// assume text/plain

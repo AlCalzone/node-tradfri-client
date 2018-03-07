@@ -260,10 +260,14 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	}
 
 	private async observeDevices_callback(response: CoapResponse) {
+
+		// check response code
 		if (response.code.toString() !== "2.05") {
-			this.emit("error", new Error(`unexpected response (${response.code.toString()}) to observeDevices.`));
-			return;
+			if (!this.handleNonSuccessfulResponse(
+				response, `observeDevices()`
+			)) return;
 		}
+
 		const newDevices: number[] = parsePayload(response);
 
 		log(`got all devices: ${JSON.stringify(newDevices)}`);
@@ -325,10 +329,14 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	// gets called whenever "get /15001/<instanceId>" updates
 	// returns true when the device was received successfully
 	private observeDevice_callback(instanceId: number, response: CoapResponse): boolean {
+
+		// check response code
 		if (response.code.toString() !== "2.05") {
-			this.emit("error", new Error(`unexpected response (${response.code.toString()}) to observeDevice(${instanceId}).`));
-			return false;
+			if (!this.handleNonSuccessfulResponse(
+				response, `observeDevice(${instanceId})`
+			)) return;
 		}
+
 		const result = parsePayload(response);
 		log(`observeDevice > ` + JSON.stringify(result), "debug");
 		// parse device info
@@ -363,10 +371,13 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	// gets called whenever "get /15004" updates
 	private async observeGroups_callback(response: CoapResponse) {
 
+		// check response code
 		if (response.code.toString() !== "2.05") {
-			this.emit("error", new Error(`unexpected response (${response.code.toString()}) to getAllGroups.`));
-			return;
+			if (!this.handleNonSuccessfulResponse(
+				response, `observeGroups()`
+			)) return;
 		}
+		
 		const newGroups: number[] = parsePayload(response);
 
 		log(`got all groups: ${JSON.stringify(newGroups)}`);
@@ -457,18 +468,12 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	private observeGroup_callback(instanceId: number, response: CoapResponse): boolean {
 
 		// check response code
-		switch (response.code.toString()) {
-			case "2.05": break; // all good
-			case "4.04": // not found
-				// We know this group existed or we wouldn't have requested it
-				// This means it has been deleted
-				// TODO: Should we delete it here or where its being handled right now?
-				return false;
-			default:
-				this.emit("error", new Error(`unexpected response (${response.code.toString()}) to getGroup(${instanceId}).`));
-				return false;
+		if (response.code.toString() !== "2.05") {
+			if (!this.handleNonSuccessfulResponse(
+				response, `observeGroup(${instanceId})`
+			)) return;
 		}
-
+		
 		const result = parsePayload(response);
 		// parse group info
 		const group = (new Group(this.ipsoOptions)).parse(result).createProxy();
@@ -500,11 +505,14 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 
 	// gets called whenever "get /15005/<groupId>" updates
 	private async observeScenes_callback(groupId: number, response: CoapResponse) {
-		if (response.code.toString() !== "2.05") {
-			this.emit("error", new Error(`unexpected response (${response.code.toString()}) to observeScenes(${groupId}).`));
-			return;
-		}
 
+		// check response code
+		if (response.code.toString() !== "2.05") {
+			if (!this.handleNonSuccessfulResponse(
+				response, `observeScenes(${groupId})`
+			)) return;
+		}
+		
 		const groupInfo = this.groups[groupId];
 		const newScenes: number[] = parsePayload(response);
 
@@ -558,18 +566,12 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	private observeScene_callback(groupId: number, instanceId: number, response: CoapResponse): boolean {
 
 		// check response code
-		switch (response.code.toString()) {
-			case "2.05": break; // all good
-			case "4.04": // not found
-				// We know this scene existed or we wouldn't have requested it
-				// This means it has been deleted
-				// TODO: Should we delete it here or where its being handled right now?
-				return false;
-			default:
-				this.emit("error", new Error(`unexpected response (${response.code.toString()}) to observeScene(${groupId}, ${instanceId}).`));
-				return false;
+		if (response.code.toString() !== "2.05") {
+			if (!this.handleNonSuccessfulResponse(
+				response, `observeScene(${groupId}, ${instanceId})`
+			)) return;
 		}
-
+		
 		const result = parsePayload(response);
 		// parse scene info
 		const scene = (new Scene(this.ipsoOptions)).parse(result).createProxy();
@@ -580,6 +582,27 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		this.emit("scene updated", groupId, scene.link(this));
 
 		return true;
+	}
+
+	/**
+	 * Handles a non-successful response, e.g. by error logging
+	 * @param resp The response with a code that indicates an unsuccessful request
+	 * @param context Some logging context to identify where the error comes from
+	 * @returns true if the calling method may proceed, false if it should break
+	 */
+	private handleNonSuccessfulResponse(resp: CoapResponse, context: string): boolean {
+		// check response code
+		const code = resp.code.toString();
+		const payload = parsePayload(resp) || "";
+		switch (code) {
+			case "4.04": // not found
+				// An observed resource has been deleted - all good
+				// The observer will be removed soon
+				return false;
+			default:
+				this.emit("error", new Error(`unexpected response (${code}) to ${context}: ${payload}`));
+				return false;
+		}
 	}
 
 	/**
@@ -742,6 +765,7 @@ function normalizeResourcePath(path: string): string {
 }
 
 function parsePayload(response: CoapResponse): any {
+	if (response.payload == null) return null;
 	switch (response.format) {
 		case 0: // text/plain
 		case null: // assume text/plain

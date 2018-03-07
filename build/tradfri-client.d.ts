@@ -131,6 +131,13 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
     private observeScenes_callback(groupId, response);
     private observeScene_callback(groupId, instanceId, response);
     /**
+     * Handles a non-successful response, e.g. by error logging
+     * @param resp The response with a code that indicates an unsuccessful request
+     * @param context Some logging context to identify where the error comes from
+     * @returns true if the calling method may proceed, false if it should break
+     */
+    private handleNonSuccessfulResponse(resp, context);
+    /**
      * Pings the gateway to check if it is alive
      * @param timeout - (optional) Timeout in ms, after which the ping is deemed unanswered. Default: 5000ms
      */
