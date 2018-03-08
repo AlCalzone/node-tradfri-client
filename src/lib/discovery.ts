@@ -1,4 +1,5 @@
-import bonjour from "bonjour";
+import * as bonjourPackage from "bonjour";
+const bonjour = bonjourPackage();
 
 const MDNS_NAME = "coap";
 
