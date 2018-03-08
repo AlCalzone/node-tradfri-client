@@ -115,9 +115,8 @@ class TradfriClient extends events_1.EventEmitter {
      */
     observeResource(path, callback) {
         return __awaiter(this, void 0, void 0, function* () {
-            path = normalizeResourcePath(path);
             // check if we are already observing this resource
-            const observerUrl = `${this.requestBase}${path}`;
+            const observerUrl = this.getObserverUrl(path);
             if (this.observedPaths.indexOf(observerUrl) > -1)
                 return false;
             // start observing
@@ -126,12 +125,16 @@ class TradfriClient extends events_1.EventEmitter {
             return true;
         });
     }
+    getObserverUrl(path) {
+        path = normalizeResourcePath(path);
+        return path.startsWith(this.requestBase) ? path : `${this.requestBase}${path}`;
+    }
     /**
      * Checks if a resource is currently being observed
      * @param path The path of the resource
      */
     isObserving(path) {
-        const observerUrl = path.startsWith(this.requestBase) ? path : `${this.requestBase}${path}`;
+        const observerUrl = this.getObserverUrl(path);
         return this.observedPaths.indexOf(observerUrl) > -1;
     }
     /**
@@ -140,9 +143,8 @@ class TradfriClient extends events_1.EventEmitter {
      * @param path The path of the resource
      */
     stopObservingResource(path) {
-        path = normalizeResourcePath(path);
         // remove observer
-        const observerUrl = path.startsWith(this.requestBase) ? path : `${this.requestBase}${path}`;
+        const observerUrl = this.getObserverUrl(path);
         const index = this.observedPaths.indexOf(observerUrl);
         if (index === -1)
             return;

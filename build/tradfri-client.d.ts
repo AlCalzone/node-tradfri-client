@@ -84,6 +84,7 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
      * @returns true if the observer was set up, false otherwise (e.g. if it already exists)
      */
     observeResource(path: string, callback: (resp: CoapResponse) => void): Promise<boolean>;
+    private getObserverUrl(path);
     /**
      * Checks if a resource is currently being observed
      * @param path The path of the resource

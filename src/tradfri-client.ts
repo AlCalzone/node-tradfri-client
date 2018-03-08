@@ -177,11 +177,8 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 * @returns true if the observer was set up, false otherwise (e.g. if it already exists)
 	 */
 	public async observeResource(path: string, callback: (resp: CoapResponse) => void): Promise<boolean> {
-
-		path = normalizeResourcePath(path);
-
 		// check if we are already observing this resource
-		const observerUrl = `${this.requestBase}${path}`;
+		const observerUrl = this.getObserverUrl(path);
 		if (this.observedPaths.indexOf(observerUrl) > -1) return false;
 
 		// start observing
@@ -190,12 +187,17 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		return true;
 	}
 
+	private getObserverUrl(path: string): string {
+		path = normalizeResourcePath(path);
+		return path.startsWith(this.requestBase) ? path : `${this.requestBase}${path}`;
+	}
+
 	/**
 	 * Checks if a resource is currently being observed
 	 * @param path The path of the resource
 	 */
 	public isObserving(path: string): boolean {
-		const observerUrl = path.startsWith(this.requestBase) ? path : `${this.requestBase}${path}`;
+		const observerUrl = this.getObserverUrl(path);
 		return this.observedPaths.indexOf(observerUrl) > -1;
 	}
 
@@ -205,11 +207,8 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 * @param path The path of the resource
 	 */
 	public stopObservingResource(path: string): void {
-
-		path = normalizeResourcePath(path);
-
 		// remove observer
-		const observerUrl = path.startsWith(this.requestBase) ? path : `${this.requestBase}${path}`;
+		const observerUrl = this.getObserverUrl(path);
 		const index = this.observedPaths.indexOf(observerUrl);
 		if (index === -1) return;
 

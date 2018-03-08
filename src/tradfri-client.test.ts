@@ -25,7 +25,7 @@ function assertPayload(actual: any, expected: {}) {
 	expect(JSON.parse(actual.toString())).to.deep.equal(expected);
 }
 
-describe("tradfri-client => ", () => {
+describe("tradfri-client => surrounding functionality => ", () => {
 
 	// Setup the mock
 	const {
@@ -158,6 +158,12 @@ describe("tradfri-client => observing resources => ", () => {
 			fakeCoap.observe.should.not.have.been.called;
 		});
 
+		it("calling it again with an absolute path should also not call coap.observe", async () => {
+			const cb = spy();
+			await tradfri.observeResource("coaps://localhost:5684/15001", cb);
+			fakeCoap.observe.should.not.have.been.called;
+		});
+		
 		it("after resetting the client, coap.observe should be called again", async () => {
 			tradfri.reset();
 			const cb = spy();
