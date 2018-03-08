@@ -263,7 +263,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		// check response code
 		if (response.code.toString() !== "2.05") {
 			if (!this.handleNonSuccessfulResponse(
-				response, `observeDevices()`
+				response, `observeDevices()`, false,
 			)) return;
 		}
 
@@ -373,7 +373,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		// check response code
 		if (response.code.toString() !== "2.05") {
 			if (!this.handleNonSuccessfulResponse(
-				response, `observeGroups()`
+				response, `observeGroups()`, false,
 			)) return;
 		}
 		
@@ -508,7 +508,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		// check response code
 		if (response.code.toString() !== "2.05") {
 			if (!this.handleNonSuccessfulResponse(
-				response, `observeScenes(${groupId})`
+				response, `observeScenes(${groupId})`, false,
 			)) return;
 		}
 		
@@ -589,18 +589,18 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 * @param context Some logging context to identify where the error comes from
 	 * @returns true if the calling method may proceed, false if it should break
 	 */
-	private handleNonSuccessfulResponse(resp: CoapResponse, context: string): boolean {
+	private handleNonSuccessfulResponse(resp: CoapResponse, context: string, ignore404: boolean = true): boolean {
 		// check response code
 		const code = resp.code.toString();
 		const payload = parsePayload(resp) || "";
-		switch (code) {
-			case "4.04": // not found
-				// An observed resource has been deleted - all good
-				// The observer will be removed soon
-				return false;
-			default:
-				this.emit("error", new Error(`unexpected response (${code}) to ${context}: ${payload}`));
-				return false;
+		if (code === "4.04" && ignore404) {
+			// not found
+			// An observed resource has been deleted - all good
+			// The observer will be removed soon
+			return false;
+		} else {
+			this.emit("error", new Error(`unexpected response (${code}) to ${context}: ${payload}`));
+			return false;
 		}
 	}
 

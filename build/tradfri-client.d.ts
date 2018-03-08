@@ -137,7 +137,7 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
      * @param context Some logging context to identify where the error comes from
      * @returns true if the calling method may proceed, false if it should break
      */
-    private handleNonSuccessfulResponse(resp, context);
+    private handleNonSuccessfulResponse(resp, context, ignore404?);
     /**
      * Pings the gateway to check if it is alive
      * @param timeout - (optional) Timeout in ms, after which the ping is deemed unanswered. Default: 5000ms

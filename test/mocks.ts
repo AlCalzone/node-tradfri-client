@@ -25,11 +25,13 @@ export function createResponse(json: string | any | null, code: MessageCode = Me
 		payload: json != null ? Buffer.from(json, "utf8") : undefined,
 	};
 }
-export const errorResponse: CoapResponse = {
-	code: new MessageCode(4, 1),
-	format: ContentFormats.text_plain,
-	payload: null,
-};
+export function createErrorResponse(code: MessageCode = MessageCodes.clientError.notFound): CoapResponse {
+	return {
+		code,
+		format: ContentFormats.text_plain,
+		payload: null,
+	};
+}
 
 /**
  * Creates a mock for the entire network and callback framework

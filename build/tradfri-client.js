@@ -191,7 +191,7 @@ class TradfriClient extends events_1.EventEmitter {
         return __awaiter(this, void 0, void 0, function* () {
             // check response code
             if (response.code.toString() !== "2.05") {
-                if (!this.handleNonSuccessfulResponse(response, `observeDevices()`))
+                if (!this.handleNonSuccessfulResponse(response, `observeDevices()`, false))
                     return;
             }
             const newDevices = parsePayload(response);
@@ -283,7 +283,7 @@ class TradfriClient extends events_1.EventEmitter {
         return __awaiter(this, void 0, void 0, function* () {
             // check response code
             if (response.code.toString() !== "2.05") {
-                if (!this.handleNonSuccessfulResponse(response, `observeGroups()`))
+                if (!this.handleNonSuccessfulResponse(response, `observeGroups()`, false))
                     return;
             }
             const newGroups = parsePayload(response);
@@ -395,7 +395,7 @@ class TradfriClient extends events_1.EventEmitter {
         return __awaiter(this, void 0, void 0, function* () {
             // check response code
             if (response.code.toString() !== "2.05") {
-                if (!this.handleNonSuccessfulResponse(response, `observeScenes(${groupId})`))
+                if (!this.handleNonSuccessfulResponse(response, `observeScenes(${groupId})`, false))
                     return;
             }
             const groupInfo = this.groups[groupId];
@@ -464,18 +464,19 @@ class TradfriClient extends events_1.EventEmitter {
      * @param context Some logging context to identify where the error comes from
      * @returns true if the calling method may proceed, false if it should break
      */
-    handleNonSuccessfulResponse(resp, context) {
+    handleNonSuccessfulResponse(resp, context, ignore404 = true) {
         // check response code
         const code = resp.code.toString();
         const payload = parsePayload(resp) || "";
-        switch (code) {
-            case "4.04":// not found
-                // An observed resource has been deleted - all good
-                // The observer will be removed soon
-                return false;
-            default:
-                this.emit("error", new Error(`unexpected response (${code}) to ${context}: ${payload}`));
-                return false;
+        if (code === "4.04" && !ignore404) {
+            // not found
+            // An observed resource has been deleted - all good
+            // The observer will be removed soon
+            return false;
+        }
+        else {
+            this.emit("error", new Error(`unexpected response (${code}) to ${context}: ${payload}`));
+            return false;
         }
     }
     /**

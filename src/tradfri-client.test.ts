@@ -11,7 +11,7 @@ import { TradfriClient } from "./tradfri-client";
 import { ContentFormats } from "node-coap-client/build/ContentFormats";
 import { MessageCode, MessageCodes } from "node-coap-client/build/Message";
 import * as sinonChai from "sinon-chai";
-import { createEmptyAccessoryResponse, createNetworkMock, createResponse, createRGBBulb, errorResponse } from "../test/mocks";
+import { createEmptyAccessoryResponse, createNetworkMock, createResponse, createRGBBulb, createErrorResponse } from "../test/mocks";
 import { Accessory, Light, TradfriError, TradfriErrorCodes } from "./";
 import { createDeferredPromise, DeferredPromise } from "./lib/defer-promise";
 import { padStart } from "./lib/strings";
@@ -163,7 +163,7 @@ describe("tradfri-client => observing resources => ", () => {
 			await tradfri.observeResource("coaps://localhost:5684/15001", cb);
 			fakeCoap.observe.should.not.have.been.called;
 		});
-		
+
 		it("after resetting the client, coap.observe should be called again", async () => {
 			tradfri.reset();
 			const cb = spy();
@@ -263,25 +263,56 @@ describe("tradfri-client => observing devices => ", () => {
 			tradfri.removeAllListeners();
 		});
 
-		it("when the server returns a code other than 2.05, only emit an error", async () => {
+		for (const error of [
+			MessageCodes.clientError.unauthorized,
+			MessageCodes.clientError.forbidden,
+			MessageCodes.clientError.notFound,
+		]) {
+			const code = error.toString();
+			it(`when the server returns code "${code}" to observeDevices, only emit an error not "device removed"`, async () => {
 
-			const removedSpy = spy();
-			const errorSpy = spy();
-			tradfri
-				.on("device removed", removedSpy)
-				.on("error", errorSpy)
-				;
+				const removedSpy = spy();
+				const errorSpy = spy();
+				tradfri
+					.on("device removed", removedSpy)
+					.on("error", errorSpy)
+					;
 
-			await callbacks.observeDevices(errorResponse);
+				await callbacks.observeDevices(createErrorResponse(error));
 
-			fakeCoap.observe.should.not.have.been.called;
-			removedSpy.should.not.have.been.called;
-			errorSpy.should.have.been.calledOnce;
-			expect(errorSpy.getCall(0).args[0]).to.be.an.instanceOf(Error);
-			expect(errorSpy.getCall(0).args[0].message.startsWith("unexpected")).to.be.true;
+				fakeCoap.observe.should.not.have.been.called;
+				removedSpy.should.not.have.been.called;
+				errorSpy.should.have.been.calledOnce;
+				expect(errorSpy.getCall(0).args[0]).to.be.an.instanceOf(Error);
+				expect(errorSpy.getCall(0).args[0].message.startsWith("unexpected")).to.be.true;
 
-			tradfri.removeAllListeners();
-		});
+				tradfri.removeAllListeners();
+			});
+
+			it(`when the server returns code "${code}" to observeDevice(instanceID), ${code === "4.04" ? "don't" : "only"} emit an error and don't emit "device removed"`, async () => {
+				const updatedSpy = spy();
+				const errorSpy = spy();
+				tradfri
+					.on("error", errorSpy)
+					.on("device updated", updatedSpy)
+					;
+
+				// at this point we have devices 65537 and 65538. Fake an error to one of them
+				await callbacks.observeDevice[65538](createErrorResponse(error));
+
+				updatedSpy.should.not.have.been.called;
+				if (code !== "4.04") {
+					errorSpy.should.have.been.calledOnce;
+					expect(errorSpy.getCall(0).args[0]).to.be.an.instanceOf(Error);
+					expect(errorSpy.getCall(0).args[0].message.startsWith("unexpected")).to.be.true;
+				} else {
+					errorSpy.should.not.have.been.called;
+				}
+
+				tradfri.removeAllListeners();
+			});
+		}
+
 
 	});
 
