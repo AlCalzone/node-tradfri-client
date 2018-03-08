@@ -436,6 +436,10 @@ A DeviceInfo object contains general information about a device. It has the foll
 
 ## Changelog
 
+#### 0.8.7 (2018-03-08)
+* (AlCalzone) Greatly enhanced test coverage
+* (AlCalzone) Fixed some minor issues found by the new tests
+
 #### 0.8.6 (2018-03-07)
 * (AlCalzone) Published bugfixes that should have been live already.
 
