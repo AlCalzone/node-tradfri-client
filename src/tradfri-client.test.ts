@@ -11,8 +11,8 @@ import { TradfriClient } from "./tradfri-client";
 import { ContentFormats } from "node-coap-client/build/ContentFormats";
 import { MessageCode, MessageCodes } from "node-coap-client/build/Message";
 import * as sinonChai from "sinon-chai";
-import { createEmptyAccessoryResponse, createNetworkMock, createResponse, createRGBBulb, createErrorResponse } from "../test/mocks";
-import { Accessory, Light, TradfriError, TradfriErrorCodes } from "./";
+import { createEmptyAccessoryResponse, createErrorResponse, createNetworkMock, createResponse, createRGBBulb } from "../test/mocks";
+import { Accessory, AccessoryTypes, Light, TradfriError, TradfriErrorCodes } from "./";
 import { createDeferredPromise, DeferredPromise } from "./lib/defer-promise";
 import { padStart } from "./lib/strings";
 
@@ -25,7 +25,7 @@ function assertPayload(actual: any, expected: {}) {
 	expect(JSON.parse(actual.toString())).to.deep.equal(expected);
 }
 
-describe("tradfri-client => surrounding functionality => ", () => {
+describe("tradfri-client => infrastructure => ", () => {
 
 	// Setup the mock
 	const {
@@ -125,6 +125,33 @@ describe("tradfri-client => surrounding functionality => ", () => {
 
 	});
 
+	describe("ping =>", () => {
+		it("should call coap.ping for the coap host", () => {
+			tradfri.ping();
+			fakeCoap.ping.should.have.been.called;
+		});
+
+		it("should pass the correct arguments", () => {
+			tradfri.ping();
+			fakeCoap.ping.should.have.been.calledWithExactly("coaps://localhost:5684/", undefined);
+			fakeCoap.ping.resetHistory();
+
+			tradfri.ping(500);
+			fakeCoap.ping.should.have.been.calledWithExactly("coaps://localhost:5684/", 500);
+			fakeCoap.ping.resetHistory();
+		});
+
+		it("should pass through the returned promise", async () => {
+			fakeCoap.ping.returns(Promise.resolve(true));
+			await tradfri.ping().should.become(true);
+
+			fakeCoap.ping.returns(Promise.resolve(false));
+			await tradfri.ping().should.become(false);
+
+			fakeCoap.ping.resetBehavior();
+		});
+	});
+
 });
 
 describe("tradfri-client => observing resources => ", () => {
@@ -158,9 +185,17 @@ describe("tradfri-client => observing resources => ", () => {
 			fakeCoap.observe.should.not.have.been.called;
 		});
 
-		it("calling it again with an absolute path should also not call coap.observe", async () => {
+		it("calling it again with similar paths pointing to the same resource should also not call coap.observe", async () => {
 			const cb = spy();
-			await tradfri.observeResource("coaps://localhost:5684/15001", cb);
+			await Promise.all(
+				[
+					"coaps://localhost:5684/15001",
+					"coaps://localhost:5684/15001/",
+					"/15001",
+					"/15001/",
+					"15001/",
+				].map(path => tradfri.observeResource(path, cb)),
+			);
 			fakeCoap.observe.should.not.have.been.called;
 		});
 
@@ -313,7 +348,6 @@ describe("tradfri-client => observing devices => ", () => {
 			});
 		}
 
-
 	});
 
 	describe("stopObservingDevices => ", () => {
@@ -324,6 +358,29 @@ describe("tradfri-client => observing devices => ", () => {
 			fakeCoap.stopObserving.should.have.been.calledWith(`${devicesUrl}`);
 			fakeCoap.stopObserving.should.have.been.calledWith(`${devicesUrl}/65537`);
 			fakeCoap.stopObserving.should.have.been.calledWith(`${devicesUrl}/65538`);
+		});
+	});
+
+	describe("observeDevices (with errors) => ", () => {
+		it("should be rejected when one of the device callbacks receives an invalid response", async () => {
+
+			// the error spy has to be used our chai fails our test
+			const errorSpy = spy();
+			tradfri.on("error", errorSpy);
+
+			const devicesPromise = tradfri.observeDevices();
+			const devices = [65536];
+			await callbacks.observeDevices(createResponse(devices));
+
+			// we intercepted the device_callback, so we need to manually call it
+			// now for the following tests to work
+			await callbacks.observeDevice[65536](createErrorResponse(MessageCodes.clientError.forbidden));
+
+			errorSpy.should.have.been.called;
+			tradfri.removeAllListeners();
+
+			// now the deferred promise should have been rejected
+			await devicesPromise.should.be.rejectedWith("could not be observed");
 		});
 	});
 
@@ -370,7 +427,7 @@ describe("tradfri-client => updating resources => ", () => {
 		light = lightAccessory.lightList[0];
 	}
 
-	describe("updateResource => ", () => {
+	describe("updateDevice => ", () => {
 
 		beforeEach(resetDeviceInfrastructure);
 
@@ -393,6 +450,20 @@ describe("tradfri-client => updating resources => ", () => {
 					5712: 5,
 				}],
 			});
+		});
+
+		it("calling it with a non-observed device should throw", () => {
+			const nonExisting = lightAccessory.clone();
+			nonExisting.instanceId = 12345;
+			expect(() => tradfri.updateDevice(nonExisting)).to.throw("is not known");
+		});
+	});
+
+	describe("operateLight => ", () => {
+		it("should throw when called with a non-light accessory", () => {
+			const notALight = new Accessory();
+			notALight.type = AccessoryTypes.remote;
+			expect(() => tradfri.operateLight(notALight, {})).to.throw("must be a lightbulb");
 		});
 	});
 
@@ -452,6 +523,44 @@ describe("tradfri-client => custom requests => ", () => {
 		it("the response should be passed through", () => {
 			actualResponse.code.should.equal(response.code.toString());
 			actualResponse.payload.should.deep.equal(responsePayload);
+		});
+
+		it("responses with content-format 0 or without one should be parsed as a string", async () => {
+			const expected = "HALLO";
+			const stringResponse = createResponse(expected, undefined, ContentFormats.text_plain);
+
+			fakeCoap.request.returns(Promise.resolve(stringResponse));
+			await tradfri.request(null, null).should.be.fulfilled.then(
+				resp => expect(resp.payload).to.be.a("string").and.equal(expected),
+			);
+
+			stringResponse.format = null;
+			fakeCoap.request.returns(Promise.resolve(stringResponse));
+			await tradfri.request(null, null).should.be.fulfilled.then(
+				resp => expect(resp.payload).to.be.a("string").and.equal(expected),
+			);
+
+			fakeCoap.request.resetBehavior();
+		});
+
+		it("responses with any other content format should pass the raw Buffer through", async () => {
+			for (const contentFormat of [
+				ContentFormats.application_octetStream,
+				ContentFormats.application_exi,
+				ContentFormats.application_linkFormat,
+				ContentFormats.application_xml,
+			]) {
+				const expected = Buffer.from("unknown");
+				const jsonResponse = createResponse(expected, undefined, ContentFormats.application_octetStream);
+
+				fakeCoap.request.returns(Promise.resolve(jsonResponse));
+				await tradfri.request(null, null).should.be.fulfilled.then(
+					resp => expect(resp.payload).to.be.an.instanceof(Buffer)
+						.and.deep.equal(expected),
+				);
+
+				fakeCoap.request.resetBehavior();
+			}
 		});
 	});
 });

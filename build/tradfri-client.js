@@ -250,7 +250,7 @@ class TradfriClient extends events_1.EventEmitter {
         // check response code
         if (response.code.toString() !== "2.05") {
             if (!this.handleNonSuccessfulResponse(response, `observeDevice(${instanceId})`))
-                return;
+                return false;
         }
         const result = parsePayload(response);
         logger_1.log(`observeDevice > ` + JSON.stringify(result), "debug");
@@ -366,7 +366,7 @@ class TradfriClient extends events_1.EventEmitter {
         // check response code
         if (response.code.toString() !== "2.05") {
             if (!this.handleNonSuccessfulResponse(response, `observeGroup(${instanceId})`))
-                return;
+                return false;
         }
         const result = parsePayload(response);
         // parse group info
@@ -446,7 +446,7 @@ class TradfriClient extends events_1.EventEmitter {
         // check response code
         if (response.code.toString() !== "2.05") {
             if (!this.handleNonSuccessfulResponse(response, `observeScene(${groupId}, ${instanceId})`))
-                return;
+                return false;
         }
         const result = parsePayload(response);
         // parse scene info
@@ -468,7 +468,7 @@ class TradfriClient extends events_1.EventEmitter {
         // check response code
         const code = resp.code.toString();
         const payload = parsePayload(resp) || "";
-        if (code === "4.04" && !ignore404) {
+        if (code === "4.04" && ignore404) {
             // not found
             // An observed resource has been deleted - all good
             // The observer will be removed soon
@@ -593,9 +593,9 @@ exports.TradfriClient = TradfriClient;
 function normalizeResourcePath(path) {
     path = path || "";
     while (path.startsWith("/"))
-        path = path.substring(1);
+        path = path.slice(1);
     while (path.endsWith("/"))
-        path = path.substring(0, -1);
+        path = path.slice(0, -1);
     return path;
 }
 function parsePayload(response) {

@@ -332,8 +332,8 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		// check response code
 		if (response.code.toString() !== "2.05") {
 			if (!this.handleNonSuccessfulResponse(
-				response, `observeDevice(${instanceId})`
-			)) return;
+				response, `observeDevice(${instanceId})`,
+			)) return false;
 		}
 
 		const result = parsePayload(response);
@@ -376,7 +376,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 				response, `observeGroups()`, false,
 			)) return;
 		}
-		
+
 		const newGroups: number[] = parsePayload(response);
 
 		log(`got all groups: ${JSON.stringify(newGroups)}`);
@@ -469,10 +469,10 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		// check response code
 		if (response.code.toString() !== "2.05") {
 			if (!this.handleNonSuccessfulResponse(
-				response, `observeGroup(${instanceId})`
-			)) return;
+				response, `observeGroup(${instanceId})`,
+			)) return false;
 		}
-		
+
 		const result = parsePayload(response);
 		// parse group info
 		const group = (new Group(this.ipsoOptions)).parse(result).createProxy();
@@ -511,7 +511,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 				response, `observeScenes(${groupId})`, false,
 			)) return;
 		}
-		
+
 		const groupInfo = this.groups[groupId];
 		const newScenes: number[] = parsePayload(response);
 
@@ -567,10 +567,10 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		// check response code
 		if (response.code.toString() !== "2.05") {
 			if (!this.handleNonSuccessfulResponse(
-				response, `observeScene(${groupId}, ${instanceId})`
-			)) return;
+				response, `observeScene(${groupId}, ${instanceId})`,
+			)) return false;
 		}
-		
+
 		const result = parsePayload(response);
 		// parse scene info
 		const scene = (new Scene(this.ipsoOptions)).parse(result).createProxy();
@@ -758,8 +758,8 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 /** Normalizes the path to a resource, so it can be used for storing the observer */
 function normalizeResourcePath(path: string): string {
 	path = path || "";
-	while (path.startsWith("/")) path = path.substring(1);
-	while (path.endsWith("/")) path = path.substring(0, -1);
+	while (path.startsWith("/")) path = path.slice(1);
+	while (path.endsWith("/")) path = path.slice(0, -1);
 	return path;
 }
 

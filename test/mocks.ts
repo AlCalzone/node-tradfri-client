@@ -15,14 +15,22 @@ import { ContentFormats } from "node-coap-client/build/ContentFormats";
 import { MessageCode, MessageCodes } from "node-coap-client/build/Message";
 import { Accessory, Light, TradfriClient } from "../src";
 
-export function createResponse(json: string | any | null, code: MessageCode = MessageCodes.success.content): CoapResponse {
-	if (typeof json !== "string" && typeof json !== "undefined") {
-		json = JSON.stringify(json);
+export function createResponse(
+	payload: Buffer | string | any | null,
+	code: MessageCode = MessageCodes.success.content,
+	contentFormat: ContentFormats = ContentFormats.application_json,
+): CoapResponse {
+	if (!(payload instanceof Buffer)) {
+		if (typeof payload !== "string" && typeof payload !== "undefined") {
+			payload = JSON.stringify(payload);
+		}
 	}
 	return {
 		code,
-		format: ContentFormats.application_json,
-		payload: json != null ? Buffer.from(json, "utf8") : undefined,
+		format: contentFormat,
+		payload: payload != null ?
+			payload instanceof Buffer ? payload :
+				Buffer.from(payload, "utf8") : undefined,
 	};
 }
 export function createErrorResponse(code: MessageCode = MessageCodes.clientError.notFound): CoapResponse {
@@ -52,6 +60,7 @@ export function createNetworkMock(
 		reset: null as sinon.SinonStub,
 		setSecurityParams: null as sinon.SinonStub,
 		tryToConnect: null as sinon.SinonStub,
+		ping: null as sinon.SinonStub,
 	};
 	const callbacks = {
 		observeDevices: null as (response: CoapResponse) => Promise<void>,
@@ -83,6 +92,7 @@ export function createNetworkMock(
 		fakeCoap.reset = stub(coap, "reset");
 		fakeCoap.setSecurityParams = stub(coap, "setSecurityParams");
 		fakeCoap.tryToConnect = stub(coap, "tryToConnect");
+		fakeCoap.ping = stub(coap, "ping");
 	}
 
 	function restoreStubs() {
