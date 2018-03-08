@@ -2,10 +2,10 @@ import bonjour from "bonjour";
 
 const MDNS_NAME = "coap";
 
-function findTradfri() {
+function Discovery() {
   return new Promise((resolve, reject) => {
 
-    function serviceUpListener(service) {
+    function serviceUpListener(service: any) {
       if (!service || !service.txt || !service.name.startsWith("gw-")) {
 	      return;
       }
@@ -22,4 +22,4 @@ function findTradfri() {
   });
 }
 
-module.exports = findTradfri;
+exports function Discovery;
