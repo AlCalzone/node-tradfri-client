@@ -2,7 +2,7 @@ import bonjour from "bonjour";
 
 const MDNS_NAME = "coap";
 
-function Discovery() {
+export function Discovery(): Promise<any> {
   return new Promise((resolve, reject) => {
 
     function serviceUpListener(service: any) {
@@ -21,5 +21,3 @@ function Discovery() {
     mdnsBrowser.start();
   });
 }
-
-exports function Discovery;
