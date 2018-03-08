@@ -12,22 +12,34 @@ use(sinonChai);
 
 import { CoapClient as coap, CoapResponse } from "node-coap-client";
 import { ContentFormats } from "node-coap-client/build/ContentFormats";
-import { MessageCode } from "node-coap-client/build/Message";
+import { MessageCode, MessageCodes } from "node-coap-client/build/Message";
 import { Accessory, Light, TradfriClient } from "../src";
 
-export function createResponse(json: string | any): CoapResponse {
-	if (typeof json !== "string") json = JSON.stringify(json);
+export function createResponse(
+	payload: Buffer | string | any | null,
+	code: MessageCode = MessageCodes.success.content,
+	contentFormat: ContentFormats = ContentFormats.application_json,
+): CoapResponse {
+	if (!(payload instanceof Buffer)) {
+		if (typeof payload !== "string" && typeof payload !== "undefined") {
+			payload = JSON.stringify(payload);
+		}
+	}
 	return {
-		code: new MessageCode(2, 5),
-		format: ContentFormats.application_json,
-		payload: Buffer.from(json, "utf8"),
+		code,
+		format: contentFormat,
+		payload: payload != null ?
+			payload instanceof Buffer ? payload :
+				Buffer.from(payload, "utf8") : undefined,
 	};
 }
-export const errorResponse: CoapResponse = {
-	code: new MessageCode(4, 1),
-	format: ContentFormats.text_plain,
-	payload: null,
-};
+export function createErrorResponse(code: MessageCode = MessageCodes.clientError.notFound): CoapResponse {
+	return {
+		code,
+		format: ContentFormats.text_plain,
+		payload: null,
+	};
+}
 
 /**
  * Creates a mock for the entire network and callback framework
@@ -41,11 +53,14 @@ export function createNetworkMock(
 
 	const devicesUrl = `coaps://${hostname}:5684/15001`;
 
-	const fakeCoap: Record<string, sinon.SinonStub> = {
-		observe: null,
-		request: null,
-		stopObserving: null,
-		reset: null,
+	const fakeCoap = {
+		observe: null as sinon.SinonStub,
+		request: null as sinon.SinonStub,
+		stopObserving: null as sinon.SinonStub,
+		reset: null as sinon.SinonStub,
+		setSecurityParams: null as sinon.SinonStub,
+		tryToConnect: null as sinon.SinonStub,
+		ping: null as sinon.SinonStub,
 	};
 	const callbacks = {
 		observeDevices: null as (response: CoapResponse) => Promise<void>,
@@ -75,6 +90,9 @@ export function createNetworkMock(
 		fakeCoap.request = stub(coap, "request");
 		fakeCoap.stopObserving = stub(coap, "stopObserving");
 		fakeCoap.reset = stub(coap, "reset");
+		fakeCoap.setSecurityParams = stub(coap, "setSecurityParams");
+		fakeCoap.tryToConnect = stub(coap, "tryToConnect");
+		fakeCoap.ping = stub(coap, "ping");
 	}
 
 	function restoreStubs() {
@@ -111,7 +129,7 @@ export function createEmptyAccessoryResponse(instanceId?: number) {
 
 export function createEmptyLight(instanceId: number = 65536) {
 	const ret = new Accessory();
-	const light = new Light(ret);
+	const light = new Light(null, ret);
 	ret.instanceId = instanceId;
 	ret.lightList = [light];
 	return ret.serialize();

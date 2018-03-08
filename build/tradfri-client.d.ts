@@ -84,6 +84,7 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
      * @returns true if the observer was set up, false otherwise (e.g. if it already exists)
      */
     observeResource(path: string, callback: (resp: CoapResponse) => void): Promise<boolean>;
+    private getObserverUrl(path);
     /**
      * Checks if a resource is currently being observed
      * @param path The path of the resource
@@ -130,6 +131,13 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
     private observeGroup_callback(instanceId, response);
     private observeScenes_callback(groupId, response);
     private observeScene_callback(groupId, instanceId, response);
+    /**
+     * Handles a non-successful response, e.g. by error logging
+     * @param resp The response with a code that indicates an unsuccessful request
+     * @param context Some logging context to identify where the error comes from
+     * @returns true if the calling method may proceed, false if it should break
+     */
+    private handleNonSuccessfulResponse(resp, context, ignore404?);
     /**
      * Pings the gateway to check if it is alive
      * @param timeout - (optional) Timeout in ms, after which the ping is deemed unanswered. Default: 5000ms
