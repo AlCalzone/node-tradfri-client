@@ -20,7 +20,6 @@ export function discoverGateway(): Promise<DiscoveredGateway> {
 					version: service.txt.version,
 					addresses: service.addresses,
 				};
-				mdnsBrowser.stop();
 				resolve(foundDevice);
 			},
 		);
