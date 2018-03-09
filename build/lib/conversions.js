@@ -216,9 +216,6 @@ const brightness_in = (value) => {
     if (value === 0)
         return 0;
     value = value / 254 * 100;
-    // Any value > 0 should equal at least 1% brightness
-    if (value < 1)
-        return 1;
     return math_1.roundTo(value, 1);
 };
 exports.serializers = {

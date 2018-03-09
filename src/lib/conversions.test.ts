@@ -35,7 +35,7 @@ describe("tradfri/conversions => brightness() =>", () => {
 	// tslint:disable-next-line:variable-name
 	const testSets_in = [
 		{coap: 0, tradfri: 0},
-		{coap: 1, tradfri: 1},
+		{coap: 1, tradfri: 0.4},
 		{coap: 68, tradfri: 26.8},
 		{coap: 128, tradfri: 50.4},
 		{coap: 254, tradfri: 100},

@@ -255,7 +255,10 @@ class TradfriClient extends events_1.EventEmitter {
         const result = parsePayload(response);
         logger_1.log(`observeDevice > ` + JSON.stringify(result), "debug");
         // parse device info
-        const accessory = new accessory_1.Accessory(this.ipsoOptions).parse(result).createProxy();
+        const accessory = new accessory_1.Accessory(this.ipsoOptions)
+            .parse(result)
+            .fixBuggedProperties()
+            .createProxy();
         // remember the device object, so we can later use it as a reference for updates
         // store a clone, so we don't have to care what the calling library does
         this.devices[instanceId] = accessory.clone();
@@ -370,7 +373,10 @@ class TradfriClient extends events_1.EventEmitter {
         }
         const result = parsePayload(response);
         // parse group info
-        const group = (new group_1.Group(this.ipsoOptions)).parse(result).createProxy();
+        const group = new group_1.Group(this.ipsoOptions)
+            .parse(result)
+            .fixBuggedProperties()
+            .createProxy();
         // remember the group object, so we can later use it as a reference for updates
         let groupInfo;
         if (!(instanceId in this.groups)) {
@@ -450,7 +456,10 @@ class TradfriClient extends events_1.EventEmitter {
         }
         const result = parsePayload(response);
         // parse scene info
-        const scene = (new scene_1.Scene(this.ipsoOptions)).parse(result).createProxy();
+        const scene = new scene_1.Scene(this.ipsoOptions)
+            .parse(result)
+            .fixBuggedProperties()
+            .createProxy();
         // remember the scene object, so we can later use it as a reference for updates
         // store a clone, so we don't have to care what the calling library does
         this.groups[groupId].scenes[instanceId] = scene.clone();

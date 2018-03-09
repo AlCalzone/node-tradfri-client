@@ -217,8 +217,6 @@ const brightness_in: PropertyTransformKernel = (value) => {
 	value = clamp(value, 0, 254);
 	if (value === 0) return 0;
 	value = value / 254 * 100;
-	// Any value > 0 should equal at least 1% brightness
-	if (value < 1) return 1;
 	return roundTo(value, 1);
 };
 

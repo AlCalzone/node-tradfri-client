@@ -307,7 +307,20 @@ export class Light extends IPSODevice {
 			transitionTime: this.transitionTime,
 		};
 	}
+
+	/**
+	 * Fixes property values that are known to be bugged
+	 */
+	public fixBuggedProperties(): this {
+		super.fixBuggedProperties();
+		// For some reason the gateway reports lights with brightness 1 after turning off
+		if (this.onOff === false && this.dimmer === MIN_BRIGHTNESS) this.dimmer = 0;
+		return this;
+	}
 }
+
+// remember the minimum possible non-zero brightness to fix the bugged properties;
+const MIN_BRIGHTNESS = deserializers.brightness(1);
 
 export type Spectrum = "none" | "white" | "rgb";
 

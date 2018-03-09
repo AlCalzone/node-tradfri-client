@@ -220,6 +220,16 @@ class Light extends ipsoDevice_1.IPSODevice {
             transitionTime: this.transitionTime,
         };
     }
+    /**
+     * Fixes property values that are known to be bugged
+     */
+    fixBuggedProperties() {
+        super.fixBuggedProperties();
+        // For some reason the gateway reports lights with brightness 1 after turning off
+        if (this.onOff === false && this.dimmer === MIN_BRIGHTNESS)
+            this.dimmer = 0;
+        return this;
+    }
 }
 __decorate([
     ipsoObject_1.doNotSerialize,
@@ -305,6 +315,8 @@ __decorate([
     __metadata("design:type", String)
 ], Light.prototype, "unit", void 0);
 exports.Light = Light;
+// remember the minimum possible non-zero brightness to fix the bugged properties;
+const MIN_BRIGHTNESS = conversions_1.deserializers.brightness(1);
 const rgbRegex = /^[0-9A-Fa-f]{6}$/;
 /**
  * Creates a proxy for an RGB lamp,

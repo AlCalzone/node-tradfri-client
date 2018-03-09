@@ -535,4 +535,12 @@ export class IPSOObject {
 		return this;
 	}
 
+	/**
+	 * Fixes property values that are known to be bugged
+	 */
+	public fixBuggedProperties(): this {
+		// IPSOObject has none
+		return this;
+	}
+
 }

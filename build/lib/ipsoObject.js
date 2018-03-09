@@ -472,6 +472,13 @@ class IPSOObject {
         this.client = client;
         return this;
     }
+    /**
+     * Fixes property values that are known to be bugged
+     */
+    fixBuggedProperties() {
+        // IPSOObject has none
+        return this;
+    }
 }
 __decorate([
     exports.doNotSerialize,

@@ -386,6 +386,70 @@ describe("tradfri-client => observing devices => ", () => {
 
 });
 
+describe("tradfri-client => fixing properties => ", () => {
+
+	// Setup the mock
+	const {
+		tradfri,
+		devicesUrl,
+		fakeCoap,
+		callbacks,
+		createStubs,
+		restoreStubs,
+		resetStubHistory,
+	} = createNetworkMock();
+	before(createStubs);
+	after(restoreStubs);
+	afterEach(resetStubHistory);
+
+	it("when the gateway reports minimum brightness on a turned-off light, set it to zero instead", async () => {
+		// remember the deferred promise as this only resolves after all responses have been received
+		const devicesPromise = tradfri.observeDevices();
+		let theLight: Light;
+		tradfri.on("device updated", (acc) => theLight = acc.lightList[0]);
+
+		const devices = [65536];
+		await callbacks.observeDevices(createResponse(devices));
+
+		const respAccessory = createRGBBulb(65536);
+		respAccessory["3311"][0]["5850"] = 0;
+		respAccessory["3311"][0]["5851"] = 1;
+		await callbacks.observeDevice[65536](createResponse(respAccessory));
+
+		// now the deferred promise should have resolved
+		await devicesPromise;
+
+		theLight.onOff.should.equal(false);
+		theLight.dimmer.should.equal(0);
+
+		tradfri.removeAllListeners();
+	});
+
+	it("when the gateway reports some other brightness on a turned-off light, keep it as-is", async () => {
+		// remember the deferred promise as this only resolves after all responses have been received
+		let theLight: Light;
+		const lightUpdatedPromise = createDeferredPromise();
+		tradfri.on("device updated", (acc) => {
+			theLight = acc.lightList[0];
+			lightUpdatedPromise.resolve();
+		});
+
+		const respAccessory = createRGBBulb(65536);
+		respAccessory["3311"][0]["5850"] = 0;
+		respAccessory["3311"][0]["5851"] = 2;
+		await callbacks.observeDevice[65536](createResponse(respAccessory));
+
+		// now the deferred promise should have resolved
+		await lightUpdatedPromise;
+
+		theLight.onOff.should.equal(false);
+		theLight.dimmer.should.not.equal(0);
+
+		tradfri.removeAllListeners();
+	});
+
+});
+
 describe("tradfri-client => updating resources => ", () => {
 
 	// Setup a fresh mock

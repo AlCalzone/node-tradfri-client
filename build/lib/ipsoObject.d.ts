@@ -77,4 +77,8 @@ export declare class IPSOObject {
      */
     createProxy(get?: (me: this, key: PropertyKey) => any, set?: (me: this, key: PropertyKey, value: any, receiver: any) => boolean): this;
     protected client: OperationProvider;
+    /**
+     * Fixes property values that are known to be bugged
+     */
+    fixBuggedProperties(): this;
 }
