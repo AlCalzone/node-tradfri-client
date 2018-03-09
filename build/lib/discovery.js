@@ -13,7 +13,7 @@ function discoverGateway(timeout = 10000) {
     let timer;
     return new Promise((resolve, reject) => {
         const mdnsBrowser = bonjour.findOne({ type: "coap", protocol: "udp" }, (service) => {
-            if (!service || !service.txt || !service.name.startsWith("gw-"))
+            if (!service || !service.txt || !service.name || !service.name.startsWith("gw-"))
                 return;
             if (timer != null)
                 clearTimeout(timer);

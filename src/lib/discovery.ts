@@ -9,7 +9,7 @@ export interface DiscoveredGateway {
 
 /**
  * Auto-discover a tradfri gateway on the network.
- * @param timeout (optional) Time in milliseconds to wait for a response. Default 10000. 
+ * @param timeout (optional) Time in milliseconds to wait for a response. Default 10000.
  * Pass false or a negative number to explicitly wait forever.
  */
 export function discoverGateway(timeout: number | false = 10000): Promise<DiscoveredGateway> {
@@ -20,7 +20,7 @@ export function discoverGateway(timeout: number | false = 10000): Promise<Discov
 		const mdnsBrowser = bonjour.findOne(
 			{ type: "coap", protocol: "udp" },
 			(service: any) => {
-				if (!service || !service.txt || !service.name.startsWith("gw-")) return;
+				if (!service || !service.txt || !service.name || !service.name.startsWith("gw-")) return;
 
 				if (timer != null) clearTimeout(timer);
 				const foundDevice = {
@@ -38,7 +38,7 @@ export function discoverGateway(timeout: number | false = 10000): Promise<Discov
 				resolve(null);
 			}, timeout);
 		}
-		
+
 		mdnsBrowser.start();
 	});
 }

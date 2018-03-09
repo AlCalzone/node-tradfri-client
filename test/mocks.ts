@@ -4,11 +4,6 @@
 
 import { assert, expect, should, use } from "chai";
 import { spy, stub } from "sinon";
-import * as sinonChai from "sinon-chai";
-
-// enable the should interface with sinon
-should();
-use(sinonChai);
 
 import { CoapClient as coap, CoapResponse } from "node-coap-client";
 import { ContentFormats } from "node-coap-client/build/ContentFormats";
