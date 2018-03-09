@@ -124,9 +124,12 @@ jobs:
           name: Generate coverage report
           command: npm run coverage
 
+      - run: export COVERALLS_SERVICE_NAME="CircleCI"
+      - run: export COVERALLS_SERVICE_JOB_ID="$CIRCLE_BUILD_NUM"
+
       - run:
           name: Upload it to coveralls.io
-          command: COVERALLS_SERVICE_NAME=CircleCI COVERALLS_SERVICE_JOB_ID=$CIRCLE_JOB npm run coveralls
+          command: npm run coveralls
 
 # ----------------------------------------------------
 # generates a clean build of the TypeScript sources
