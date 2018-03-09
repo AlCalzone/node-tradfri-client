@@ -113,6 +113,24 @@ jobs:
 # ----------------------------------------------------
 # generates a clean build of the TypeScript sources
 # to make sure there were no leftover build files
+  coverage:
+    <<: *latest
+
+    steps:
+      - attach_workspace:
+          at: *workdir_latest
+
+      - run:
+          name: Generate coverage report
+          command: npm run coverage
+
+      - run:
+          name: Upload it to coveralls.io
+          command: npm run coveralls
+
+# ----------------------------------------------------
+# generates a clean build of the TypeScript sources
+# to make sure there were no leftover build files
   build:
     <<: *latest
 
@@ -158,6 +176,11 @@ workflows:
       - test_node6:
           <<: *tags_and_branches
       - test_latest:
+          <<: *tags_and_branches
+
+      - coverage:
+          requires: 
+            - test_latest
           <<: *tags_and_branches
 
       # build only on tagged builds and if all tests succeeded
