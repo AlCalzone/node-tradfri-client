@@ -7,6 +7,25 @@ Library to talk to IKEA Trådfri Gateways without external binaries
 *Requires NodeJS >= 6.x*
 
 ## Example usage
+### Discover Tradfri Gateway
+
+You can discover one (currently its not possible to discover multiple gateways) Tradfri Gateways.
+
+```TS
+import { discoverGateway } from "node-tradfri-client";
+
+discoverGateway().then(result => console.log(result));
+```
+
+If the search is successful it will return
+
+```
+{ name: 'gw-a0cc2bf8535d',
+ version: '1.3.14',
+ addresses: [ '10.0.0.94', 'fe80::a2cc:2bff:fef8:535d' ] }
+```
+
+
 ### Common code for all examples
 ```TS
 import { TradfriClient, Accessory, AccessoryTypes } from "node-tradfri-client";
@@ -94,7 +113,7 @@ const tradfri = new TradfriClient(hostname: string, options: TradfriOptions);
 As the 2nd parameter, you can provide a custom logger function or some options. By providing a custom logger function to the constructor, all diagnostic output will be sent to that function. By default, the `debug` module is used instead. The logger function has the following signature:
 ```TS
 type LoggerFunction = (
-    message: string, 
+    message: string,
     [severity: "info" | "warn" | "debug" | "error" | "silly"]
 ) => void;
 ```
@@ -229,7 +248,7 @@ This doesn't have to be fatal and can be called when an unexpected response code
 The standard way to receive updates to a Trådfri (or CoAP) resource is by observing it. The TradfriClient provides a couple of methods to observe resources, with the most generic one being
 ```TS
 const success = await tradfri.observeResource(
-    path: string, 
+    path: string,
     callback: (resp: CoapResponse) => void
 );
 ```
@@ -360,8 +379,8 @@ The additional properties are either for internal use (`colorX`/`colorY`) or not
 If the light object was returned from a library function and not created by you, the following methods are available to change its appearance directly. You can await them to make sure the commands were sent or just fire-and-forget them. The returned Promises resolve to true if a command was sent, otherwise to false.
 * `turnOn()` - Turns the light on.
 * `turnOff()` - Turns the light off.
-* `toggle([value: boolean])` - Toggles the light's state to the given value or the opposite of its current state. 
-* `setBrightness(value: number [, transitionTime: number])` - Dims the light to the given brightness. 
+* `toggle([value: boolean])` - Toggles the light's state to the given value or the opposite of its current state.
+* `setBrightness(value: number [, transitionTime: number])` - Dims the light to the given brightness.
 * `setColorTemperature(value: string [, transitionTime: number])` - Changes a white spectrum lightbulb's color temperature to the given value.
 * `setColor(value: string [, transitionTime: number])` - Changes an RGB lightbulb's hex color to the given value. May also be use for white spectrum bulbs to target one of the predefined colors `f5faf6` (cold), `f1e0b5` (normal) and `efd275` (warm).
 * `setHue(value: number [, transitionTime: number])` - Changes an RGB lightbulb's hue to the given value.
@@ -388,7 +407,7 @@ or a subset thereof.
 A group contains several devices, usually a remote control or dimmer and some lightbulbs. To control the group's lightbulbs, use the following properties:
 * `onOff: boolean` - Turn the group's lightbulbs on (`true`) or off (`false`)
 * `dimmer: number` - Set the brightness of the group's lightbulbs in percent [0..100%]. _Note:_ When using raw values, this range is [0..254].
-* `transitionTime: number` - The duration of state changes in seconds. Not supported for on/off. 
+* `transitionTime: number` - The duration of state changes in seconds. Not supported for on/off.
 In contrast to controlling lightbulbs, the default transition time for groups is 0s (no transition).
 
 **Note:** The Trådfri gateway does not update those values when lights change, so they should be considered write-only.
@@ -400,8 +419,8 @@ Additionally, these properties are also supported:
 Similar to lightbulbs, groups provide the following methods if they were returned from a library function. You can await them to make sure the commands were sent or just fire-and-forget them. The returned Promises resolve to true if a command was sent, otherwise to false.
 * `turnOn()` - Turns all lights on.
 * `turnOff()` - Turns all lights off.
-* `toggle(value: boolean)` - Sets all lights' state to the given value. 
-* `setBrightness(value: number [, transitionTime: number])` - Dims all lights to the given brightness. 
+* `toggle(value: boolean)` - Sets all lights' state to the given value.
+* `setBrightness(value: number [, transitionTime: number])` - Dims all lights to the given brightness.
 
 ### `GroupOperation`
 A GroupOperation is an object containing at least one of a `Group`'s controllable properties, which are:
