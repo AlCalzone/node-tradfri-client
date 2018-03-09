@@ -1,7 +1,7 @@
 # node-tradfri-client
 Library to talk to IKEA Trådfri Gateways without external binaries
 
-[![node](https://img.shields.io/node/v/node-tradfri-client.svg) ![npm](https://img.shields.io/npm/v/npm.svg)](https://www.npmjs.com/package/node-tradfri-client)
+[![node](https://img.shields.io/node/v/node-tradfri-client.svg) ![npm](https://img.shields.io/npm/v/node-tradfri-client.svg)](https://www.npmjs.com/package/node-tradfri-client)
 
 [![Build Status](https://img.shields.io/circleci/project/github/AlCalzone/node-tradfri-client.svg)](https://circleci.com/gh/AlCalzone/node-tradfri-client)
 [![Coverage Status](https://img.shields.io/coveralls/github/AlCalzone/node-tradfri-client.svg)](https://coveralls.io/github/AlCalzone/node-tradfri-client)
