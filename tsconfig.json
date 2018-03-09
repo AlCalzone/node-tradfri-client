@@ -15,7 +15,7 @@
         "stripInternal": true,
         "target": "es2015",
         "strictPropertyInitialization": true,
-        "watch": true
+        "watch": false // true breaks circleci
     },
     "include": [
         "src/**/*.ts"
