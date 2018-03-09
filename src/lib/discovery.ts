@@ -1,5 +1,4 @@
 import * as bonjourPackage from "bonjour";
-const bonjour = bonjourPackage();
 
 export interface DiscoveredGateway {
 	name: string;
@@ -8,6 +7,8 @@ export interface DiscoveredGateway {
 }
 
 export function discoverGateway(): Promise<DiscoveredGateway> {
+  const bonjour = bonjourPackage();
+
 	return new Promise((resolve, reject) => {
 		const mdnsBrowser = bonjour.findOne(
 			{ type: "coap", protocol: "udp" },
