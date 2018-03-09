@@ -489,6 +489,9 @@ A DeviceInfo object contains general information about a device. It has the foll
 
 ## Changelog
 
+#### 0.9.1 (2018-03-09)
+* (AlCalzone) Fix properties which are wrongly reported by the gateway
+
 #### 0.9.0 (2018-03-09)
 * (neophob) Added gateway discovery
 * (AlCalzone) Added timeout and tests for gateway discovery
