@@ -7,22 +7,24 @@ Library to talk to IKEA Trådfri Gateways without external binaries
 *Requires NodeJS >= 6.x*
 
 ## Example usage
-### Discover Tradfri Gateway
 
-You can discover one (currently its not possible to discover multiple gateways) Tradfri Gateways.
-
-```TS
+### Discover a Gateway
+```js
 import { discoverGateway } from "node-tradfri-client";
 
-discoverGateway().then(result => console.log(result));
+// later:
+const result = await discoverGateway();
 ```
 
-If the search is successful it will return
-
-```
-{ name: 'gw-a0cc2bf8535d',
- version: '1.3.14',
- addresses: [ '10.0.0.94', 'fe80::a2cc:2bff:fef8:535d' ] }
+The `result` variable has the following properties:
+```js
+{
+    name: 'gw-abcdef012345',
+    version: '1.3.14',
+    addresses: [ 
+        // array of strings with IP addresses
+    ]
+}
 ```
 
 
@@ -99,12 +101,44 @@ tradfri.destroy();
 
 ## Detailed usage
 
+### Import the necessary methods
 ```TS
 const tradfriLib = require("node-tradfri-client");
+// for normal usage:
 const TradfriClient = tradfriLib.TradfriClient;
-// or with the new import syntax
-import { TradfriClient /*, more imports */ } from "node-tradfri-client";
+// for discovery:
+const discoverGateway = tradfriLib.discoverGateway;
 
+// or with the new import syntax
+import { discoverGateway, TradfriClient /*, more imports */ } from "node-tradfri-client";
+```
+
+### Auto-detect your gateway
+You can automatically discover a Trådfri gateway on the local network with the `discoverGateway` method. Discovery will return the first gateway found, finding multiple ones is not possible yet.
+
+The method has the following signatures:
+```TS
+const discovered = await discoverGateway();
+const discovered = await discoverGateway(timeout: number);
+const discovered = await discoverGateway(false);
+```
+The timeout parameter is the time in milliseconds (default 10000) the discovery will run before returning `null` to indicate that no gateway was found. By passing a negative value or `false` you can instruct the discovery to run *forever*.
+
+The return value is of the type `DiscoveredGateway` which looks as follows:
+```ts
+{
+    // hostname of the gateway, has the form "gw-abcdef012345"
+    name: string,
+    // firmware version of the gateway
+    version: string,
+    // array of IP addresses the gateway responds to
+    addresses: string[],
+}
+```
+
+
+### Create a client instance
+```TS
 // one of the following
 const tradfri = new TradfriClient(hostname: string);
 const tradfri = new TradfriClient(hostname: string, customLogger: LoggerFunction);

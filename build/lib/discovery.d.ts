@@ -3,4 +3,9 @@ export interface DiscoveredGateway {
     version: string;
     addresses: string[];
 }
-export declare function discoverGateway(): Promise<DiscoveredGateway>;
+/**
+ * Auto-discover a tradfri gateway on the network.
+ * @param timeout (optional) Time in milliseconds to wait for a response. Default 10000.
+ * Pass false or a negative number to explicitly wait forever.
+ */
+export declare function discoverGateway(timeout?: number | false): Promise<DiscoveredGateway>;
