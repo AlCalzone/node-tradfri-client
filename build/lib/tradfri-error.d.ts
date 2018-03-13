@@ -1,6 +1,7 @@
 export declare enum TradfriErrorCodes {
     ConnectionFailed = 0,
     AuthenticationFailed = 1,
+    NetworkReset = 2,
 }
 export declare class TradfriError extends Error {
     readonly message: string;

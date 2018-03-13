@@ -626,5 +626,20 @@ describe("tradfri-client => custom requests => ", () => {
 				fakeCoap.request.resetBehavior();
 			}
 		});
+
+		it("when the coap client is reset during a pending request, the rejection should be turned into an error event", (done) => {
+			fakeCoap.request.returns(Promise.reject(new Error("CoapClient was reset")));
+
+			tradfri.on("error", err => {
+				err.should.be.an.instanceof(TradfriError);
+				(err as TradfriError).code.should.equal(TradfriErrorCodes.NetworkReset);
+
+				tradfri.removeAllListeners();
+				fakeCoap.request.resetBehavior();
+				done();
+			});
+
+			tradfri.request(null, null);
+		});
 	});
 });
