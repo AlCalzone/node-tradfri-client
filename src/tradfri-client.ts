@@ -148,11 +148,11 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		// request creation of new PSK
 		let payload: string | Buffer = JSON.stringify({ 9090: identity });
 		payload = Buffer.from(payload);
-		const response = await coap.request(
+		const response = await this.swallowInternalCoapRejections(coap.request(
 			`${this.requestBase}${coapEndpoints.authentication}`,
 			"post",
 			payload,
-		);
+		));
 
 		// check the response
 		if (response.code.toString() !== "2.01") {
@@ -183,7 +183,9 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 
 		// start observing
 		this.observedPaths.push(observerUrl);
-		await coap.observe(observerUrl, "get", callback);
+		await this.swallowInternalCoapRejections(
+			coap.observe(observerUrl, "get", callback),
+		);
 		return true;
 	}
 
@@ -687,9 +689,9 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		log(`updateResource(${path}) > sending payload: ${payload}`, "debug");
 		payload = Buffer.from(payload);
 
-		await coap.request(
+		await this.swallowInternalCoapRejections(coap.request(
 			`${this.requestBase}${path}`, "put", payload,
-		);
+		));
 		return true;
 	}
 
@@ -755,15 +757,39 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		}
 
 		// wait for the CoAP response and respond to the message
-		const resp = await coap.request(
+		const resp = await this.swallowInternalCoapRejections(coap.request(
 			`${this.requestBase}${path}`,
 			method,
 			jsonPayload as Buffer,
-		);
+		));
 		return {
 			code: resp.code.toString(),
 			payload: parsePayload(resp),
 		};
+	}
+
+	private swallowInternalCoapRejections<T>(promise: Promise<T>): Promise<T> {
+		// We use the conventional promise pattern here so we can opt to never
+		// resolve the promise in case we want to redirect it into an emitted error event
+		return new Promise(async (resolve, reject) => {
+			try {
+				// try to resolve the promise normally
+				resolve(await promise);
+			} catch (e) {
+				if (/coap\s?client was reset/i.test(e.message)) {
+					// The CoAP client was reset. This happens when the user
+					// resets the CoAP client while connections or requests
+					// are still pending. It's not an error per se, so just
+					// inform the user about what happened.
+					this.emit("error", new TradfriError(
+						"The network stack was reset. Pending promises will not be fulfilled.",
+						TradfriErrorCodes.NetworkReset,
+					));
+				} else {
+					reject(e);
+				}
+			}
+		});
 	}
 }
 

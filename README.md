@@ -230,7 +230,9 @@ tradfri.reset();
 ```
 After a connection loss or reboot of another endpoint, the currently active connection params might no longer be valid. In this case, use the reset method to invalidate the stored connection params, so the next request will use a fresh connection.
 
-This causes all requests to be dropped and clears all observations.
+This causes all requests to be dropped and clears all observations. 
+
+**Note:** Promises belonging to any pending connections, requests or observers will not be fulfilled anymore and you should delete all references to them. In that case, the `"error"` event will be emitted (once or multiple times) with an error with code `TradfriClient.NetworkReset`.
 
 ### Closing the connection
 ```TS
@@ -272,11 +274,22 @@ type SceneUpdatedCallback = (groupId: number, scene: Scene) => void;
 type SceneRemovedCallback = (groupId: number, instanceId: number) => void;
 ```
 
-#### `"error"` - An error occured
+### Handle errors
+The `"error"` event gets emitted when something unexpected happens. The callback has the following form.
 ```TS
 type ErrorCallback = (e: Error) => void;
 ```
-This doesn't have to be fatal and can be called when an unexpected response code is received.
+This doesn't have to be fatal, so you should check which kind of error happened. 
+Some errors are of the type `TradfriError` and contain a code which provides more information about the nature of the error. To check that, add `TradfriError` and `TradfriErrorCodes` to the list of imports and check as follows:
+```TS
+if (e instanceof TradfriError) {
+    // handle the error depending on `e.code`
+} else {
+    // handle the error as you normally would.
+}
+```
+The currently supported error codes are:
+* `TradfriErrorCode.NetworkReset`: The `reset()` method was called while some requests or connection attempts were still pending. Those promises will not be fulfilled anymore, and you should delete all references to them.
 
 ### Observe a resource
 The standard way to receive updates to a Trådfri (or CoAP) resource is by observing it. The TradfriClient provides a couple of methods to observe resources, with the most generic one being
@@ -488,6 +501,9 @@ A DeviceInfo object contains general information about a device. It has the foll
 * `serialNumber: string` - Not used currently. Always `""`
 
 ## Changelog
+
+#### NEXT:
+* (AlCalzone) Swallow `"CoapClient was reset"` promise rejections and emit an `"error"` instead
 
 #### 0.9.1 (2018-03-09)
 * (AlCalzone) Fix properties which are wrongly reported by the gateway

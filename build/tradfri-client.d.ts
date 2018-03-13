@@ -187,4 +187,5 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
         code: string;
         payload: any;
     }>;
+    private swallowInternalCoapRejections<T>(promise);
 }
