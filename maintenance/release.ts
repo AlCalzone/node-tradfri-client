@@ -17,6 +17,7 @@ import { execSync } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import * as readline from "readline";
+import { padStart } from "../src/lib/strings";
 const semver = require("semver");
 const colors = require("colors/safe");
 import { argv } from "yargs";
@@ -25,6 +26,8 @@ const rootDir = path.resolve(__dirname, "../");
 
 const packPath = path.join(rootDir, "package.json");
 const pack = require(packPath);
+const readmePath = path.join(rootDir, "README.md");
+let readme = fs.readFileSync(readmePath, "utf8");
 // const ioPackPath = path.join(rootDir, "io-package.json");
 // const ioPack = require(ioPackPath);
 
@@ -87,6 +90,14 @@ if (argv.dry) {
 	console.log(`updating package.json from ${colors.blue(pack.version)} to ${colors.green(newVersion)}`);
 	pack.version = newVersion;
 	fs.writeFileSync(packPath, JSON.stringify(pack, null, 2));
+
+	console.log(`updating changelog in README.md`);
+	const d = new Date();
+	readme = readme.replace(
+		"#### __WORK IN PROGRESS__",
+		`#### ${newVersion} (${d.getFullYear()}-${padStart("" + d.getMonth() + 1, 2, "0")}-${padStart("" + d.getDay(), 2, "0")})`,
+	);
+	fs.writeFileSync(readmePath, readme, "utf8");
 
 	// console.log(`updating io-package.json from ${colors.blue(ioPack.common.version)} to ${colors.green(newVersion)}`);
 	// ioPack.common.version = newVersion;

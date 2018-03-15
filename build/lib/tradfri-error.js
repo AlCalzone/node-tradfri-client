@@ -3,8 +3,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var TradfriErrorCodes;
 (function (TradfriErrorCodes) {
     TradfriErrorCodes[TradfriErrorCodes["ConnectionFailed"] = 0] = "ConnectionFailed";
-    TradfriErrorCodes[TradfriErrorCodes["AuthenticationFailed"] = 1] = "AuthenticationFailed";
-    TradfriErrorCodes[TradfriErrorCodes["NetworkReset"] = 2] = "NetworkReset";
+    TradfriErrorCodes[TradfriErrorCodes["ConnectionTimedOut"] = 1] = "ConnectionTimedOut";
+    TradfriErrorCodes[TradfriErrorCodes["AuthenticationFailed"] = 2] = "AuthenticationFailed";
+    TradfriErrorCodes[TradfriErrorCodes["NetworkReset"] = 3] = "NetworkReset";
 })(TradfriErrorCodes = exports.TradfriErrorCodes || (exports.TradfriErrorCodes = {}));
 class TradfriError extends Error {
     constructor(message, code) {

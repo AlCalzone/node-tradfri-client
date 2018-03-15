@@ -801,6 +801,12 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 						"The network stack was reset. Pending promises will not be fulfilled.",
 						TradfriErrorCodes.NetworkReset,
 					));
+				} else if (/dtls handshake timed out/i.test(e.message)) {
+					// The DTLS layer did not complete a handshake in time.
+					this.emit("error", new TradfriError(
+						"Could not establish a secure connection in time. Pending promises will not be fulfilled.",
+						TradfriErrorCodes.ConnectionTimedOut,
+					));
 				} else {
 					reject(e);
 				}

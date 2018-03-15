@@ -290,6 +290,7 @@ if (e instanceof TradfriError) {
 ```
 The currently supported error codes are:
 * `TradfriErrorCode.NetworkReset`: The `reset()` method was called while some requests or connection attempts were still pending. Those promises will not be fulfilled anymore, and you should delete all references to them.
+* `TradfriErrorCode.ConnectionTimedOut`: While some requests or connection attempts were still pending, a secure connection could not be established within the timeout. The promises related to those requests or connection attempts will not be fulfilled anymore, and you should delete all references to them.
 
 ### Observe a resource
 The standard way to receive updates to a Trådfri (or CoAP) resource is by observing it. The TradfriClient provides a couple of methods to observe resources, with the most generic one being
@@ -505,6 +506,9 @@ A DeviceInfo object contains general information about a device. It has the foll
 * `serialNumber: string` - Not used currently. Always `""`
 
 ## Changelog
+
+#### __WORK IN PROGRESS__
+* (AlCalzone) Swallow `"DTLS handshake timed out"` promise rejections and emit an `"error"` instead
 
 #### 0.10.1 (2018-03-15)
 * (AlCalzone) Ensure all changes are being sent when using the simplified API for groups.
