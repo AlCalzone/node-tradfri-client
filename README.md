@@ -34,7 +34,11 @@ import { TradfriClient, Accessory, AccessoryTypes } from "node-tradfri-client";
 
 // connect
 const tradfri = new TradfriClient("gw-abcdef012345");
-await tradfri.connect(identity, psk);
+try {
+    await tradfri.connect(identity, psk);
+} catch (e) {
+    // handle error - see below for details
+}
 ```
 
 ### Make a lightbulb blink
@@ -198,12 +202,16 @@ The call throws an error if it wasn't successful which you should handle. The er
 ```TS
 if (e instanceof TradfriError) {
     switch (e.code) {
-        case TradfriErrorCodes.ConnectionFailed: {
-            // Gateway unreachable or security code wrong
+        case TradfriErrorCodes.ConnectionTimedOut: {
+            // The gateway is unreachable or did not respond in time
         }
         case TradfriErrorCodes.AuthenticationFailed: {
-            // Something went wrong with the authentication.
-            // It might be that this library has to be updated to be compatible with a new firmware.
+            // The security code is wrong or something else went wrong with the authentication.
+            // Check the error message for details. It might be that this library has to be updated
+            // to be compatible with a new firmware.
+        }
+        case TradfriErrorCodes.ConnectionFailed: {
+            // An unknown error happened while trying to connect
         }
     }
 }
@@ -212,9 +220,24 @@ if (e instanceof TradfriError) {
 ### Connecting to the gateway
 When you have a valid identity and psk, you can connect to the gateway using the `connect` method:
 ```TS
-const success = await tradfri.connect(identity, psk);
+try {
+    await tradfri.connect(identity, psk);
+} catch (e: TradfriError) {
+    // handle error
+    switch (e.code) {
+        case TradfriErrorCodes.ConnectionTimedOut: {
+            // The gateway is unreachable or did not respond in time
+        }
+        case TradfriErrorCodes.AuthenticationFailed: {
+            // The provided credentials are not valid. You need to re-authenticate using `authenticate()`.
+        }
+        case TradfriErrorCodes.ConnectionFailed: {
+            // An unknown error happened while trying to connect
+        }
+    }
+}
 ```
-If the connection was unsuccessful, either the gateway was unreachable or the identity/psk pair isn't valid.
+The error thrown when the connection failed is of the type `TradfriError` and contains details about why the connection failed.
 
 ### Pinging the gateway
 ```TS
@@ -507,7 +530,8 @@ A DeviceInfo object contains general information about a device. It has the foll
 
 ## Changelog
 
-#### __WORK IN PROGRESS__
+#### __WORK IN PROGRESS__ - WARNING: BREAKING CHANGES!
+* (AlCalzone) **BREAKING**: The `connect()` method now either resolves with `true` or rejects with an error detailing why the connection failed.
 * (AlCalzone) Swallow `"DTLS handshake timed out"` promise rejections and emit an `"error"` instead
 
 #### 0.10.1 (2018-03-15)

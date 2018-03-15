@@ -58,7 +58,7 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
      * @param identity A previously negotiated identity.
      * @param psk The pre-shared key belonging to the identity.
      */
-    connect(identity: string, psk: string): Promise<boolean>;
+    connect(identity: string, psk: string): Promise<true>;
     /**
      * Try to establish a connection to the configured gateway.
      * @param identity The DTLS identity to use

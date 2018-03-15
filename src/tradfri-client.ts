@@ -1,6 +1,6 @@
 // load external modules
 import { EventEmitter } from "events";
-import { CoapClient as coap, CoapResponse, RequestMethod } from "node-coap-client";
+import { CoapClient as coap, CoapResponse, ConnectionResult, RequestMethod } from "node-coap-client";
 
 // load internal modules
 import { Accessory, AccessoryTypes } from "./lib/accessory";
@@ -105,8 +105,22 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 * @param identity A previously negotiated identity.
 	 * @param psk The pre-shared key belonging to the identity.
 	 */
-	public connect(identity: string, psk: string): Promise<boolean> {
-		return this.tryToConnect(identity, psk);
+	public async connect(identity: string, psk: string): Promise<true> {
+		switch (await this.tryToConnect(identity, psk)) {
+			case true: return true;
+			case "auth failed": throw new TradfriError(
+				"The provided credentials are not valid. Please re-authenticate!",
+				TradfriErrorCodes.AuthenticationFailed,
+			);
+			case "timeout": throw new TradfriError(
+				"The gateway did not respond in time.",
+				TradfriErrorCodes.ConnectionTimedOut,
+			);
+			case "error": throw new TradfriError(
+				"An unknown error occured while connecting to the gateway",
+				TradfriErrorCodes.ConnectionFailed,
+			);
+		}
 	}
 
 	/**
@@ -115,7 +129,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 * @param psk The pre-shared key to use
 	 * @returns true if the connection attempt was successful, otherwise false.
 	 */
-	private async tryToConnect(identity: string, psk: string): Promise<boolean> {
+	private async tryToConnect(identity: string, psk: string): Promise<ConnectionResult> {
 
 		// initialize CoAP client
 		coap.reset();
@@ -125,7 +139,11 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 
 		log(`Attempting connection. Identity = ${identity}, psk = ${psk}`, "debug");
 		const result = await coap.tryToConnect(this.requestBase);
-		log(`Connection ${result ? "" : "un"}successful`, "debug");
+		if (result === true) {
+			log("Connection successful", "debug");
+		} else {
+			log("Connection failed. Reason: " + result, "debug");
+		}
 		return result;
 	}
 
@@ -138,10 +156,23 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	public async authenticate(securityCode: string): Promise<{identity: string, psk: string}> {
 		// first, check try to connect with the security code
 		log("authenticate() > trying to connect with the security code", "debug");
-		if (!await this.tryToConnect("Client_identity", securityCode)) {
-			// that didn't work, so the code is wrong
-			throw new TradfriError("The security code is wrong", TradfriErrorCodes.ConnectionFailed);
+		switch (await this.tryToConnect("Client_identity", securityCode)) {
+			case true: break; // all good
+
+			case "auth failed": throw new TradfriError(
+				"The security code is wrong",
+				TradfriErrorCodes.AuthenticationFailed,
+			);
+			case "timeout": throw new TradfriError(
+				"The gateway did not respond in time.",
+				TradfriErrorCodes.ConnectionTimedOut,
+			);
+			case "error": throw new TradfriError(
+				"An unknown error occured while connecting to the gateway",
+				TradfriErrorCodes.ConnectionFailed,
+			);
 		}
+
 		// generate a new identity
 		const identity = `tradfri_${Date.now()}`;
 		log(`authenticating with identity "${identity}"`, "debug");
