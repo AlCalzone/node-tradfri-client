@@ -198,7 +198,7 @@ try {
 ```
 The returned `identity` and `psk` **have to be stored** for future connections to the gateway. To comply with IKEA's requests, the security code **must not be stored** permanently in your application.
 
-The call throws an error if it wasn't successful which you should handle. The error `e` should be of type `TradfriError` and gives further information why the authentication failed. To check that, add `TradfriError` and `TradfriErrorCodes` to the list of imports and check as follows:
+If the authentication was not successful, this method throws (or rather rejects with) an error which you should handle. The error `e` should be of type `TradfriError` and gives further information why the authentication failed. To check that, add `TradfriError` and `TradfriErrorCodes` to the list of imports and check as follows:
 ```TS
 if (e instanceof TradfriError) {
     switch (e.code) {
@@ -237,7 +237,7 @@ try {
     }
 }
 ```
-The error thrown when the connection failed is of the type `TradfriError` and contains details about why the connection failed.
+**NOTE:** As of v0.6.0, this no longer resolves with `false` if the connection was unsuccessful. Instead, it throws (or rejects with) a `TradfriError` which contains details about why the connection failed.
 
 ### Pinging the gateway
 ```TS
