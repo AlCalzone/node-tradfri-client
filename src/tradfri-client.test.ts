@@ -59,13 +59,9 @@ describe("tradfri-client => infrastructure => ", () => {
 		const identity = "IDENTITY";
 		const psk = "PSK";
 
-		it("should reset the CoAP client, provide new security params and return the result from tryToConnect", async () => {
-			// test if both possible responses are passed through
+		it("should reset the CoAP client, provide new security params and resolve with true on success", async () => {
 			fakeCoap.tryToConnect.returns(Promise.resolve(true));
 			await tradfri.connect(identity, psk).should.become(true);
-
-			fakeCoap.tryToConnect.returns(Promise.resolve(false));
-			await tradfri.connect(identity, psk).should.become(false);
 
 			fakeCoap.reset.should.have.been.called;
 			fakeCoap.setSecurityParams.should.have.been.called;
@@ -74,6 +70,33 @@ describe("tradfri-client => infrastructure => ", () => {
 			});
 			fakeCoap.tryToConnect.should.have.been.called;
 
+			fakeCoap.tryToConnect.resetBehavior();
+		});
+
+		it("should reject with a `TradfriError` with code ConnectionTimedOut when the connection times out", async () => {
+			fakeCoap.tryToConnect.returns(Promise.resolve("timeout"));
+			await tradfri.connect(identity, psk).should.be.rejected.then(err => {
+				expect(err).to.be.an.instanceof(TradfriError);
+				expect(err.code).to.equal(TradfriErrorCodes.ConnectionTimedOut);
+			});
+			fakeCoap.tryToConnect.resetBehavior();
+		});
+
+		it("should reject with a `TradfriError` with code AuthenticationFailed when the credentials are wrong", async () => {
+			fakeCoap.tryToConnect.returns(Promise.resolve("auth failed"));
+			await tradfri.connect(identity, psk).should.be.rejected.then(err => {
+				expect(err).to.be.an.instanceof(TradfriError);
+				expect(err.code).to.equal(TradfriErrorCodes.AuthenticationFailed);
+			});
+			fakeCoap.tryToConnect.resetBehavior();
+		});
+
+		it("should reject with a `TradfriError` with code ConnectionFailed when some other error happens", async () => {
+			fakeCoap.tryToConnect.returns(Promise.resolve("error"));
+			await tradfri.connect(identity, psk).should.be.rejected.then(err => {
+				expect(err).to.be.an.instanceof(TradfriError);
+				expect(err.code).to.equal(TradfriErrorCodes.ConnectionFailed);
+			});
 			fakeCoap.tryToConnect.resetBehavior();
 		});
 	});
@@ -88,11 +111,6 @@ describe("tradfri-client => infrastructure => ", () => {
 		afterEach(() => {
 			fakeCoap.tryToConnect.resetBehavior();
 			fakeCoap.request.resetBehavior();
-		});
-
-		it(`detects failure to connect with "Client_identity" as a wrong security code`, async () => {
-			fakeCoap.tryToConnect.returns(Promise.resolve(false));
-			await tradfri.authenticate(null).should.be.rejectedWith("security code");
 		});
 
 		it(`should call coap.request with the correct endpoint and payload and return the identity and psk`, async () => {
@@ -114,6 +132,33 @@ describe("tradfri-client => infrastructure => ", () => {
 			);
 		});
 
+		it("should reject with a `TradfriError` with code ConnectionTimedOut when the authentication times out", async () => {
+			fakeCoap.tryToConnect.returns(Promise.resolve("timeout"));
+			await tradfri.authenticate(dummyIdentity).should.be.rejected.then(err => {
+				expect(err).to.be.an.instanceof(TradfriError);
+				expect(err.code).to.equal(TradfriErrorCodes.ConnectionTimedOut);
+			});
+			fakeCoap.tryToConnect.resetBehavior();
+		});
+
+		it("should reject with a `TradfriError` with code AuthenticationFailed when the security code was wrong", async () => {
+			fakeCoap.tryToConnect.returns(Promise.resolve("auth failed"));
+			await tradfri.authenticate(dummyIdentity).should.be.rejected.then(err => {
+				expect(err).to.be.an.instanceof(TradfriError);
+				expect(err.code).to.equal(TradfriErrorCodes.AuthenticationFailed);
+			});
+			fakeCoap.tryToConnect.resetBehavior();
+		});
+
+		it("should reject with a `TradfriError` with code ConnectionFailed when some other error happens", async () => {
+			fakeCoap.tryToConnect.returns(Promise.resolve("error"));
+			await tradfri.authenticate(dummyIdentity).should.be.rejected.then(err => {
+				expect(err).to.be.an.instanceof(TradfriError);
+				expect(err.code).to.equal(TradfriErrorCodes.ConnectionFailed);
+			});
+			fakeCoap.tryToConnect.resetBehavior();
+		});
+
 		it(`if coap.request returns an error, throw AuthenticationFailed`, async () => {
 			fakeCoap.tryToConnect.returns(Promise.resolve(true));
 			fakeCoap.request.returns(Promise.resolve(failedAuthResponse));
@@ -122,7 +167,6 @@ describe("tradfri-client => infrastructure => ", () => {
 				expect((err as TradfriError).code).to.equal(TradfriErrorCodes.AuthenticationFailed);
 			});
 		});
-
 	});
 
 	describe("ping =>", () => {

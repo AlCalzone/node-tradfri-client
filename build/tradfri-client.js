@@ -54,7 +54,14 @@ class TradfriClient extends events_1.EventEmitter {
      * @param psk The pre-shared key belonging to the identity.
      */
     connect(identity, psk) {
-        return this.tryToConnect(identity, psk);
+        return __awaiter(this, void 0, void 0, function* () {
+            switch (yield this.tryToConnect(identity, psk)) {
+                case true: return true;
+                case "auth failed": throw new tradfri_error_1.TradfriError("The provided credentials are not valid. Please re-authenticate!", tradfri_error_1.TradfriErrorCodes.AuthenticationFailed);
+                case "timeout": throw new tradfri_error_1.TradfriError("The gateway did not respond in time.", tradfri_error_1.TradfriErrorCodes.ConnectionTimedOut);
+                case "error": throw new tradfri_error_1.TradfriError("An unknown error occured while connecting to the gateway", tradfri_error_1.TradfriErrorCodes.ConnectionFailed);
+            }
+        });
     }
     /**
      * Try to establish a connection to the configured gateway.
@@ -71,7 +78,12 @@ class TradfriClient extends events_1.EventEmitter {
             });
             logger_1.log(`Attempting connection. Identity = ${identity}, psk = ${psk}`, "debug");
             const result = yield node_coap_client_1.CoapClient.tryToConnect(this.requestBase);
-            logger_1.log(`Connection ${result ? "" : "un"}successful`, "debug");
+            if (result === true) {
+                logger_1.log("Connection successful", "debug");
+            }
+            else {
+                logger_1.log("Connection failed. Reason: " + result, "debug");
+            }
             return result;
         });
     }
@@ -85,9 +97,11 @@ class TradfriClient extends events_1.EventEmitter {
         return __awaiter(this, void 0, void 0, function* () {
             // first, check try to connect with the security code
             logger_1.log("authenticate() > trying to connect with the security code", "debug");
-            if (!(yield this.tryToConnect("Client_identity", securityCode))) {
-                // that didn't work, so the code is wrong
-                throw new tradfri_error_1.TradfriError("The security code is wrong", tradfri_error_1.TradfriErrorCodes.ConnectionFailed);
+            switch (yield this.tryToConnect("Client_identity", securityCode)) {
+                case true: break; // all good
+                case "auth failed": throw new tradfri_error_1.TradfriError("The security code is wrong", tradfri_error_1.TradfriErrorCodes.AuthenticationFailed);
+                case "timeout": throw new tradfri_error_1.TradfriError("The gateway did not respond in time.", tradfri_error_1.TradfriErrorCodes.ConnectionTimedOut);
+                case "error": throw new tradfri_error_1.TradfriError("An unknown error occured while connecting to the gateway", tradfri_error_1.TradfriErrorCodes.ConnectionFailed);
             }
             // generate a new identity
             const identity = `tradfri_${Date.now()}`;
