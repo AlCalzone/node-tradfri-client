@@ -504,6 +504,7 @@ A DeviceInfo object contains general information about a device. It has the foll
 
 #### NEXT:
 * (AlCalzone) Swallow `"CoapClient was reset"` promise rejections and emit an `"error"` instead
+* (AlCalzone) Avoid sending `5712: null` in payloads when a group's transition time is `null` for some reason
 
 #### 0.9.1 (2018-03-09)
 * (AlCalzone) Fix properties which are wrongly reported by the gateway
