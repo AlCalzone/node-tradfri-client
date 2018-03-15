@@ -356,9 +356,13 @@ const requestSent = await tradfri.updateGroup(group: Group);
 **NOTE:** To switch all lights in a group or to change their properties, prefer the `operateGroup` method.
 
 ```TS
-const requestSent = await tradfri.operateGroup(group: Group, operation: GroupOperation);
+const requestSent = await tradfri.operateGroup(
+    group: Group, 
+    operation: GroupOperation, 
+    [force: boolean = false]
+);
 ```
-It is similar to the `operateLight` method, see the chapter "Data structures" below for a complete list of all properties.
+It is similar to the `operateLight` method, see the chapter "Data structures" below for a complete list of all properties. Because the gateway does not report back group properties, the sent payloads are computed using the old properties of the group. To ensure the entire `GroupOperation` is always present in the payload, set the `force` parameter to `true`. **Note:** `force = true` might become the default in a future release.
 
 ### Custom requests
 For all one-time requests currently not possible through specialized methods, you can use
@@ -501,6 +505,9 @@ A DeviceInfo object contains general information about a device. It has the foll
 * `serialNumber: string` - Not used currently. Always `""`
 
 ## Changelog
+
+#### 0.10.1 (2018-03-15)
+* (AlCalzone) Ensure all changes are being sent when using the simplified API for groups.
 
 #### 0.10.0 (2018-03-15)
 * (AlCalzone) Swallow `"CoapClient was reset"` promise rejections and emit an `"error"` instead
