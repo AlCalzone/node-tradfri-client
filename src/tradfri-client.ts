@@ -11,6 +11,7 @@ import { Group, GroupInfo, GroupOperation } from "./lib/group";
 import { IPSOObject, IPSOOptions } from "./lib/ipsoObject";
 import { LightOperation } from "./lib/light";
 import { log, LoggerFunction, setCustomLogger } from "./lib/logger";
+import { composeObject, entries } from "./lib/object-polyfill";
 import { OperationProvider } from "./lib/operation-provider";
 import { Scene } from "./lib/scene";
 import { TradfriError, TradfriErrorCodes } from "./lib/tradfri-error";
@@ -699,12 +700,27 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 * Sets some properties on a group
 	 * @param group The group to be updated
 	 * @param operation The properties to be set
+	 * @param force If the provided properties must be sent in any case
 	 * @returns true if a request was sent, false otherwise
 	 */
-	public operateGroup(group: Group, operation: GroupOperation): Promise<boolean> {
+	public operateGroup(group: Group, operation: GroupOperation, force: boolean = false): Promise<boolean> {
 
+		const newGroup = group.clone().merge(operation, true /* all props */);
 		const reference = group.clone();
-		const newGroup = reference.clone().merge(operation, true /* all props */);
+		if (force) {
+			// to force the properties being sent, we need to reset them on the reference
+			const inverseOperation = composeObject<number|boolean>(
+				entries(operation)
+					.map(([key, value]) => {
+						switch (typeof value) {
+							case "number": return [key, Number.NaN] as [string, number];
+							case "boolean": return [key, !value] as [string, boolean];
+							default: return [key, null] as [string, any];
+						}
+					}),
+			);
+			reference.merge(inverseOperation, true);
+		}
 
 		return this.updateResource(
 			`${coapEndpoints.groups}/${group.instanceId}`,

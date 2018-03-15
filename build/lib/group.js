@@ -31,41 +31,37 @@ class Group extends ipsoDevice_1.IPSODevice {
         this.ensureLink();
         return this.client.operateGroup(this, {
             onOff: true,
-        });
+        }, true);
     }
     /** Turn all lightbulbs off */
     turnOff() {
         this.ensureLink();
         return this.client.operateGroup(this, {
             onOff: false,
-        });
+        }, true);
     }
     /** Set all lightbulbs on/off to the given state */
     toggle(value) {
         this.ensureLink();
         return this.client.operateGroup(this, {
             onOff: value,
-        });
+        }, true);
     }
     /** Activates the given scene */
     activateScene(sceneOrId) {
         this.ensureLink();
         const id = (sceneOrId instanceof scene_1.Scene) ? sceneOrId.instanceId : sceneOrId;
-        // we need to make sure the scene ID always gets sent, so we cheat a bit
-        const reference = this.clone();
-        reference.sceneId = Number.NaN;
-        reference.onOff = false;
-        return this.client.operateGroup(reference, {
+        return this.client.operateGroup(this, {
             sceneId: id,
             onOff: true,
-        });
+        }, true);
     }
     operateGroup(operation, transitionTime) {
         if (transitionTime != null) {
             transitionTime = Math.max(0, transitionTime);
             operation.transitionTime = transitionTime;
         }
-        return this.client.operateGroup(this, operation);
+        return this.client.operateGroup(this, operation, true);
     }
     /**
      * Changes this lightbulb's brightness
