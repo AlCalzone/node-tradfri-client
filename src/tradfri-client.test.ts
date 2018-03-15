@@ -159,6 +159,14 @@ describe("tradfri-client => infrastructure => ", () => {
 			fakeCoap.tryToConnect.resetBehavior();
 		});
 
+		it(`if coap.request returns an error, throw AuthenticationFailed`, async () => {
+			fakeCoap.tryToConnect.returns(Promise.resolve(true));
+			fakeCoap.request.returns(Promise.resolve(failedAuthResponse));
+			await tradfri.authenticate(dummyIdentity).should.be.rejected.then(err => {
+				expect(err).to.be.an.instanceof(TradfriError);
+				expect((err as TradfriError).code).to.equal(TradfriErrorCodes.AuthenticationFailed);
+			});
+		});
 	});
 
 	describe("ping =>", () => {
