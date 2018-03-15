@@ -55,7 +55,7 @@ export class Group extends IPSODevice {
 		this.ensureLink();
 		return this.client.operateGroup(this, {
 			onOff: true,
-		});
+		}, true);
 	}
 
 	/** Turn all lightbulbs off */
@@ -63,7 +63,7 @@ export class Group extends IPSODevice {
 		this.ensureLink();
 		return this.client.operateGroup(this, {
 			onOff: false,
-		});
+		}, true);
 	}
 
 	/** Set all lightbulbs on/off to the given state */
@@ -71,21 +71,17 @@ export class Group extends IPSODevice {
 		this.ensureLink();
 		return this.client.operateGroup(this, {
 			onOff: value,
-		});
+		}, true);
 	}
 
 	/** Activates the given scene */
 	public activateScene(sceneOrId: Scene | number): Promise<boolean> {
 		this.ensureLink();
 		const id: number = (sceneOrId instanceof Scene) ? sceneOrId.instanceId : sceneOrId;
-		// we need to make sure the scene ID always gets sent, so we cheat a bit
-		const reference = this.clone();
-		reference.sceneId = Number.NaN;
-		reference.onOff = false;
-		return this.client.operateGroup(reference, {
+		return this.client.operateGroup(this, {
 			sceneId: id,
 			onOff: true, // this has to be true when changing a scene
-		});
+		}, true);
 	}
 
 	private operateGroup(operation: GroupOperation, transitionTime?: number): Promise<boolean> {
@@ -93,7 +89,7 @@ export class Group extends IPSODevice {
 			transitionTime = Math.max(0, transitionTime);
 			operation.transitionTime = transitionTime;
 		}
-		return this.client.operateGroup(this, operation);
+		return this.client.operateGroup(this, operation, true);
 	}
 
 	/**

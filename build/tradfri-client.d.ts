@@ -167,9 +167,10 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
      * Sets some properties on a group
      * @param group The group to be updated
      * @param operation The properties to be set
+     * @param force If the provided properties must be sent in any case
      * @returns true if a request was sent, false otherwise
      */
-    operateGroup(group: Group, operation: GroupOperation): Promise<boolean>;
+    operateGroup(group: Group, operation: GroupOperation, force?: boolean): Promise<boolean>;
     /**
      * Sets some properties on a lightbulb
      * @param accessory The parent accessory of the lightbulb

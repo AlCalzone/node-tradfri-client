@@ -18,6 +18,7 @@ const defer_promise_1 = require("./lib/defer-promise");
 const endpoints_1 = require("./lib/endpoints");
 const group_1 = require("./lib/group");
 const logger_1 = require("./lib/logger");
+const object_polyfill_1 = require("./lib/object-polyfill");
 const scene_1 = require("./lib/scene");
 const tradfri_error_1 = require("./lib/tradfri-error");
 class TradfriClient extends events_1.EventEmitter {
@@ -551,11 +552,24 @@ class TradfriClient extends events_1.EventEmitter {
      * Sets some properties on a group
      * @param group The group to be updated
      * @param operation The properties to be set
+     * @param force If the provided properties must be sent in any case
      * @returns true if a request was sent, false otherwise
      */
-    operateGroup(group, operation) {
+    operateGroup(group, operation, force = false) {
+        const newGroup = group.clone().merge(operation, true /* all props */);
         const reference = group.clone();
-        const newGroup = reference.clone().merge(operation, true /* all props */);
+        if (force) {
+            // to force the properties being sent, we need to reset them on the reference
+            const inverseOperation = object_polyfill_1.composeObject(object_polyfill_1.entries(operation)
+                .map(([key, value]) => {
+                switch (typeof value) {
+                    case "number": return [key, Number.NaN];
+                    case "boolean": return [key, !value];
+                    default: return [key, null];
+                }
+            }));
+            reference.merge(inverseOperation, true);
+        }
         return this.updateResource(`${endpoints_1.endpoints.groups}/${group.instanceId}`, newGroup, reference);
     }
     /**
