@@ -47,6 +47,18 @@ describe("ipso/group => basic functionality => ", () => {
 		expect(group.serialize()).to.deep.equal(template);
 	});
 
+	it(`should serialize correctly when transitionTime has the value "null"`, () => {
+		// repro for issue#51
+		const brokenGroup = group.clone();
+		brokenGroup.transitionTime = null;
+		const reference = brokenGroup.clone();
+		brokenGroup.onOff = !brokenGroup.onOff;
+
+		expect(brokenGroup.serialize(reference)).to.deep.equal({
+			5850: brokenGroup.onOff ? 1 : 0,
+		});
+	});
+
 });
 
 describe("ipso/group => simplified API => ", () => {
