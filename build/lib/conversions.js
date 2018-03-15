@@ -200,7 +200,7 @@ const saturation_in = (value /*, light: Light*/) => {
 // ===========================
 // TRANSITION TIME conversions
 // the sent value is in 10ths of seconds, we're working with seconds
-const transitionTime_out = val => val * 10;
+const transitionTime_out = val => val && val * 10; // "val && " avoids sending `null` if val is null for some reason
 // the sent value is in 10ths of seconds, we're working with seconds
 const transitionTime_in = val => val / 10;
 // ===========================
