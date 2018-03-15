@@ -641,5 +641,20 @@ describe("tradfri-client => custom requests => ", () => {
 
 			tradfri.request(null, null);
 		});
+
+		it("when the DTLS handshake times out during a pending request, the rejection should be turned into an error event", (done) => {
+			fakeCoap.request.returns(Promise.reject(new Error("The DTLS handshake timed out")));
+
+			tradfri.on("error", err => {
+				err.should.be.an.instanceof(TradfriError);
+				(err as TradfriError).code.should.equal(TradfriErrorCodes.ConnectionTimedOut);
+
+				tradfri.removeAllListeners();
+				fakeCoap.request.resetBehavior();
+				done();
+			});
+
+			tradfri.request(null, null);
+		});
 	});
 });
