@@ -532,6 +532,7 @@ A DeviceInfo object contains general information about a device. It has the foll
 
 #### __WORK IN PROGRESS__ - WARNING: BREAKING CHANGES!
 * (AlCalzone) **BREAKING**: The `connect()` method now either resolves with `true` or rejects with an error detailing why the connection failed.
+* (AlCalzone) The error thrown by `authentication()` now correctly reflects why the authentication failed.
 * (AlCalzone) Swallow `"DTLS handshake timed out"` promise rejections and emit an `"error"` instead
 
 #### 0.10.1 (2018-03-15)
