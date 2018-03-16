@@ -44,7 +44,7 @@ class TradfriClient extends events_1.EventEmitter {
                 if (optionsOrLogger.customLogger != null)
                     logger_1.setCustomLogger(optionsOrLogger.customLogger);
                 if (optionsOrLogger.useRawCoAPValues)
-                    this.ipsoOptions.skipBasicSerializers = true;
+                    this.ipsoOptions.skipValueSerializers = true;
             }
         }
     }

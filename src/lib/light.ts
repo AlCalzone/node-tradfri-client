@@ -343,7 +343,7 @@ function createRGBProxy<T extends Light>() {
 					return conversions.rgbToString(r, g, b);
 				}
 			}
-			default: return me[key];
+			default: return me[key as keyof T];
 		}
 	}
 	function set(me: T, key: PropertyKey, value: any, receiver: any) {
@@ -366,7 +366,7 @@ function createRGBProxy<T extends Light>() {
 				}
 				break;
 			}
-			default: me[key] = value;
+			default: me[key as keyof T] = value;
 		}
 		return true;
 	}

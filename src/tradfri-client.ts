@@ -95,7 +95,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 				setCustomLogger(optionsOrLogger);
 			} else {
 				if (optionsOrLogger.customLogger != null) setCustomLogger(optionsOrLogger.customLogger);
-				if (optionsOrLogger.useRawCoAPValues) this.ipsoOptions.skipBasicSerializers = true;
+				if (optionsOrLogger.useRawCoAPValues) this.ipsoOptions.skipValueSerializers = true;
 			}
 		}
 	}
