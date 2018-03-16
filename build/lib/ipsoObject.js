@@ -332,6 +332,9 @@ class IPSOObject {
             if (transform && (transform.neverSkip || !this.options.skipValueSerializers)) {
                 _ret = transform(_ret, this);
             }
+            else if (typeof _ret === "number" && this.options.skipValueSerializers) {
+                _ret = Math.round(_ret);
+            }
             return _ret;
         };
         // check all set properties

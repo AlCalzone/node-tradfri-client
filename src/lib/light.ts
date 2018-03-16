@@ -147,9 +147,13 @@ export class Light extends IPSODevice {
 	 * Creates a proxy which redirects the properties to the correct internal one
 	 */
 	public createProxy(): this {
+		const raw = this._accessory instanceof Accessory ?
+			this._accessory.options.skipValueSerializers :
+			false
+		;
 		switch (this.spectrum) {
 			case "rgb": {
-				const proxy = createRGBProxy();
+				const proxy = createRGBProxy(raw);
 				return super.createProxy(proxy.get, proxy.set);
 			}
 			default:
@@ -330,7 +334,7 @@ const rgbRegex = /^[0-9A-Fa-f]{6}$/;
  * Creates a proxy for an RGB lamp,
  * which converts RGB color to CIE xy
  */
-function createRGBProxy<T extends Light>() {
+function createRGBProxy<T extends Light>(raw: boolean = false) {
 	function get(me: T, key: PropertyKey) {
 		switch (key) {
 			case "color": {
@@ -352,16 +356,26 @@ function createRGBProxy<T extends Light>() {
 				if (predefinedColors.has(value)) {
 					// its a predefined color, use the predefined values
 					const definition = predefinedColors.get(value);
-					me.hue = definition.hue;
-					me.saturation = definition.saturation;
+					if (raw) {
+						me.hue = definition.hue_raw;
+						me.saturation = definition.saturation_raw;
+					} else {
+						me.hue = definition.hue;
+						me.saturation = definition.saturation;
+					}
 				} else {
 					// only accept HEX colors
 					if (rgbRegex.test(value)) {
 						// calculate the X/Y values
 						const { r, g, b } = conversions.rgbFromString(value);
 						const { h, s, v } = conversions.rgbToHSV(r, g, b);
-						me.hue = h;
-						me.saturation = s * 100;
+						if (raw) {
+							me.hue = Math.round(h / 360 * MAX_COLOR);
+							me.saturation = Math.round(s * MAX_COLOR);
+						} else {
+							me.hue = h;
+							me.saturation = s * 100;
+						}
 					}
 				}
 				break;

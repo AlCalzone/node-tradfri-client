@@ -76,9 +76,12 @@ class Light extends ipsoDevice_1.IPSODevice {
      * Creates a proxy which redirects the properties to the correct internal one
      */
     createProxy() {
+        const raw = this._accessory instanceof accessory_1.Accessory ?
+            this._accessory.options.skipValueSerializers :
+            false;
         switch (this.spectrum) {
             case "rgb": {
-                const proxy = createRGBProxy();
+                const proxy = createRGBProxy(raw);
                 return super.createProxy(proxy.get, proxy.set);
             }
             default:
@@ -322,7 +325,7 @@ const rgbRegex = /^[0-9A-Fa-f]{6}$/;
  * Creates a proxy for an RGB lamp,
  * which converts RGB color to CIE xy
  */
-function createRGBProxy() {
+function createRGBProxy(raw = false) {
     function get(me, key) {
         switch (key) {
             case "color": {
@@ -345,8 +348,14 @@ function createRGBProxy() {
                 if (predefined_colors_1.predefinedColors.has(value)) {
                     // its a predefined color, use the predefined values
                     const definition = predefined_colors_1.predefinedColors.get(value);
-                    me.hue = definition.hue;
-                    me.saturation = definition.saturation;
+                    if (raw) {
+                        me.hue = definition.hue_raw;
+                        me.saturation = definition.saturation_raw;
+                    }
+                    else {
+                        me.hue = definition.hue;
+                        me.saturation = definition.saturation;
+                    }
                 }
                 else {
                     // only accept HEX colors
@@ -354,8 +363,14 @@ function createRGBProxy() {
                         // calculate the X/Y values
                         const { r, g, b } = conversions_1.conversions.rgbFromString(value);
                         const { h, s, v } = conversions_1.conversions.rgbToHSV(r, g, b);
-                        me.hue = h;
-                        me.saturation = s * 100;
+                        if (raw) {
+                            me.hue = Math.round(h / 360 * predefined_colors_1.MAX_COLOR);
+                            me.saturation = Math.round(s * predefined_colors_1.MAX_COLOR);
+                        }
+                        else {
+                            me.hue = h;
+                            me.saturation = s * 100;
+                        }
                     }
                 }
                 break;

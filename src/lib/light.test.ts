@@ -10,7 +10,9 @@ import { spy, stub } from "sinon";
 import { TradfriClient } from "..";
 import { createNetworkMock } from "../../test/mocks";
 import { Accessory } from "./accessory";
+import { IPSOObject } from "./ipsoObject";
 import { Light, LightOperation, Spectrum } from "./light";
+import { entries } from "./object-polyfill";
 import { MAX_COLOR, predefinedColors, whiteSpectrumHex } from "./predefined-colors";
 
 // enable the should interface with sinon
@@ -134,26 +136,49 @@ describe("ipso/light => basic functionality =>", () => {
 		expect(serialized["3311"][0]).to.haveOwnProperty("5712");
 	});
 
-	it("updating RGB to a predefined color should send the predefined hue/saturation values", () => {
-		const rgb = new Accessory()
-			.parse(buildAccessory("TRADFRI bulb E27 C/WS opal 600lm"))
-			.createProxy()
-			;
-		const original = rgb.clone();
-		const light = rgb.lightList[0];
+	describe("updating RGB to a predefined color should send the predefined hue/saturation values", () => {
+		it("with the simplified scale", () => {
+			const rgb = new Accessory()
+				.parse(buildAccessory("TRADFRI bulb E27 C/WS opal 600lm"))
+				.createProxy()
+				;
+			const original = rgb.clone();
+			const light = rgb.lightList[0];
 
-		for (const predefined of predefinedColors.values()) {
-			if (predefined.rgbHex === original.lightList[0].color) continue;
-			light.color = predefined.rgbHex;
-			const serialized = rgb.serialize(original);
-			expect(serialized).to.deep.equal({
-				3311: [{
-					5707: Math.round(predefined.hue / 360 * MAX_COLOR),
-					5708: Math.round(predefined.saturation / 100 * MAX_COLOR),
-					5712: 5,
-				}],
-			});
-		}
+			for (const predefined of predefinedColors.values()) {
+				if (predefined.rgbHex === original.lightList[0].color) continue;
+				light.color = predefined.rgbHex;
+				const serialized = rgb.serialize(original);
+				expect(serialized).to.deep.equal({
+					3311: [{
+						5707: Math.round(predefined.hue / 360 * MAX_COLOR),
+						5708: Math.round(predefined.saturation / 100 * MAX_COLOR),
+						5712: 5,
+					}],
+				});
+			}
+		});
+		it("with raw CoAP values", () => {
+			const rgb = new Accessory({skipValueSerializers: true})
+				.parse(buildAccessory("TRADFRI bulb E27 C/WS opal 600lm"))
+				.createProxy()
+				;
+			const original = rgb.clone();
+			const light = rgb.lightList[0];
+
+			for (const predefined of predefinedColors.values()) {
+				if (predefined.rgbHex === original.lightList[0].color) continue;
+				light.color = predefined.rgbHex;
+				const serialized = rgb.serialize(original);
+				expect(serialized).to.deep.equal({
+					3311: [{
+						5707: predefined.hue_raw,
+						5708: predefined.saturation_raw,
+						5712: 5,
+					}],
+				});
+			}
+		});
 	});
 
 	it("when updating hue, saturation should be sent as well", () => {
@@ -222,6 +247,43 @@ describe("ipso/light => basic functionality =>", () => {
 			.createProxy()
 			;
 		expect(rgb.lightList[0].dimmer).to.equal(70.5);
+	});
+
+	describe("values should be rounded in raw CoAP mode => ", () => {
+
+		type TestSet = {
+			[prop in keyof Light]?: {key: number, min: number, max: number, rgb: boolean};
+		};
+		const tests: TestSet = {
+			dimmer: {key: 5851, min: 0, max: 254, rgb: false},
+			colorTemperature: {key: 5711, min: 250, max: 454, rgb: false},
+			hue: {key: 5707, min: 0, max: MAX_COLOR, rgb: true},
+			saturation: {key: 5708, min: 0, max: MAX_COLOR, rgb: true},
+		};
+
+		for (const [prop, test] of entries(tests)) {
+			const source = buildAccessory(test.rgb ? "TRADFRI bulb E12 CWS opal 600" : "TRADFRI bulb E27 C/WS opal 600lm");
+			const acc = new Accessory({skipValueSerializers: true})
+				.parse(source)
+				.createProxy()
+			;
+			it(`for the ${prop} property`, () => {
+				const changed = acc.clone();
+				// TODO: enable this test at a later stage
+				// // < min
+				// changed.lightList[0][prop] = test.min - 1;
+				// expect(changed.serialize()[3311][0][test.key]).to.equal(test.min, `min wasn't clamped for ${prop}`);
+				// // > max
+				// changed.lightList[0][prop] = test.max + 1;
+				// expect(changed.serialize()[3311][0][test.key]).to.equal(test.max, `max wasn't clamped for ${prop}`);
+				// float
+				let float = (test.min + test.max) / 2;
+				if (float % 1 === 0) float += 0.67;
+				changed.lightList[0][prop] = float;
+				expect(changed.serialize()[3311][0][test.key]).to.equal(Math.round(float), `float wasn't rounded for ${prop}`);
+			});
+		}
+
 	});
 
 	it("cloning a light should correctly copy the model name", () => {
