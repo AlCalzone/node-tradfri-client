@@ -66,7 +66,7 @@ export function createNetworkMock(
 	/**
 	 * Remembers a callback for later tests
 	 */
-	function rememberCallback(path: string, cb) {
+	function rememberCallback(path: string, cb: (response: CoapResponse) => Promise<void>) {
 		if (path === devicesUrl) {
 			callbacks.observeDevices = cb;
 		} else if (path.indexOf(devicesUrl) > -1) {

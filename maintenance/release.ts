@@ -11,6 +11,9 @@
 	or
 	npm run release -- <version> [--dry]
 
+	PLACEHOLDER for next version in readme:
+	#### __WORK IN PROGRESS__
+
 */
 
 import { execSync } from "child_process";
