@@ -530,6 +530,9 @@ A DeviceInfo object contains general information about a device. It has the foll
 
 ## Changelog
 
+#### __WORK IN PROGRESS__
+* (AlCalzone) Fix rounding and hue/saturation when using raw CoAP values
+
 #### 0.11.0 (2018-21-04) - WARNING: BREAKING CHANGES!
 * (AlCalzone) **BREAKING**: The `connect()` method now either resolves with `true` or rejects with an error detailing why the connection failed.
 * (AlCalzone) The error thrown by `authentication()` now correctly reflects why the authentication failed.
