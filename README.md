@@ -59,7 +59,7 @@ function tradfri_deviceUpdated(device: Accessory) {
 }
 
 function tradfri_deviceRemoved(instanceId: number) {
-	// clean up
+    // clean up
 }
 
 // later...
@@ -148,7 +148,7 @@ const tradfri = new TradfriClient(hostname: string);
 const tradfri = new TradfriClient(hostname: string, customLogger: LoggerFunction);
 const tradfri = new TradfriClient(hostname: string, options: TradfriOptions);
 ```
-As the 2nd parameter, you can provide a custom logger function or some options. By providing a custom logger function to the constructor, all diagnostic output will be sent to that function. By default, the `debug` module is used instead. The logger function has the following signature:
+As the 2nd parameter, you can provide a custom logger function or an object with some or all of the options shown below. By providing a custom logger function to the constructor, all diagnostic output will be sent to that function. By default, the `debug` module is used instead. The logger function has the following signature:
 ```TS
 type LoggerFunction = (
     message: string,
@@ -159,11 +159,15 @@ type LoggerFunction = (
 The options object looks as follows:
 ```TS
 interface TradfriOptions {
-	customLogger?: LoggerFunction,
-	useRawCoAPValues?: boolean,
+    customLogger: LoggerFunction,
+    useRawCoAPValues: boolean,
+    watchConnection: boolean | ConnectionWatcherOptions,
 }
 ```
-The custom logger function is used as above. By setting `useRawCoAPValues` to true, you can instruct `TradfriClient` to use raw CoAP values instead of the simplified scales used internally. See below for a detailed description how the scales change.
+You can provide all the options or just some of them:
+* The custom logger function is used as above. 
+* By setting `useRawCoAPValues` to true, you can instruct `TradfriClient` to use raw CoAP values instead of the simplified scales used internally. See below for a detailed description how the scales change.
+* `watchConnection` accepts a boolean to enable/disable connection watching with default parameters or a set of options. See below ("watching the connection") for a detailed description.
 
 The following code samples use the new `async/await` syntax which is available through TypeScript/Babel or in ES7. If that is no option for you, you can also consume the library by using promises:
 ```TS
@@ -264,7 +268,7 @@ tradfri.destroy();
 Call this before shutting down your application so the gateway may clean up its resources.
 
 ### Subscribe to updates
-The `TradfriClient` notifies registered listeners when observed resources are updated or removed. It is using the standard `EventEmitter` [interface](https://nodejs.org/api/events.html), so you can add listeners with `on("event", handler)` and remove them with `removeListener` and `removeAllListeners`.
+The `TradfriClient` notifies registered listeners when observed resources are updated or removed. It is using the standard [`EventEmitter` interface](https://nodejs.org/api/events.html), so you can add listeners with `on("event", handler)` and remove them with `removeListener` and `removeAllListeners`.
 The currently supported events and their handler signatures are:
 
 #### `"device updated"` - A device was added or changed
@@ -518,20 +522,64 @@ A DeviceInfo object contains general information about a device. It has the foll
 * `manufacturer: string` - The device manufacturer. Usually `"IKEA of Sweden"`.
 * `modelNumber: string` - The name/type of the device, e.g. `"TRADFRI bulb E27 CWS opal 600lm"`
 * `power: PowerSources` - How the device is powered. One of the following enum values:
-	* `Unknown (0)`
-	* `InternalBattery (1)`
-	* `ExternalBattery (2)`
-	* `Battery (3)` - Although not in the specs, this is apparently used by the remote
-	* `PowerOverEthernet (4)`
-	* `USB (5)`
-	* `AC_Power (6)`
-	* `Solar (7)`
+    * `Unknown (0)`
+    * `InternalBattery (1)`
+    * `ExternalBattery (2)`
+    * `Battery (3)` - Although not in the specs, this is apparently used by the remote
+    * `PowerOverEthernet (4)`
+    * `USB (5)`
+    * `AC_Power (6)`
+    * `Solar (7)`
 * `serialNumber: string` - Not used currently. Always `""`
+
+
+## Automatically watching the connection and reconnecting
+**Note:** This feature is currently experimental and allows you to watch the connection and automatically reconnect without shipping your own reconnection routine.
+
+You can enable it by setting the `watchConnection` param of the constructor options to `true` or an options object with the following structure:
+```TS
+interface ConnectionWatcherOptions {
+    /** The interval in ms between consecutive pings */
+    pingInterval: number; // DEFAULT: 10000ms
+    /** How many pings have to consecutively fail until the gateway is assumed offline */
+    failedPingCountUntilOffline: number; // DEFAULT: 1
+    /**
+     * How much the interval between consecutive pings should be increased
+     * while the gateway is offline. The actual interval is calculated by 
+     * <ping interval> * <backoff factor> ** <offline pings)>,
+     * with the number of offline pings capped at 5.
+     */
+    failedPingBackoffFactor: number; // DEFAULT: 1.5
+
+    /** Whether automatic reconnection is enabled */
+    reconnectionEnabled: boolean; // DEFAULT: enabled
+    /** 
+     * How many pings have to consecutively fail while the gateway is offline
+     * until a reconnection is triggered
+     */
+    offlinePingCountUntilReconnect: number; // DEFAULT: 3
+    /** After how many failed reconnects we give up */
+    maximumReconnects: number; // DEFAULT: infinite
+}
+```
+All parameters of this object are optional and use the default values if not provided. Monitoring the connection state is possible by subscribing to the following events, similar to [subscribing to updates](#subscribe-to-updates):
+
+* `"ping succeeded"`: Pinging the gateway has succeeded. Callback arguments: none.
+* `"ping failed"`: Pinging the gateway has failed one or multiple times in a row. Callback arguments: 
+  * `failedPingCount`: number
+* `"connection lost"`: Raised after after the first failed ping. Callback arguments: none.
+* `"connection alive"`: The connection is alive again after one or more pings have failed. Callback arguments: none.
+* `"gateway offline"`: The threshold for consecutive failed pings has been reached, so the gateway is assumed offline. Callback arguments: none.
+* `"reconnecting"`: The threshold for failed pings while the gateway is offline has been reached. A reconnect attempt was started. Callback arguments:
+  * `reconnectAttempt`: number
+  * `maximumReconnects`: number
+* `"give up"`: The maximum amount of reconnect attempts has been reached. No further attempts will be made until the connection is restored.
 
 ## Changelog
 
 #### __WORK IN PROGRESS__
 * (AlCalzone) Fix rounding and hue/saturation when using raw CoAP values
+* (AlCalzone) Experimental support for automatic connection watching and reconnection
 
 #### 0.11.0 (2018-21-04) - WARNING: BREAKING CHANGES!
 * (AlCalzone) **BREAKING**: The `connect()` method now either resolves with `true` or rejects with an error detailing why the connection failed.
