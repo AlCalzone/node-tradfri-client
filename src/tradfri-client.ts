@@ -15,6 +15,7 @@ import { composeObject, entries } from "./lib/object-polyfill";
 import { OperationProvider } from "./lib/operation-provider";
 import { Scene } from "./lib/scene";
 import { TradfriError, TradfriErrorCodes } from "./lib/tradfri-error";
+import { ConnectionEvents, ConnectionWatcher, ConnectionWatcherOptions, PingFailedCallback, ReconnectingCallback } from "./lib/watcher";
 
 export type ObserveResourceCallback = (resp: CoapResponse) => void;
 export type ObserveDevicesCallback = (addedDevices: Accessory[], removedDevices: Accessory[]) => void;
@@ -37,7 +38,9 @@ export type ObservableEvents =
 	"error"
 	;
 
-export declare interface TradfriClient {
+// tslint:disable:unified-signatures
+export interface TradfriClient {
+	// default events
 	on(event: "device updated", callback: DeviceUpdatedCallback): this;
 	on(event: "device removed", callback: DeviceRemovedCallback): this;
 	on(event: "group updated", callback: GroupUpdatedCallback): this;
@@ -45,6 +48,14 @@ export declare interface TradfriClient {
 	on(event: "scene updated", callback: SceneUpdatedCallback): this;
 	on(event: "scene removed", callback: SceneRemovedCallback): this;
 	on(event: "error", callback: ErrorCallback): this;
+	// connection events => is there a nicer way than copy & paste?
+	on(event: "ping succeeded", callback: () => void): this;
+	on(event: "ping failed", callback: PingFailedCallback): this;
+	on(event: "connection alive", callback: () => void): this;
+	on(event: "connection lost", callback: () => void): this;
+	on(event: "gateway offline", callback: () => void): this;
+	on(event: "reconnecting", callback: ReconnectingCallback): this;
+	on(event: "give up", callback: () => void): this;
 
 	removeListener(event: "device updated", callback: DeviceUpdatedCallback): this;
 	removeListener(event: "device removed", callback: DeviceRemovedCallback): this;
@@ -53,13 +64,26 @@ export declare interface TradfriClient {
 	removeListener(event: "scene updated", callback: SceneUpdatedCallback): this;
 	removeListener(event: "scene removed", callback: SceneRemovedCallback): this;
 	removeListener(event: "error", callback: ErrorCallback): this;
+	// connection events => is there a nicer way than copy & paste?
+	removeListener(event: "ping succeeded", callback: () => void): this;
+	removeListener(event: "ping failed", callback: PingFailedCallback): this;
+	removeListener(event: "connection alive", callback: () => void): this;
+	removeListener(event: "connection lost", callback: () => void): this;
+	removeListener(event: "gateway offline", callback: () => void): this;
+	removeListener(event: "reconnecting", callback: ReconnectingCallback): this;
+	removeListener(event: "give up", callback: () => void): this;
 
-	removeAllListeners(event?: ObservableEvents): this;
+	removeAllListeners(event?: ObservableEvents | ConnectionEvents): this;
 }
+// tslint:enable:unified-signatures
 
 export interface TradfriOptions {
-	customLogger?: LoggerFunction;
-	useRawCoAPValues?: boolean;
+	/** Callback for a custom logger function. */
+	customLogger: LoggerFunction;
+	/** Whether to use raw CoAP values or the simplified scale */
+	useRawCoAPValues: boolean;
+	/** Whether the connection should be automatically watched */
+	watchConnection: boolean | Partial<ConnectionWatcherOptions>;
 }
 
 export class TradfriClient extends EventEmitter implements OperationProvider {
@@ -77,25 +101,45 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	/** Options regarding IPSO objects and serialization */
 	private ipsoOptions: IPSOOptions = {};
 
+	/** Automatic connection watching */
+	private watcher: ConnectionWatcher;
+
 	// tslint:disable:unified-signatures
 	constructor(hostname: string)
 	constructor(hostname: string, customLogger: LoggerFunction)
-	constructor(hostname: string, options: TradfriOptions)
+	constructor(hostname: string, options: Partial<TradfriOptions>)
 	// tslint:enable:unified-signatures
 	constructor(
 		public readonly hostname: string,
-		optionsOrLogger?: LoggerFunction | TradfriOptions,
+		optionsOrLogger?: LoggerFunction | Partial<TradfriOptions>,
 	) {
 		super();
 		this.requestBase = `coaps://${hostname}:5684/`;
 
-		if (optionsOrLogger != null) {
-			if (typeof optionsOrLogger === "function") {
-				// Legacy version: 2nd parameter is a logger
-				setCustomLogger(optionsOrLogger);
-			} else {
-				if (optionsOrLogger.customLogger != null) setCustomLogger(optionsOrLogger.customLogger);
-				if (optionsOrLogger.useRawCoAPValues) this.ipsoOptions.skipValueSerializers = true;
+		if (typeof optionsOrLogger === "function") {
+			// Legacy version: 2nd parameter is a logger
+			setCustomLogger(optionsOrLogger);
+		} else if (typeof optionsOrLogger === "object") {
+			if (optionsOrLogger.customLogger != null) setCustomLogger(optionsOrLogger.customLogger);
+
+			if (optionsOrLogger.useRawCoAPValues === true) this.ipsoOptions.skipValueSerializers = true;
+
+			if (optionsOrLogger.watchConnection != null && optionsOrLogger.watchConnection !== false) {
+				// true simply means "use default options" => don't pass a 2nd argument
+				const watcherOptions = optionsOrLogger.watchConnection === true ? undefined : optionsOrLogger.watchConnection;
+				this.watcher = new ConnectionWatcher(this, watcherOptions);
+
+				// in the first iteration of this feature, just pass all events through
+				const eventNames: ConnectionEvents[] = [
+					"ping succeeded", "ping failed",
+					"connection alive", "connection lost",
+					"gateway offline",
+					"reconnecting",
+					"give up",
+				];
+				for (const event of eventNames) {
+					this.watcher.on(event, (...args: any[]) => this.emit(event, ...args));
+				}
 			}
 		}
 	}
@@ -107,7 +151,12 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 */
 	public async connect(identity: string, psk: string): Promise<true> {
 		switch (await this.tryToConnect(identity, psk)) {
-			case true: return true;
+			case true: {
+				// start connection watching
+				// TODO: Figure out how to handle retrying the initial connection
+				if (this.watcher != null) this.watcher.start();
+				return true;
+			}
 			case "auth failed": throw new TradfriError(
 				"The provided credentials are not valid. Please re-authenticate!",
 				TradfriErrorCodes.AuthenticationFailed,
@@ -262,7 +311,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 * Closes the underlying CoAP client and clears all observers.
 	 */
 	public destroy(): void {
-		// TODO: do we need to do more?
+		if (this.watcher != null) this.watcher.stop();
 		this.reset();
 	}
 

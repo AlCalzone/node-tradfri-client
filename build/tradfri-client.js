@@ -21,6 +21,7 @@ const logger_1 = require("./lib/logger");
 const object_polyfill_1 = require("./lib/object-polyfill");
 const scene_1 = require("./lib/scene");
 const tradfri_error_1 = require("./lib/tradfri-error");
+const watcher_1 = require("./lib/watcher");
 class TradfriClient extends events_1.EventEmitter {
     // tslint:enable:unified-signatures
     constructor(hostname, optionsOrLogger) {
@@ -35,16 +36,30 @@ class TradfriClient extends events_1.EventEmitter {
         /** Options regarding IPSO objects and serialization */
         this.ipsoOptions = {};
         this.requestBase = `coaps://${hostname}:5684/`;
-        if (optionsOrLogger != null) {
-            if (typeof optionsOrLogger === "function") {
-                // Legacy version: 2nd parameter is a logger
-                logger_1.setCustomLogger(optionsOrLogger);
-            }
-            else {
-                if (optionsOrLogger.customLogger != null)
-                    logger_1.setCustomLogger(optionsOrLogger.customLogger);
-                if (optionsOrLogger.useRawCoAPValues)
-                    this.ipsoOptions.skipValueSerializers = true;
+        if (typeof optionsOrLogger === "function") {
+            // Legacy version: 2nd parameter is a logger
+            logger_1.setCustomLogger(optionsOrLogger);
+        }
+        else if (typeof optionsOrLogger === "object") {
+            if (optionsOrLogger.customLogger != null)
+                logger_1.setCustomLogger(optionsOrLogger.customLogger);
+            if (optionsOrLogger.useRawCoAPValues === true)
+                this.ipsoOptions.skipValueSerializers = true;
+            if (optionsOrLogger.watchConnection != null && optionsOrLogger.watchConnection !== false) {
+                // true simply means "use default options" => don't pass a 2nd argument
+                const watcherOptions = optionsOrLogger.watchConnection === true ? undefined : optionsOrLogger.watchConnection;
+                this.watcher = new watcher_1.ConnectionWatcher(this, watcherOptions);
+                // in the first iteration of this feature, just pass all events through
+                const eventNames = [
+                    "ping succeeded", "ping failed",
+                    "connection alive", "connection lost",
+                    "gateway offline",
+                    "reconnecting",
+                    "give up",
+                ];
+                for (const event of eventNames) {
+                    this.watcher.on(event, (...args) => this.emit(event, ...args));
+                }
             }
         }
     }
@@ -56,7 +71,13 @@ class TradfriClient extends events_1.EventEmitter {
     connect(identity, psk) {
         return __awaiter(this, void 0, void 0, function* () {
             switch (yield this.tryToConnect(identity, psk)) {
-                case true: return true;
+                case true: {
+                    // start connection watching
+                    // TODO: Figure out how to handle retrying the initial connection
+                    if (this.watcher != null)
+                        this.watcher.start();
+                    return true;
+                }
                 case "auth failed": throw new tradfri_error_1.TradfriError("The provided credentials are not valid. Please re-authenticate!", tradfri_error_1.TradfriErrorCodes.AuthenticationFailed);
                 case "timeout": throw new tradfri_error_1.TradfriError("The gateway did not respond in time.", tradfri_error_1.TradfriErrorCodes.ConnectionTimedOut);
                 case "error": throw new tradfri_error_1.TradfriError("An unknown error occured while connecting to the gateway", tradfri_error_1.TradfriErrorCodes.ConnectionFailed);
@@ -177,7 +198,8 @@ class TradfriClient extends events_1.EventEmitter {
      * Closes the underlying CoAP client and clears all observers.
      */
     destroy() {
-        // TODO: do we need to do more?
+        if (this.watcher != null)
+            this.watcher.stop();
         this.reset();
     }
     /**

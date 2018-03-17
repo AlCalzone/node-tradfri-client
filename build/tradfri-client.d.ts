@@ -7,6 +7,7 @@ import { LightOperation } from "./lib/light";
 import { LoggerFunction } from "./lib/logger";
 import { OperationProvider } from "./lib/operation-provider";
 import { Scene } from "./lib/scene";
+import { ConnectionEvents, ConnectionWatcherOptions, PingFailedCallback, ReconnectingCallback } from "./lib/watcher";
 export declare type ObserveResourceCallback = (resp: CoapResponse) => void;
 export declare type ObserveDevicesCallback = (addedDevices: Accessory[], removedDevices: Accessory[]) => void;
 export declare type DeviceUpdatedCallback = (device: Accessory) => void;
@@ -25,6 +26,13 @@ export interface TradfriClient {
     on(event: "scene updated", callback: SceneUpdatedCallback): this;
     on(event: "scene removed", callback: SceneRemovedCallback): this;
     on(event: "error", callback: ErrorCallback): this;
+    on(event: "ping succeeded", callback: () => void): this;
+    on(event: "ping failed", callback: PingFailedCallback): this;
+    on(event: "connection alive", callback: () => void): this;
+    on(event: "connection lost", callback: () => void): this;
+    on(event: "gateway offline", callback: () => void): this;
+    on(event: "reconnecting", callback: ReconnectingCallback): this;
+    on(event: "give up", callback: () => void): this;
     removeListener(event: "device updated", callback: DeviceUpdatedCallback): this;
     removeListener(event: "device removed", callback: DeviceRemovedCallback): this;
     removeListener(event: "group updated", callback: GroupUpdatedCallback): this;
@@ -32,11 +40,22 @@ export interface TradfriClient {
     removeListener(event: "scene updated", callback: SceneUpdatedCallback): this;
     removeListener(event: "scene removed", callback: SceneRemovedCallback): this;
     removeListener(event: "error", callback: ErrorCallback): this;
-    removeAllListeners(event?: ObservableEvents): this;
+    removeListener(event: "ping succeeded", callback: () => void): this;
+    removeListener(event: "ping failed", callback: PingFailedCallback): this;
+    removeListener(event: "connection alive", callback: () => void): this;
+    removeListener(event: "connection lost", callback: () => void): this;
+    removeListener(event: "gateway offline", callback: () => void): this;
+    removeListener(event: "reconnecting", callback: ReconnectingCallback): this;
+    removeListener(event: "give up", callback: () => void): this;
+    removeAllListeners(event?: ObservableEvents | ConnectionEvents): this;
 }
 export interface TradfriOptions {
-    customLogger?: LoggerFunction;
-    useRawCoAPValues?: boolean;
+    /** Callback for a custom logger function. */
+    customLogger: LoggerFunction;
+    /** Whether to use raw CoAP values or the simplified scale */
+    useRawCoAPValues: boolean;
+    /** Whether the connection should be automatically watched */
+    watchConnection: boolean | Partial<ConnectionWatcherOptions>;
 }
 export declare class TradfriClient extends EventEmitter implements OperationProvider {
     readonly hostname: string;
@@ -50,9 +69,11 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
     private requestBase;
     /** Options regarding IPSO objects and serialization */
     private ipsoOptions;
+    /** Automatic connection watching */
+    private watcher;
     constructor(hostname: string);
     constructor(hostname: string, customLogger: LoggerFunction);
-    constructor(hostname: string, options: TradfriOptions);
+    constructor(hostname: string, options: Partial<TradfriOptions>);
     /**
      * Connect to the gateway
      * @param identity A previously negotiated identity.

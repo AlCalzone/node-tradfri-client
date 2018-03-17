@@ -5,12 +5,12 @@
 import { assert, expect, should, use } from "chai";
 import { CoapClient as coap, CoapResponse } from "node-coap-client";
 import { spy, stub } from "sinon";
+import * as sinonChai from "sinon-chai";
 import "./"; // dummy-import so index.ts is covered
 import { TradfriClient } from "./tradfri-client";
 
 import { ContentFormats } from "node-coap-client/build/ContentFormats";
 import { MessageCode, MessageCodes } from "node-coap-client/build/Message";
-import * as sinonChai from "sinon-chai";
 import { createEmptyAccessoryResponse, createErrorResponse, createNetworkMock, createResponse, createRGBBulb } from "../test/mocks";
 import { Accessory, AccessoryTypes, Light, TradfriError, TradfriErrorCodes } from "./";
 import { createDeferredPromise, DeferredPromise } from "./lib/defer-promise";
@@ -18,6 +18,7 @@ import { padStart } from "./lib/strings";
 
 // enable the should interface with sinon
 should();
+// improve stubs for testing
 use(sinonChai);
 
 function assertPayload(actual: any, expected: {}) {
