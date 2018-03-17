@@ -31,6 +31,14 @@ export interface ConnectionWatcher {
     on(event: "reconnecting", callback: ReconnectingCallback): this;
     on(event: "give up", callback: () => void): this;
     on(event: ConnectionEvents, callback: (...args: any[]) => void): this;
+    once(event: "ping succeeded", callback: () => void): this;
+    once(event: "ping failed", callback: PingFailedCallback): this;
+    once(event: "connection alive", callback: () => void): this;
+    once(event: "connection lost", callback: () => void): this;
+    once(event: "gateway offline", callback: () => void): this;
+    once(event: "reconnecting", callback: ReconnectingCallback): this;
+    once(event: "give up", callback: () => void): this;
+    once(event: ConnectionEvents, callback: (...args: any[]) => void): this;
     removeListener(event: "ping succeeded", callback: () => void): this;
     removeListener(event: "ping failed", callback: PingFailedCallback): this;
     removeListener(event: "connection alive", callback: () => void): this;

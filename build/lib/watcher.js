@@ -10,14 +10,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const events_1 = require("events");
 const logger_1 = require("./logger");
-const defaultOptions = {
+const defaultOptions = Object.freeze({
     pingInterval: 10000,
     failedPingCountUntilOffline: 1,
     failedPingBackoffFactor: 1.5,
     reconnectionEnabled: true,
     offlinePingCountUntilReconnect: 3,
     maximumReconnects: Number.POSITIVE_INFINITY,
-};
+});
 function checkOptions(opts) {
     if (opts.pingInterval != null && (opts.pingInterval < 1000 || opts.pingInterval > 5 * 60000)) {
         throw new Error("The ping interval must be between 1s and 5 minutes");
@@ -49,7 +49,7 @@ class ConnectionWatcher extends events_1.EventEmitter {
         if (options == null)
             options = {};
         checkOptions(options);
-        this.options = Object.assign(defaultOptions, options);
+        this.options = Object.assign({}, defaultOptions, options);
     }
     /** Starts watching the connection */
     start() {

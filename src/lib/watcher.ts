@@ -22,7 +22,7 @@ export interface ConnectionWatcherOptions {
 	maximumReconnects: number;
 }
 
-const defaultOptions: ConnectionWatcherOptions = {
+const defaultOptions: ConnectionWatcherOptions = Object.freeze({
 	pingInterval: 10000, // 10s
 	failedPingCountUntilOffline: 1,
 	failedPingBackoffFactor: 1.5,
@@ -30,7 +30,7 @@ const defaultOptions: ConnectionWatcherOptions = {
 	reconnectionEnabled: true, // when the watch is enabled, also reconnect
 	offlinePingCountUntilReconnect: 3,
 	maximumReconnects: Number.POSITIVE_INFINITY, // don't stop believing
-};
+});
 
 function checkOptions(opts: Partial<ConnectionWatcherOptions>) {
 	if (opts.pingInterval != null && (opts.pingInterval < 1000 || opts.pingInterval > 5 * 60000)) {
@@ -72,6 +72,15 @@ export interface ConnectionWatcher {
 	on(event: "give up", callback: () => void): this;
 	on(event: ConnectionEvents, callback: (...args: any[]) => void): this;
 
+	once(event: "ping succeeded", callback: () => void): this;
+	once(event: "ping failed", callback: PingFailedCallback): this;
+	once(event: "connection alive", callback: () => void): this;
+	once(event: "connection lost", callback: () => void): this;
+	once(event: "gateway offline", callback: () => void): this;
+	once(event: "reconnecting", callback: ReconnectingCallback): this;
+	once(event: "give up", callback: () => void): this;
+	once(event: ConnectionEvents, callback: (...args: any[]) => void): this;
+
 	removeListener(event: "ping succeeded", callback: () => void): this;
 	removeListener(event: "ping failed", callback: PingFailedCallback): this;
 	removeListener(event: "connection alive", callback: () => void): this;
@@ -96,7 +105,7 @@ export class ConnectionWatcher extends EventEmitter {
 		super();
 		if (options == null) options = {};
 		checkOptions(options);
-		this.options = Object.assign(defaultOptions, options);
+		this.options = Object.assign({}, defaultOptions, options);
 	}
 
 	private options: ConnectionWatcherOptions;
