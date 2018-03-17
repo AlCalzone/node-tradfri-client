@@ -579,7 +579,7 @@ All parameters of this object are optional and use the default values if not pro
 
 ## Changelog
 
-#### __WORK IN PROGRESS__
+#### 0.12.0 (2018-21-06)
 * (AlCalzone) Fix rounding and hue/saturation when using raw CoAP values
 * (AlCalzone) Experimental support for automatic connection watching and reconnection
 
