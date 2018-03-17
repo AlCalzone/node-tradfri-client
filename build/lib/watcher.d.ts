@@ -50,6 +50,7 @@ export declare class ConnectionWatcher extends EventEmitter {
     private pingTimer;
     /** Starts watching the connection */
     start(): void;
+    private isActive;
     /** Stops watching the connection */
     stop(): void;
     private connectionAlive;

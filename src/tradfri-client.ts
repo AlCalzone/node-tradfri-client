@@ -311,7 +311,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 * Closes the underlying CoAP client and clears all observers.
 	 */
 	public destroy(): void {
-		// TODO: do we need to do more?
+		if (this.watcher != null) this.watcher.stop();
 		this.reset();
 	}
 

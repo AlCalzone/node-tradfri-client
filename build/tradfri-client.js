@@ -198,7 +198,8 @@ class TradfriClient extends events_1.EventEmitter {
      * Closes the underlying CoAP client and clears all observers.
      */
     destroy() {
-        // TODO: do we need to do more?
+        if (this.watcher != null)
+            this.watcher.stop();
         this.reset();
     }
     /**

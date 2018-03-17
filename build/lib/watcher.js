@@ -55,6 +55,7 @@ class ConnectionWatcher extends events_1.EventEmitter {
     start() {
         if (this.pingTimer != null)
             throw new Error("The connection watcher is already running");
+        this.isActive = true;
         this.pingTimer = setTimeout(() => this.pingThread(), this.options.pingInterval);
     }
     /** Stops watching the connection */
@@ -63,6 +64,7 @@ class ConnectionWatcher extends events_1.EventEmitter {
             clearTimeout(this.pingTimer);
             this.pingTimer = null;
         }
+        this.isActive = false;
     }
     pingThread() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -122,9 +124,11 @@ class ConnectionWatcher extends events_1.EventEmitter {
                 }
             }
             // schedule the next ping
-            const nextTimeout = Math.round(this.options.pingInterval * Math.pow(this.options.failedPingBackoffFactor, Math.min(5, this.failedPingCount)));
-            logger_1.log("setting next timeout in " + nextTimeout, "debug");
-            this.pingTimer = setTimeout(() => this.pingThread(), nextTimeout);
+            if (this.isActive) {
+                const nextTimeout = Math.round(this.options.pingInterval * Math.pow(this.options.failedPingBackoffFactor, Math.min(5, this.failedPingCount)));
+                logger_1.log("setting next timeout in " + nextTimeout, "debug");
+                this.pingTimer = setTimeout(() => this.pingThread(), nextTimeout);
+            }
         });
     }
 }
