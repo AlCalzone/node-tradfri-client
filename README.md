@@ -575,6 +575,8 @@ All parameters of this object are optional and use the default values if not pro
   * `maximumReconnects`: number
 * `"give up"`: The maximum amount of reconnect attempts has been reached. No further attempts will be made until the connection is restored.
 
+**Note:** Reconnection internally calls the `reset()` method. This means pending connections and promises will be dropped and the `"error"` event may be emitted aswell. See [resetting the connection](#resetting-the-connection) for details.
+
 ## Changelog
 
 #### __WORK IN PROGRESS__
