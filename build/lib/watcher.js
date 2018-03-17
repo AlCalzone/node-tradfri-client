@@ -9,8 +9,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const events_1 = require("events");
+const logger_1 = require("./logger");
 const defaultOptions = {
-    watchEnabled: false,
     pingInterval: 10000,
     failedPingCountUntilOffline: 1,
     failedPingBackoffFactor: 1.5,
@@ -35,6 +35,7 @@ function checkOptions(opts) {
         throw new Error("The maximum number of reconnect attempts must be positive");
     }
 }
+// tslint:enable:unified-signatures
 /**
  * Watches the connection of a TradfriClient and notifies about changes in the connection state
  */
@@ -45,11 +46,10 @@ class ConnectionWatcher extends events_1.EventEmitter {
         this.failedPingCount = 0;
         this.offlinePingCount = 0;
         this.resetAttempts = 0;
+        if (options == null)
+            options = {};
         checkOptions(options);
         this.options = Object.assign(defaultOptions, options);
-        // start immediately if configured
-        if (this.options.watchEnabled)
-            this.start();
     }
     /** Starts watching the connection */
     start() {
@@ -70,47 +70,61 @@ class ConnectionWatcher extends events_1.EventEmitter {
             this.connectionAlive = yield this.client.ping();
             // see if the connection state has changed
             if (this.connectionAlive) {
+                logger_1.log("ping succeeded", "debug");
                 this.emit("ping succeeded");
+                // connection is now alive again
+                if (oldValue === false) {
+                    logger_1.log(`The connection is alive again after ${this.failedPingCount} failed pings`, "debug");
+                    this.emit("connection alive");
+                }
+                // reset all counters because the connection is good again
                 this.failedPingCount = 0;
                 this.offlinePingCount = 0;
                 this.resetAttempts = 0;
-                // connection is now alive again
-                if (!oldValue)
-                    this.emit("connection alive");
             }
             else {
-                this.emit("ping failed");
-                if (oldValue)
-                    this.emit("connection lost");
-                // connection is dead
                 this.failedPingCount++;
+                logger_1.log(`ping failed (#${this.failedPingCount})`, "debug");
+                this.emit("ping failed", this.failedPingCount);
+                if (oldValue === true) {
+                    logger_1.log("The connection was lost", "debug");
+                    this.emit("connection lost");
+                }
+                // connection is dead
                 if (this.failedPingCount >= this.options.failedPingCountUntilOffline) {
                     if (this.failedPingCount === this.options.failedPingCountUntilOffline) {
                         // we just reached the threshold, say the gateway is offline
+                        logger_1.log(`${this.failedPingCount} consecutive pings failed. The gateway is offline.`, "debug");
                         this.emit("gateway offline");
                     }
                     // if we should reconnect automatically, count the offline pings
                     if (this.options.reconnectionEnabled) {
+                        this.offlinePingCount++;
                         // as soon as we pass the threshold, reset the client
                         if (this.offlinePingCount >= this.options.offlinePingCountUntilReconnect) {
-                            if (this.resetAttempts <= this.options.maximumReconnects) {
+                            if (this.resetAttempts < this.options.maximumReconnects) {
                                 // trigger a reconnect
-                                this.emit("reconnecting");
-                                this.client.reset();
                                 this.offlinePingCount = 0;
                                 this.resetAttempts++;
+                                logger_1.log(`Trying to reconnect... Attempt ${this.resetAttempts} of ${this.options.maximumReconnects === Number.POSITIVE_INFINITY ? "∞" : this.options.maximumReconnects}`, "debug");
+                                this.emit("reconnecting", this.resetAttempts, this.options.maximumReconnects);
+                                this.client.reset();
                             }
-                            else {
+                            else if (this.resetAttempts === this.options.maximumReconnects) {
                                 // don't try anymore
+                                logger_1.log("Maximum reconnect attempts reached... giving up.", "debug");
                                 this.emit("give up");
+                                // increase the counter once more so this branch doesn't get hit
+                                this.resetAttempts++;
                             }
                         }
                     }
                 }
             }
             // schedule the next ping
-            const nextTimeout = this.options.pingInterval * Math.pow(this.options.failedPingBackoffFactor, Math.min(5, this.failedPingCount));
-            this.pingTimer = setTimeout(() => this.pingThread, nextTimeout);
+            const nextTimeout = Math.round(this.options.pingInterval * Math.pow(this.options.failedPingBackoffFactor, Math.min(5, this.failedPingCount)));
+            logger_1.log("setting next timeout in " + nextTimeout, "debug");
+            this.pingTimer = setTimeout(() => this.pingThread(), nextTimeout);
         });
     }
 }
