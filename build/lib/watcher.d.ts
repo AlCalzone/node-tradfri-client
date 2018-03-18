@@ -18,6 +18,15 @@ export interface ConnectionWatcherOptions {
     offlinePingCountUntilReconnect: number;
     /** After how many failed reconnects we give up. Number.POSITIVE_INFINITY to never gonna give you up, never gonna let you down... */
     maximumReconnects: number;
+    /** How many tries for the initial connection should be attempted */
+    maximumConnectionAttempts: number;
+    /** The interval in ms between consecutive connection attempts */
+    connectionInterval: number;
+    /**
+     * How much the interval between consecutive connection attempts should be increased.
+     * The actual interval is calculated by <connection interval> * <backoff factor> ** <min(5, # failed attempts)>
+     */
+    failedConnectionBackoffFactor: number;
 }
 export declare type ConnectionEvents = "ping succeeded" | "ping failed" | "connection alive" | "connection lost" | "gateway offline" | "reconnecting" | "give up";
 export declare type PingFailedCallback = (failedPingCount: number) => void;
@@ -54,7 +63,8 @@ export interface ConnectionWatcher {
 export declare class ConnectionWatcher extends EventEmitter {
     private client;
     constructor(client: TradfriClient, options?: Partial<ConnectionWatcherOptions>);
-    private options;
+    private _options;
+    readonly options: ConnectionWatcherOptions;
     private pingTimer;
     /** Starts watching the connection */
     start(): void;

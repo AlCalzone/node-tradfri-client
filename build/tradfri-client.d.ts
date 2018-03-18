@@ -17,7 +17,8 @@ export declare type GroupRemovedCallback = (instanceId: number) => void;
 export declare type SceneUpdatedCallback = (groupId: number, scene: Scene) => void;
 export declare type SceneRemovedCallback = (groupId: number, instanceId: number) => void;
 export declare type ErrorCallback = (e: Error) => void;
-export declare type ObservableEvents = "device updated" | "device removed" | "group updated" | "group removed" | "scene updated" | "scene removed" | "error";
+export declare type ConnectionFailedCallback = (attempt: number, maxAttempts: number) => void;
+export declare type ObservableEvents = "device updated" | "device removed" | "group updated" | "group removed" | "scene updated" | "scene removed" | "error" | "connection failed";
 export interface TradfriClient {
     on(event: "device updated", callback: DeviceUpdatedCallback): this;
     on(event: "device removed", callback: DeviceRemovedCallback): this;
@@ -29,6 +30,7 @@ export interface TradfriClient {
     on(event: "ping succeeded", callback: () => void): this;
     on(event: "ping failed", callback: PingFailedCallback): this;
     on(event: "connection alive", callback: () => void): this;
+    on(event: "connection failed", callback: ConnectionFailedCallback): this;
     on(event: "connection lost", callback: () => void): this;
     on(event: "gateway offline", callback: () => void): this;
     on(event: "reconnecting", callback: ReconnectingCallback): this;
@@ -43,6 +45,7 @@ export interface TradfriClient {
     removeListener(event: "ping succeeded", callback: () => void): this;
     removeListener(event: "ping failed", callback: PingFailedCallback): this;
     removeListener(event: "connection alive", callback: () => void): this;
+    removeListener(event: "connection failed", callback: ConnectionFailedCallback): this;
     removeListener(event: "connection lost", callback: () => void): this;
     removeListener(event: "gateway offline", callback: () => void): this;
     removeListener(event: "reconnecting", callback: ReconnectingCallback): this;
