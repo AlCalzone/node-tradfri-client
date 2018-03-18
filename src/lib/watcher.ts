@@ -171,6 +171,11 @@ export class ConnectionWatcher extends EventEmitter {
 			if (oldValue === false) {
 				log(`The connection is alive again after ${this.failedPingCount} failed pings`, "debug");
 				this.emit("connection alive");
+				// also restore the observers if necessary
+				if (this.resetAttempts > 0) {
+					this.client.restoreObservers().catch(() => { /* doesn't matter, will be handled by the next ping */ });
+					// don't await or we might get stuck when the promise gets dropped
+				}
 			}
 			// reset all counters because the connection is good again
 			this.failedPingCount = 0;
@@ -204,7 +209,7 @@ export class ConnectionWatcher extends EventEmitter {
 							this.resetAttempts++;
 							log(`Trying to reconnect... Attempt ${this.resetAttempts} of ${this._options.maximumReconnects === Number.POSITIVE_INFINITY ? "∞" : this._options.maximumReconnects}`, "debug");
 							this.emit("reconnecting", this.resetAttempts, this._options.maximumReconnects);
-							this.client.reset();
+							this.client.reset(true);
 						} else if (this.resetAttempts === this._options.maximumReconnects) {
 							// don't try anymore
 							log("Maximum reconnect attempts reached... giving up.", "debug");

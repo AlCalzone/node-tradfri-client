@@ -255,11 +255,15 @@ Check the reachability of the gateway using inexpensive CoAP pings. The optional
 
 ### Resetting the connection
 ```TS
-tradfri.reset();
+tradfri.reset([preserveObservers: boolean]);
 ```
-After a connection loss or reboot of another endpoint, the currently active connection params might no longer be valid. In this case, use the reset method to invalidate the stored connection params, so the next request will use a fresh connection.
+After a connection loss or reboot of the gateway, the currently active connection params might no longer be valid. In this case, use the reset method to invalidate the stored connection params, so the next request will use a fresh connection.
 
-This causes all requests to be dropped and clears all observations. 
+This causes all requests to be dropped and clears all observations. To preserve the observers, pass `true` to the method. When the connection is alive again, you can then call
+```TS
+await tradfri.restoreObservers();
+```
+to re-activate all observers and their callbacks.
 
 **Note:** Promises belonging to any pending connections, requests or observers will not be fulfilled anymore and you should delete all references to them. In that case, the `"error"` event will be emitted (once or multiple times) with an error with code `TradfriClient.NetworkReset`.
 
@@ -597,7 +601,12 @@ All parameters of this object are optional and use the default values if not pro
 
 **Note:** Reconnection internally calls the `reset()` method. This means pending connections and promises will be dropped and the `"error"` event may be emitted aswell. See [resetting the connection](#resetting-the-connection) for details.
 
+The automatic reconnection tries to restore all previously defined observers as soon as the connection is alive again.
+
 ## Changelog
+
+#### __WORK IN PROGRESS__
+* (AlCalzone) Automatic reconnection now restores observers
 
 #### 0.12.1 (2018-03-18)
 * (AlCalzone) Added automatic retrying of the initial connection (if already authenticated)

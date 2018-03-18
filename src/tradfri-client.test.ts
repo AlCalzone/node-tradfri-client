@@ -507,6 +507,70 @@ describe("tradfri-client => observing devices => ", () => {
 
 });
 
+describe("tradfri-client => restoring observers => ", () => {
+
+	// Setup the mock
+	const {
+		tradfri,
+		devicesUrl,
+		fakeCoap,
+		callbacks,
+		createStubs,
+		restoreStubs,
+		resetStubHistory,
+	} = createNetworkMock();
+	before(createStubs);
+	after(restoreStubs);
+	afterEach(resetStubHistory);
+
+	it("device observers should be restored using observeDevices after a soft-reset and pick up changes while offline", async () => {
+		// SETUP: Create devices and observers
+		// remember the deferred promise as this only resolves after all responses have been received
+		const devicesPromise = tradfri.observeDevices();
+		let devices = [65536, 65537];
+
+		await callbacks.observeDevices(createResponse(devices));
+		for (const dev of devices) {
+			await callbacks.observeDevice[dev](createEmptyAccessoryResponse(dev));
+		}
+
+		// now the deferred promise should have resolved
+		await devicesPromise;
+
+		// actual test: Reset everything
+		tradfri.reset(true);
+
+		const updatedSpy = spy();
+		tradfri.on("device updated", updatedSpy);
+
+		fakeCoap.observe.resetHistory();
+
+		const restorePromise = tradfri.restoreObservers();
+
+		fakeCoap.observe.should.have.been.calledOnce;
+		fakeCoap.observe.should.have.been.calledWith(devicesUrl);
+		fakeCoap.observe.resetHistory();
+
+		// tell the observer that we now have 3 devices
+		devices = [65536, 65537, 65538];
+		await callbacks.observeDevices(createResponse(devices));
+
+		fakeCoap.observe.should.have.been.calledThrice;
+		for (const dev of devices) {
+			fakeCoap.observe.should.have.been.calledWith(`${devicesUrl}/${dev}`);
+		}
+		for (const dev of devices) {
+			await callbacks.observeDevice[dev](createEmptyAccessoryResponse(dev));
+		}
+
+		// now the promise should have resolved
+		await restorePromise;
+		for (const dev of devices) {
+			expect(updatedSpy.getCalls().some(call => (call.args[0] as Accessory).instanceId === dev)).to.be.true;
+		}
+	});
+});
+
 describe("tradfri-client => fixing properties => ", () => {
 
 	// Setup the mock
