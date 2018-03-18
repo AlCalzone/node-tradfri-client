@@ -4,7 +4,7 @@ async function main() {
 	const tradfri = new TradfriClient("gw-b072bf257a41", {watchConnection: {
 		pingInterval: 2000,
 		failedPingBackoffFactor: 1,
-		maximumReconnects: 3,
+		// maximumReconnects: 3,
 		failedPingCountUntilOffline: 3,
 		connectionInterval: 10000,
 		failedConnectionBackoffFactor: 1.2,
@@ -21,6 +21,8 @@ async function main() {
 		.on("give up", () => console.log("giving up..."))
 	;
 	await tradfri.connect("tradfri_1509642359115", "gzqZY5HUlFOOVu9f");
-	console.log("success");
+	
+	tradfri.on("device updated", (acc) => console.log(`device with ID ${acc.instanceId} updated...`));
+	await tradfri.observeDevices();
 }
 main();

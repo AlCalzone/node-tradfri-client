@@ -108,6 +108,8 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 
 	/** Automatic connection watching */
 	private watcher: ConnectionWatcher;
+	/** A dictionary of the observer callbacks. Used to restore it after a soft reset */
+	private rememberedObserveCallbacks = new Map<string, (resp: CoapResponse) => void>();
 
 	// tslint:disable:unified-signatures
 	constructor(hostname: string)
@@ -227,7 +229,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 * @returns The identity and psk to use for future connections. Store these!
 	 * @throws TradfriError
 	 */
-	public async authenticate(securityCode: string): Promise<{identity: string, psk: string}> {
+	public async authenticate(securityCode: string): Promise<{ identity: string, psk: string }> {
 		// first, check try to connect with the security code
 		log("authenticate() > trying to connect with the security code", "debug");
 		switch (await this.tryToConnect("Client_identity", securityCode)) {
@@ -272,7 +274,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		const pskResponse = JSON.parse(response.payload.toString("utf8"));
 		const psk = pskResponse["9091"];
 
-		return {identity, psk};
+		return { identity, psk };
 	}
 
 	/**
@@ -289,6 +291,8 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 
 		// start observing
 		this.observedPaths.push(observerUrl);
+		// and remember the callback to restore it after a soft-reset
+		this.rememberedObserveCallbacks.set(observerUrl, callback);
 		await this.swallowInternalCoapRejections(
 			coap.observe(observerUrl, "get", callback),
 		);
@@ -322,14 +326,17 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 
 		coap.stopObserving(observerUrl);
 		this.observedPaths.splice(index, 1);
+		if (this.rememberedObserveCallbacks.has(observerUrl)) this.rememberedObserveCallbacks.delete(observerUrl);
 	}
 
 	/**
 	 * Resets the underlying CoAP client and clears all observers.
+	 * @param preserveObservers Whether the active observers should be remembered to restore them later
 	 */
-	public reset(): void {
+	public reset(preserveObservers: boolean = false): void {
 		coap.reset();
 		this.clearObservers();
+		if (!preserveObservers) this.rememberedObserveCallbacks.clear();
 	}
 
 	/**
@@ -346,6 +353,42 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 */
 	private clearObservers(): void {
 		this.observedPaths = [];
+	}
+
+	/**
+	 * Restores all previously remembered observers with their original callbacks
+	 * Call this AFTER a dead connection was restored
+	 */
+	public async restoreObservers() {
+		log("restoring previously used observers", "debug");
+
+		let devicesRestored: boolean = false;
+		const devicesPath = this.getObserverUrl(coapEndpoints.devices);
+		let groupsAndScenesRestored: boolean = false;
+		const groupsPath = this.getObserverUrl(coapEndpoints.groups);
+		const scenesPath = this.getObserverUrl(coapEndpoints.scenes);
+
+		for (const [path, callback] of this.rememberedObserveCallbacks.entries()) {
+			if (path.indexOf(devicesPath) > -1) {
+				if (!devicesRestored) {
+					// restore all device observers (with a new callback)
+					log("restoring device observers", "debug");
+					await this.observeDevices();
+					devicesRestored = true;
+				}
+			} else if (path.indexOf(groupsPath) > -1 || path.indexOf(scenesPath) > -1) {
+				if (!groupsAndScenesRestored) {
+					// restore all group and scene observers (with a new callback)
+					log("restoring groups and scene observers", "debug");
+					await this.observeGroupsAndScenes;
+					groupsAndScenesRestored = true;
+				}
+			} else {
+				// restore all custom observers with the old callback
+				log(`restoring custom observer for path "${path}"`, "debug");
+				await this.observeResource(path, callback);
+			}
+		}
 	}
 
 	private observeDevicesPromise: DeferredPromise<void>;
@@ -430,7 +473,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		this.observedPaths
 			.filter(p => p.startsWith(pathPrefix))
 			.forEach(p => this.stopObservingResource(p))
-		;
+			;
 	}
 
 	// gets called whenever "get /15001/<instanceId>" updates
@@ -451,7 +494,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 			.parse(result)
 			.fixBuggedProperties()
 			.createProxy()
-		;
+			;
 		// remember the device object, so we can later use it as a reference for updates
 		// store a clone, so we don't have to care what the calling library does
 		this.devices[instanceId] = accessory.clone();
@@ -532,7 +575,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 									this.observeGroupsPromise = null;
 									this.observeScenesPromises = null;
 								})
-							;
+								;
 						}
 					} else {
 						this.observeGroupsPromise.reject(`The group with the id ${id} could not be observed`);
@@ -591,7 +634,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 			.parse(result)
 			.fixBuggedProperties()
 			.createProxy()
-		;
+			;
 		// remember the group object, so we can later use it as a reference for updates
 		let groupInfo: GroupInfo;
 		if (!(instanceId in this.groups)) {
@@ -693,7 +736,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 			.parse(result)
 			.fixBuggedProperties()
 			.createProxy()
-		;
+			;
 		// remember the scene object, so we can later use it as a reference for updates
 		// store a clone, so we don't have to care what the calling library does
 		this.groups[groupId].scenes[instanceId] = scene.clone();
@@ -814,7 +857,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		const reference = group.clone();
 		if (force) {
 			// to force the properties being sent, we need to reset them on the reference
-			const inverseOperation = composeObject<number|boolean>(
+			const inverseOperation = composeObject<number | boolean>(
 				entries(operation)
 					.map(([key, value]) => {
 						switch (typeof value) {

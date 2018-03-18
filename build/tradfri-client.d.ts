@@ -74,6 +74,8 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
     private ipsoOptions;
     /** Automatic connection watching */
     private watcher;
+    /** A dictionary of the observer callbacks. Used to restore it after a soft reset */
+    private rememberedObserveCallbacks;
     constructor(hostname: string);
     constructor(hostname: string, customLogger: LoggerFunction);
     constructor(hostname: string, options: Partial<TradfriOptions>);
@@ -122,8 +124,9 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
     stopObservingResource(path: string): void;
     /**
      * Resets the underlying CoAP client and clears all observers.
+     * @param preserveObservers Whether the active observers should be remembered to restore them later
      */
-    reset(): void;
+    reset(preserveObservers?: boolean): void;
     /**
      * Closes the underlying CoAP client and clears all observers.
      */
@@ -133,6 +136,11 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
      * This does not stop observing the resources if the observers are still active
      */
     private clearObservers();
+    /**
+     * Restores all previously remembered observers with their original callbacks
+     * Call this AFTER a dead connection was restored
+     */
+    restoreObservers(): Promise<void>;
     private observeDevicesPromise;
     /**
      * Sets up an observer for all devices

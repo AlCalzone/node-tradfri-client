@@ -36,6 +36,8 @@ class TradfriClient extends events_1.EventEmitter {
         this.groups = {};
         /** Options regarding IPSO objects and serialization */
         this.ipsoOptions = {};
+        /** A dictionary of the observer callbacks. Used to restore it after a soft reset */
+        this.rememberedObserveCallbacks = new Map();
         this.requestBase = `coaps://${hostname}:5684/`;
         if (typeof optionsOrLogger === "function") {
             // Legacy version: 2nd parameter is a logger
@@ -174,6 +176,8 @@ class TradfriClient extends events_1.EventEmitter {
                 return false;
             // start observing
             this.observedPaths.push(observerUrl);
+            // and remember the callback to restore it after a soft-reset
+            this.rememberedObserveCallbacks.set(observerUrl, callback);
             yield this.swallowInternalCoapRejections(node_coap_client_1.CoapClient.observe(observerUrl, "get", callback));
             return true;
         });
@@ -203,13 +207,18 @@ class TradfriClient extends events_1.EventEmitter {
             return;
         node_coap_client_1.CoapClient.stopObserving(observerUrl);
         this.observedPaths.splice(index, 1);
+        if (this.rememberedObserveCallbacks.has(observerUrl))
+            this.rememberedObserveCallbacks.delete(observerUrl);
     }
     /**
      * Resets the underlying CoAP client and clears all observers.
+     * @param preserveObservers Whether the active observers should be remembered to restore them later
      */
-    reset() {
+    reset(preserveObservers = false) {
         node_coap_client_1.CoapClient.reset();
         this.clearObservers();
+        if (!preserveObservers)
+            this.rememberedObserveCallbacks.clear();
     }
     /**
      * Closes the underlying CoAP client and clears all observers.
@@ -225,6 +234,43 @@ class TradfriClient extends events_1.EventEmitter {
      */
     clearObservers() {
         this.observedPaths = [];
+    }
+    /**
+     * Restores all previously remembered observers with their original callbacks
+     * Call this AFTER a dead connection was restored
+     */
+    restoreObservers() {
+        return __awaiter(this, void 0, void 0, function* () {
+            logger_1.log("restoring previously used observers", "debug");
+            let devicesRestored = false;
+            const devicesPath = this.getObserverUrl(endpoints_1.endpoints.devices);
+            let groupsAndScenesRestored = false;
+            const groupsPath = this.getObserverUrl(endpoints_1.endpoints.groups);
+            const scenesPath = this.getObserverUrl(endpoints_1.endpoints.scenes);
+            for (const [path, callback] of this.rememberedObserveCallbacks.entries()) {
+                if (path.indexOf(devicesPath) > -1) {
+                    if (!devicesRestored) {
+                        // restore all device observers (with a new callback)
+                        logger_1.log("restoring device observers", "debug");
+                        yield this.observeDevices();
+                        devicesRestored = true;
+                    }
+                }
+                else if (path.indexOf(groupsPath) > -1 || path.indexOf(scenesPath) > -1) {
+                    if (!groupsAndScenesRestored) {
+                        // restore all group and scene observers (with a new callback)
+                        logger_1.log("restoring groups and scene observers", "debug");
+                        yield this.observeGroupsAndScenes;
+                        groupsAndScenesRestored = true;
+                    }
+                }
+                else {
+                    // restore all custom observers with the old callback
+                    logger_1.log(`restoring custom observer for path "${path}"`, "debug");
+                    yield this.observeResource(path, callback);
+                }
+            }
+        });
     }
     /**
      * Sets up an observer for all devices
