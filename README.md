@@ -538,7 +538,7 @@ A DeviceInfo object contains general information about a device. It has the foll
 ## Automatically watching the connection and reconnecting
 **Note:** This feature is currently experimental
 
-This libara allows you to watch the connection and automatically reconnect without shipping your own reconnection routine. Retrying the initial connection is also possible **if you have already authenticated**.
+This library allows you to watch the connection and automatically reconnect without shipping your own reconnection routine. Retrying the initial connection is also possible **if you have already authenticated**.
 
 You can enable it by setting the `watchConnection` param of the constructor options to `true` or an options object with the following structure:
 ```TS
