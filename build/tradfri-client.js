@@ -71,7 +71,9 @@ class TradfriClient extends events_1.EventEmitter {
      */
     connect(identity, psk) {
         return __awaiter(this, void 0, void 0, function* () {
-            const maxAttempts = this.watcher != null ? this.watcher.options.maximumConnectionAttempts : 1;
+            const maxAttempts = (this.watcher != null && this.watcher.options.reconnectionEnabled) ?
+                this.watcher.options.maximumConnectionAttempts :
+                1;
             const interval = this.watcher != null && this.watcher.options.connectionInterval;
             const backoffFactor = this.watcher != null && this.watcher.options.failedConnectionBackoffFactor;
             for (let attempt = 0; attempt < maxAttempts; attempt++) {

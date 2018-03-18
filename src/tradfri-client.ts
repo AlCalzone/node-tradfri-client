@@ -155,7 +155,9 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 * @param psk The pre-shared key belonging to the identity.
 	 */
 	public async connect(identity: string, psk: string): Promise<true> {
-		const maxAttempts = this.watcher != null ? this.watcher.options.maximumConnectionAttempts : 1;
+		const maxAttempts = (this.watcher != null && this.watcher.options.reconnectionEnabled) ?
+			this.watcher.options.maximumConnectionAttempts :
+			1;
 		const interval = this.watcher != null && this.watcher.options.connectionInterval;
 		const backoffFactor = this.watcher != null && this.watcher.options.failedConnectionBackoffFactor;
 

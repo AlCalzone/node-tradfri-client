@@ -241,6 +241,8 @@ try {
     }
 }
 ```
+If you have [automatic reconnection](#automatically-watching-the-connection-and-reconnecting) enabled, this method can retry for a long time before resolving or rejecting, depending on the configuration.
+
 **NOTE:** As of v0.6.0, this no longer resolves with `false` if the connection was unsuccessful. Instead, it throws (or rejects with) a `TradfriError` which contains details about why the connection failed.
 
 ### Pinging the gateway
@@ -534,7 +536,9 @@ A DeviceInfo object contains general information about a device. It has the foll
 
 
 ## Automatically watching the connection and reconnecting
-**Note:** This feature is currently experimental and allows you to watch the connection and automatically reconnect without shipping your own reconnection routine.
+**Note:** This feature is currently experimental
+
+This libara allows you to watch the connection and automatically reconnect without shipping your own reconnection routine. Retrying the initial connection is also possible **if you have already authenticated**.
 
 You can enable it by setting the `watchConnection` param of the constructor options to `true` or an options object with the following structure:
 ```TS
@@ -551,7 +555,7 @@ interface ConnectionWatcherOptions {
      */
     failedPingBackoffFactor: number; // DEFAULT: 1.5
 
-    /** Whether automatic reconnection is enabled */
+    /** Whether automatic reconnection and retrying the initial connection is enabled */
     reconnectionEnabled: boolean; // DEFAULT: enabled
     /** 
      * How many pings have to consecutively fail while the gateway is offline
@@ -560,6 +564,19 @@ interface ConnectionWatcherOptions {
     offlinePingCountUntilReconnect: number; // DEFAULT: 3
     /** After how many failed reconnects we give up */
     maximumReconnects: number; // DEFAULT: infinite
+
+    /** How many tries for the initial connection should be attempted */
+    maximumConnectionAttempts: number; // DEFAULT: infinite
+    /** The interval in ms between consecutive connection attempts */
+    connectionInterval: number; // DEFAULT: 10000ms
+    /**
+     * How much the interval between consecutive connection attempts 
+     * should be increased. The actual interval is calculated by 
+     * <connection interval> * <backoff factor> ** <failed attempts>
+     * with the number of failed attempts capped at 5
+     */
+    failedConnectionBackoffFactor: number; // DEFAULT: 1.5
+
 }
 ```
 All parameters of this object are optional and use the default values if not provided. Monitoring the connection state is possible by subscribing to the following events, similar to [subscribing to updates](#subscribe-to-updates):
@@ -568,6 +585,9 @@ All parameters of this object are optional and use the default values if not pro
 * `"ping failed"`: Pinging the gateway has failed one or multiple times in a row. Callback arguments: 
   * `failedPingCount`: number
 * `"connection lost"`: Raised after after the first failed ping. Callback arguments: none.
+* `"connection failed"`: Raised when an attempt for the initial connection fails. Callback arguments:
+  * `connectionAttempt`: number
+  * `maximumAttempts`: number
 * `"connection alive"`: The connection is alive again after one or more pings have failed. Callback arguments: none.
 * `"gateway offline"`: The threshold for consecutive failed pings has been reached, so the gateway is assumed offline. Callback arguments: none.
 * `"reconnecting"`: The threshold for failed pings while the gateway is offline has been reached. A reconnect attempt was started. Callback arguments:
