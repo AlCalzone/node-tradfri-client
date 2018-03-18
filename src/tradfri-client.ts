@@ -13,6 +13,7 @@ import { LightOperation } from "./lib/light";
 import { log, LoggerFunction, setCustomLogger } from "./lib/logger";
 import { composeObject, entries } from "./lib/object-polyfill";
 import { OperationProvider } from "./lib/operation-provider";
+import { wait } from "./lib/promises";
 import { Scene } from "./lib/scene";
 import { TradfriError, TradfriErrorCodes } from "./lib/tradfri-error";
 import { ConnectionEvents, ConnectionWatcher, ConnectionWatcherOptions, PingFailedCallback, ReconnectingCallback } from "./lib/watcher";
@@ -27,6 +28,7 @@ export type GroupRemovedCallback = (instanceId: number) => void;
 export type SceneUpdatedCallback = (groupId: number, scene: Scene) => void;
 export type SceneRemovedCallback = (groupId: number, instanceId: number) => void;
 export type ErrorCallback = (e: Error) => void;
+export type ConnectionFailedCallback = (attempt: number, maxAttempts: number) => void;
 
 export type ObservableEvents =
 	"device updated" |
@@ -35,7 +37,8 @@ export type ObservableEvents =
 	"group removed" |
 	"scene updated" |
 	"scene removed" |
-	"error"
+	"error" |
+	"connection failed"
 	;
 
 // tslint:disable:unified-signatures
@@ -52,6 +55,7 @@ export interface TradfriClient {
 	on(event: "ping succeeded", callback: () => void): this;
 	on(event: "ping failed", callback: PingFailedCallback): this;
 	on(event: "connection alive", callback: () => void): this;
+	on(event: "connection failed", callback: ConnectionFailedCallback): this;
 	on(event: "connection lost", callback: () => void): this;
 	on(event: "gateway offline", callback: () => void): this;
 	on(event: "reconnecting", callback: ReconnectingCallback): this;
@@ -68,6 +72,7 @@ export interface TradfriClient {
 	removeListener(event: "ping succeeded", callback: () => void): this;
 	removeListener(event: "ping failed", callback: PingFailedCallback): this;
 	removeListener(event: "connection alive", callback: () => void): this;
+	removeListener(event: "connection failed", callback: ConnectionFailedCallback): this;
 	removeListener(event: "connection lost", callback: () => void): this;
 	removeListener(event: "gateway offline", callback: () => void): this;
 	removeListener(event: "reconnecting", callback: ReconnectingCallback): this;
@@ -150,26 +155,46 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 * @param psk The pre-shared key belonging to the identity.
 	 */
 	public async connect(identity: string, psk: string): Promise<true> {
-		switch (await this.tryToConnect(identity, psk)) {
-			case true: {
-				// start connection watching
-				// TODO: Figure out how to handle retrying the initial connection
-				if (this.watcher != null) this.watcher.start();
-				return true;
+		const maxAttempts = (this.watcher != null && this.watcher.options.reconnectionEnabled) ?
+			this.watcher.options.maximumConnectionAttempts :
+			1;
+		const interval = this.watcher != null && this.watcher.options.connectionInterval;
+		const backoffFactor = this.watcher != null && this.watcher.options.failedConnectionBackoffFactor;
+
+		for (let attempt = 0; attempt < maxAttempts; attempt++) {
+			if (attempt > 0) {
+				const nextTimeout = Math.round(interval * backoffFactor ** Math.min(5, attempt - 1));
+				log(`retrying connection in ${nextTimeout} ms`, "debug");
+				await wait(nextTimeout);
 			}
-			case "auth failed": throw new TradfriError(
-				"The provided credentials are not valid. Please re-authenticate!",
-				TradfriErrorCodes.AuthenticationFailed,
-			);
-			case "timeout": throw new TradfriError(
-				"The gateway did not respond in time.",
-				TradfriErrorCodes.ConnectionTimedOut,
-			);
-			case "error": throw new TradfriError(
-				"An unknown error occured while connecting to the gateway",
-				TradfriErrorCodes.ConnectionFailed,
-			);
+
+			switch (await this.tryToConnect(identity, psk)) {
+				case true: {
+					// start connection watching
+					if (this.watcher != null) this.watcher.start();
+					return true;
+				}
+				case "auth failed": throw new TradfriError(
+					"The provided credentials are not valid. Please re-authenticate!",
+					TradfriErrorCodes.AuthenticationFailed,
+				);
+				case "timeout": {
+					// retry if allowed
+					this.emit("connection failed", attempt + 1, maxAttempts);
+					continue;
+				}
+				case "error": throw new TradfriError(
+					"An unknown error occured while connecting to the gateway",
+					TradfriErrorCodes.ConnectionFailed,
+				);
+			}
 		}
+
+		throw new TradfriError(
+			`The gateway did not respond ${maxAttempts === 1 ? "in time" : `after ${maxAttempts} tries`}.`,
+			TradfriErrorCodes.ConnectionTimedOut,
+		);
+
 	}
 
 	/**

@@ -19,6 +19,7 @@ const endpoints_1 = require("./lib/endpoints");
 const group_1 = require("./lib/group");
 const logger_1 = require("./lib/logger");
 const object_polyfill_1 = require("./lib/object-polyfill");
+const promises_1 = require("./lib/promises");
 const scene_1 = require("./lib/scene");
 const tradfri_error_1 = require("./lib/tradfri-error");
 const watcher_1 = require("./lib/watcher");
@@ -70,18 +71,34 @@ class TradfriClient extends events_1.EventEmitter {
      */
     connect(identity, psk) {
         return __awaiter(this, void 0, void 0, function* () {
-            switch (yield this.tryToConnect(identity, psk)) {
-                case true: {
-                    // start connection watching
-                    // TODO: Figure out how to handle retrying the initial connection
-                    if (this.watcher != null)
-                        this.watcher.start();
-                    return true;
+            const maxAttempts = (this.watcher != null && this.watcher.options.reconnectionEnabled) ?
+                this.watcher.options.maximumConnectionAttempts :
+                1;
+            const interval = this.watcher != null && this.watcher.options.connectionInterval;
+            const backoffFactor = this.watcher != null && this.watcher.options.failedConnectionBackoffFactor;
+            for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                if (attempt > 0) {
+                    const nextTimeout = Math.round(interval * Math.pow(backoffFactor, Math.min(5, attempt - 1)));
+                    logger_1.log(`retrying connection in ${nextTimeout} ms`, "debug");
+                    yield promises_1.wait(nextTimeout);
                 }
-                case "auth failed": throw new tradfri_error_1.TradfriError("The provided credentials are not valid. Please re-authenticate!", tradfri_error_1.TradfriErrorCodes.AuthenticationFailed);
-                case "timeout": throw new tradfri_error_1.TradfriError("The gateway did not respond in time.", tradfri_error_1.TradfriErrorCodes.ConnectionTimedOut);
-                case "error": throw new tradfri_error_1.TradfriError("An unknown error occured while connecting to the gateway", tradfri_error_1.TradfriErrorCodes.ConnectionFailed);
+                switch (yield this.tryToConnect(identity, psk)) {
+                    case true: {
+                        // start connection watching
+                        if (this.watcher != null)
+                            this.watcher.start();
+                        return true;
+                    }
+                    case "auth failed": throw new tradfri_error_1.TradfriError("The provided credentials are not valid. Please re-authenticate!", tradfri_error_1.TradfriErrorCodes.AuthenticationFailed);
+                    case "timeout": {
+                        // retry if allowed
+                        this.emit("connection failed", attempt + 1, maxAttempts);
+                        continue;
+                    }
+                    case "error": throw new tradfri_error_1.TradfriError("An unknown error occured while connecting to the gateway", tradfri_error_1.TradfriErrorCodes.ConnectionFailed);
+                }
             }
+            throw new tradfri_error_1.TradfriError(`The gateway did not respond ${maxAttempts === 1 ? "in time" : `after ${maxAttempts} tries`}.`, tradfri_error_1.TradfriErrorCodes.ConnectionTimedOut);
         });
     }
     /**

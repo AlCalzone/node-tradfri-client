@@ -20,6 +20,16 @@ export interface ConnectionWatcherOptions {
 	offlinePingCountUntilReconnect: number;
 	/** After how many failed reconnects we give up. Number.POSITIVE_INFINITY to never gonna give you up, never gonna let you down... */
 	maximumReconnects: number;
+
+	/** How many tries for the initial connection should be attempted */
+	maximumConnectionAttempts: number;
+	/** The interval in ms between consecutive connection attempts */
+	connectionInterval: number;
+	/**
+	 * How much the interval between consecutive connection attempts should be increased.
+	 * The actual interval is calculated by <connection interval> * <backoff factor> ** <min(5, # failed attempts)>
+	 */
+	failedConnectionBackoffFactor: number;
 }
 
 const defaultOptions: ConnectionWatcherOptions = Object.freeze({
@@ -30,6 +40,10 @@ const defaultOptions: ConnectionWatcherOptions = Object.freeze({
 	reconnectionEnabled: true, // when the watch is enabled, also reconnect
 	offlinePingCountUntilReconnect: 3,
 	maximumReconnects: Number.POSITIVE_INFINITY, // don't stop believing
+
+	connectionInterval: 10000, // 10s
+	failedConnectionBackoffFactor: 1.5,
+	maximumConnectionAttempts: Number.POSITIVE_INFINITY, // try to connect until the end of time
 });
 
 function checkOptions(opts: Partial<ConnectionWatcherOptions>) {
@@ -46,7 +60,16 @@ function checkOptions(opts: Partial<ConnectionWatcherOptions>) {
 		throw new Error("The failed ping count before a reconnect attempt must be between 1 and 10");
 	}
 	if (opts.maximumReconnects != null && opts.maximumReconnects < 1) {
-		throw new Error("The maximum number of reconnect attempts must be positive");
+		throw new Error("The maximum number of reconnect attempts must be at least 1");
+	}
+	if (opts.connectionInterval != null && (opts.connectionInterval < 1000 || opts.connectionInterval > 5 * 60000)) {
+		throw new Error("The connection interval must be between 1s and 5 minutes");
+	}
+	if (opts.failedConnectionBackoffFactor != null && (opts.failedConnectionBackoffFactor < 1 || opts.failedConnectionBackoffFactor > 3)) {
+		throw new Error("The interval back-off factor for failed connections must be between 1 and 3");
+	}
+	if (opts.maximumConnectionAttempts != null && opts.maximumConnectionAttempts < 1) {
+		throw new Error("The maximum number of connection attempts must be at least 1");
 	}
 }
 
@@ -105,17 +128,20 @@ export class ConnectionWatcher extends EventEmitter {
 		super();
 		if (options == null) options = {};
 		checkOptions(options);
-		this.options = Object.assign({}, defaultOptions, options);
+		this._options = Object.assign({}, defaultOptions, options);
 	}
 
-	private options: ConnectionWatcherOptions;
+	private _options: ConnectionWatcherOptions;
+	public get options() {
+		return this._options;
+	}
 	private pingTimer: NodeJS.Timer;
 
 	/** Starts watching the connection */
 	public start() {
 		if (this.pingTimer != null) throw new Error("The connection watcher is already running");
 		this.isActive = true;
-		this.pingTimer = setTimeout(() => this.pingThread(), this.options.pingInterval);
+		this.pingTimer = setTimeout(() => this.pingThread(), this._options.pingInterval);
 	}
 
 	private isActive: boolean;
@@ -160,26 +186,26 @@ export class ConnectionWatcher extends EventEmitter {
 			}
 
 			// connection is dead
-			if (this.failedPingCount >= this.options.failedPingCountUntilOffline) {
-				if (this.failedPingCount === this.options.failedPingCountUntilOffline) {
+			if (this.failedPingCount >= this._options.failedPingCountUntilOffline) {
+				if (this.failedPingCount === this._options.failedPingCountUntilOffline) {
 					// we just reached the threshold, say the gateway is offline
 					log(`${this.failedPingCount} consecutive pings failed. The gateway is offline.`, "debug");
 					this.emit("gateway offline");
 				}
 
 				// if we should reconnect automatically, count the offline pings
-				if (this.options.reconnectionEnabled) {
+				if (this._options.reconnectionEnabled) {
 					this.offlinePingCount++;
 					// as soon as we pass the threshold, reset the client
-					if (this.offlinePingCount >= this.options.offlinePingCountUntilReconnect) {
-						if (this.resetAttempts < this.options.maximumReconnects) {
+					if (this.offlinePingCount >= this._options.offlinePingCountUntilReconnect) {
+						if (this.resetAttempts < this._options.maximumReconnects) {
 							// trigger a reconnect
 							this.offlinePingCount = 0;
 							this.resetAttempts++;
-							log(`Trying to reconnect... Attempt ${this.resetAttempts} of ${this.options.maximumReconnects === Number.POSITIVE_INFINITY ? "∞" : this.options.maximumReconnects}`, "debug");
-							this.emit("reconnecting", this.resetAttempts, this.options.maximumReconnects);
+							log(`Trying to reconnect... Attempt ${this.resetAttempts} of ${this._options.maximumReconnects === Number.POSITIVE_INFINITY ? "∞" : this._options.maximumReconnects}`, "debug");
+							this.emit("reconnecting", this.resetAttempts, this._options.maximumReconnects);
 							this.client.reset();
-						} else if (this.resetAttempts === this.options.maximumReconnects) {
+						} else if (this.resetAttempts === this._options.maximumReconnects) {
 							// don't try anymore
 							log("Maximum reconnect attempts reached... giving up.", "debug");
 							this.emit("give up");
@@ -193,7 +219,7 @@ export class ConnectionWatcher extends EventEmitter {
 
 		// schedule the next ping
 		if (this.isActive) {
-			const nextTimeout = Math.round(this.options.pingInterval * this.options.failedPingBackoffFactor ** Math.min(5, this.failedPingCount));
+			const nextTimeout = Math.round(this._options.pingInterval * this._options.failedPingBackoffFactor ** Math.min(5, this.failedPingCount));
 			log("setting next timeout in " + nextTimeout, "debug");
 			this.pingTimer = setTimeout(() => this.pingThread(), nextTimeout);
 		}

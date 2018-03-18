@@ -8,7 +8,9 @@ import { spy, stub } from "sinon";
 import { CoapClient as coap, CoapResponse } from "node-coap-client";
 import { ContentFormats } from "node-coap-client/build/ContentFormats";
 import { MessageCode, MessageCodes } from "node-coap-client/build/Message";
+import { ConnectionWatcherOptions } from "../build/lib/watcher";
 import { Accessory, Light, TradfriClient } from "../src";
+import { TradfriOptions } from "../src/tradfri-client";
 
 export function createResponse(
 	payload: Buffer | string | any | null,
@@ -42,9 +44,10 @@ export function createErrorResponse(code: MessageCode = MessageCodes.clientError
  */
 export function createNetworkMock(
 	hostname: string = "localhost",
+	options?: Partial<TradfriOptions>,
 ) {
 
-	const tradfri = new TradfriClient(hostname);
+	const tradfri = new TradfriClient(hostname, options);
 
 	const devicesUrl = `coaps://${hostname}:5684/15001`;
 
