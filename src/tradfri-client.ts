@@ -326,7 +326,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 
 		coap.stopObserving(observerUrl);
 		this.observedPaths.splice(index, 1);
-		if (this.rememberedObserveCallbacks.has(observerUrl)) this.rememberedObserveCallbacks.delete(observerUrl);
+		this.rememberedObserveCallbacks.delete(observerUrl);
 	}
 
 	/**

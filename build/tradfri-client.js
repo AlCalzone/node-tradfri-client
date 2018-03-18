@@ -207,8 +207,7 @@ class TradfriClient extends events_1.EventEmitter {
             return;
         node_coap_client_1.CoapClient.stopObserving(observerUrl);
         this.observedPaths.splice(index, 1);
-        if (this.rememberedObserveCallbacks.has(observerUrl))
-            this.rememberedObserveCallbacks.delete(observerUrl);
+        this.rememberedObserveCallbacks.delete(observerUrl);
     }
     /**
      * Resets the underlying CoAP client and clears all observers.
