@@ -98,7 +98,7 @@ if (argv.dry) {
 	const d = new Date();
 	readme = readme.replace(
 		"#### __WORK IN PROGRESS__",
-		`#### ${newVersion} (${d.getFullYear()}-${padStart("" + d.getMonth() + 1, 2, "0")}-${padStart("" + d.getDay(), 2, "0")})`,
+		`#### ${newVersion} (${d.getFullYear()}-${padStart("" + (d.getMonth() + 1), 2, "0")}-${padStart("" + d.getDate(), 2, "0")})`,
 	);
 	fs.writeFileSync(readmePath, readme, "utf8");
 

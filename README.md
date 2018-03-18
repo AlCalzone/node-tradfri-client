@@ -599,14 +599,14 @@ All parameters of this object are optional and use the default values if not pro
 
 ## Changelog
 
-#### 0.12.1 (2018-21-00)
+#### 0.12.1 (2018-03-18)
 * (AlCalzone) Added automatic retrying of the initial connection (if already authenticated)
 
-#### 0.12.0 (2018-21-06)
+#### 0.12.0 (2018-03-17)
 * (AlCalzone) Fix rounding and hue/saturation when using raw CoAP values
 * (AlCalzone) Experimental support for automatic connection watching and reconnection
 
-#### 0.11.0 (2018-21-04) - WARNING: BREAKING CHANGES!
+#### 0.11.0 (2018-03-15) - WARNING: BREAKING CHANGES!
 * (AlCalzone) **BREAKING**: The `connect()` method now either resolves with `true` or rejects with an error detailing why the connection failed.
 * (AlCalzone) The error thrown by `authentication()` now correctly reflects why the authentication failed.
 * (AlCalzone) Swallow `"DTLS handshake timed out"` promise rejections and emit an `"error"` instead
