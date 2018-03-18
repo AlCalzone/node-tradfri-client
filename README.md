@@ -599,7 +599,7 @@ All parameters of this object are optional and use the default values if not pro
 
 ## Changelog
 
-#### __WORK IN PROGRESS__
+#### 0.12.1 (2018-21-00)
 * (AlCalzone) Added automatic retrying of the initial connection (if already authenticated)
 
 #### 0.12.0 (2018-21-06)
