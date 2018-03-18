@@ -4,7 +4,7 @@
 
 import { assert, expect, should, use } from "chai";
 import { CoapClient as coap, CoapResponse } from "node-coap-client";
-import { spy, stub } from "sinon";
+import { SinonFakeTimers, spy, stub, useFakeTimers } from "sinon";
 import * as sinonChai from "sinon-chai";
 import "./"; // dummy-import so index.ts is covered
 import { TradfriClient } from "./tradfri-client";
@@ -197,6 +197,82 @@ describe("tradfri-client => infrastructure => ", () => {
 		});
 	});
 
+});
+
+describe("tradfri-client => retrying the connection => ", () => {
+	let clock: SinonFakeTimers;
+
+	beforeEach(() => clock = useFakeTimers());
+	afterEach(() => clock.restore());
+
+	// Setup the mock
+	const {
+		tradfri,
+		devicesUrl,
+		fakeCoap,
+		callbacks,
+		createStubs,
+		restoreStubs,
+		resetStubHistory,
+	} = createNetworkMock(undefined, {
+		watchConnection: {
+			connectionInterval: 1000,
+			maximumConnectionAttempts: 3,
+		},
+	});
+	before(createStubs);
+	after(restoreStubs);
+	afterEach(resetStubHistory);
+
+	let connectionFailedPromise: DeferredPromise<void>;
+	// async hacked version of clock.runAll that waits for the async method to complete aswell
+	async function runAllAsync() {
+		clock.runAll();
+		connectionFailedPromise = createDeferredPromise();
+		await connectionFailedPromise;
+		connectionFailedPromise = null;
+	}
+	tradfri.on("connection failed", () => connectionFailedPromise && connectionFailedPromise.resolve());
+
+	it("should retry the connection as many times as configured and then reject", async () => {
+		fakeCoap.tryToConnect.returns("timeout");
+
+		// set up spies
+		const failedSpy = spy();
+		tradfri.on("connection failed", failedSpy);
+		const connectionPromise = tradfri.connect("foo", "bar");
+		// we configured 3 tries, so advance the timer thrice
+		for (let i = 1; i <= 3; i++) {
+			await runAllAsync();
+			failedSpy.should.have.been.calledWith(i, 3);
+		}
+
+		await expect(connectionPromise).to.be.rejectedWith("did not respond");
+
+		// back to square one
+		tradfri.removeListener("connection failed", failedSpy);
+		fakeCoap.tryToConnect.resetBehavior();
+	});
+
+	it("should work when any of the connection attempts succeeds", async () => {
+		fakeCoap.tryToConnect
+			.onFirstCall().returns("timeout")
+			.onSecondCall().returns("timeout")
+		;
+		fakeCoap.tryToConnect.returns(true);
+
+		const connectionPromise = tradfri.connect("foo", "bar");
+		// the first 2 attempts will be retried, so advance the timer twice
+		for (let i = 1; i <= 2; i++) {
+			await runAllAsync();
+		}
+		// now synchronously run the suceeding timer
+		clock.runAll();
+		await expect(connectionPromise).to.become(true);
+
+		// back to square one
+		fakeCoap.tryToConnect.resetBehavior();
+	});
 });
 
 describe("tradfri-client => observing resources => ", () => {

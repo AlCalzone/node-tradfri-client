@@ -17,11 +17,6 @@ should();
 // improve stubs for testing
 use(sinonChai);
 
-// timeout testing
-// beforeEach(() => {
-// 	clock = useFakeTimers();
-// });
-
 describe("connection watching => ", () => {
 
 	let clock: SinonFakeTimers;
@@ -54,6 +49,9 @@ describe("connection watching => ", () => {
 			{failedPingCountUntilOffline: 0}, {failedPingCountUntilOffline: 100},
 			{offlinePingCountUntilReconnect: 0}, {offlinePingCountUntilReconnect: 100},
 			{maximumReconnects: 0},
+			{connectionInterval: 0}, {connectionInterval: 1_000_000},
+			{failedConnectionBackoffFactor: 0.9}, {failedConnectionBackoffFactor: 10},
+			{maximumConnectionAttempts: 0},
 		];
 		for (const opt of throwingOptions) {
 			const prop = Object.keys(opt)[0];
