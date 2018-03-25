@@ -452,6 +452,7 @@ export class IPSOObject {
 			new(options?: IPSOOptions, ...constructorArgs: any[]): T;
 		}
 		const constructor = this.constructor as Constructable<this>;
+		log(`cloning ${constructor.name}...`, "silly");
 		const ret = new constructor(this.options, ...constructorArgs);
 		// serialize the old values
 		const serialized = this.serialize();
@@ -553,6 +554,7 @@ export class IPSOObject {
 	 */
 	public fixBuggedProperties(): this {
 		// IPSOObject has none
+		log(`IPSOObject: restoring bugged properties`, "silly");
 		return this;
 	}
 
@@ -562,6 +564,7 @@ export class IPSOObject {
 	 */
 	public restoreBuggedProperties(): this {
 		// IPSOObject has none
+		log(`IPSOObject: fixing bugged properties`, "silly");
 		return this;
 	}
 

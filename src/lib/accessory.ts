@@ -2,6 +2,7 @@ import { DeviceInfo } from "./deviceInfo";
 import { IPSODevice } from "./ipsoDevice";
 import { deserializeWith, doNotSerialize, ipsoKey, required, serializeWith } from "./ipsoObject";
 import { Light } from "./light";
+import { log } from "./logger";
 import { OperationProvider } from "./operation-provider";
 import { Plug } from "./plug";
 import { Sensor } from "./sensor";
@@ -99,6 +100,7 @@ export class Accessory extends IPSODevice {
 	 * Fixes property values that are known to be bugged
 	 */
 	public fixBuggedProperties(): this {
+		log(`Accessory: fixing bugged properties`, "silly");
 		super.fixBuggedProperties();
 
 		// Fix GH#67
@@ -136,6 +138,7 @@ export class Accessory extends IPSODevice {
 	}
 
 	public restoreBuggedProperties(): this {
+		log(`Accessory: restoring bugged properties`, "silly");
 
 		if (this.lightList != null) {
 			this.lightList = this.lightList.map(light => light.restoreBuggedProperties());

@@ -13,6 +13,7 @@ const deviceInfo_1 = require("./deviceInfo");
 const ipsoDevice_1 = require("./ipsoDevice");
 const ipsoObject_1 = require("./ipsoObject");
 const light_1 = require("./light");
+const logger_1 = require("./logger");
 const plug_1 = require("./plug");
 const sensor_1 = require("./sensor");
 // list of known endpoints defined on the gateway
@@ -78,6 +79,7 @@ class Accessory extends ipsoDevice_1.IPSODevice {
      * Fixes property values that are known to be bugged
      */
     fixBuggedProperties() {
+        logger_1.log(`Accessory: fixing bugged properties`, "silly");
         super.fixBuggedProperties();
         // Fix GH#67
         if (this.type !== AccessoryTypes.lightbulb &&
@@ -108,6 +110,7 @@ class Accessory extends ipsoDevice_1.IPSODevice {
         return this;
     }
     restoreBuggedProperties() {
+        logger_1.log(`Accessory: restoring bugged properties`, "silly");
         if (this.lightList != null) {
             this.lightList = this.lightList.map(light => light.restoreBuggedProperties());
         }
