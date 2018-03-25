@@ -262,6 +262,7 @@ class IPSOObject {
             // and remember it - we are now sure propname is a keyof this
             this[propName] = parsedValue;
         }
+        this.originalPayload = obj;
         return this;
     }
     // parses a value, depending on the value type and defined parsers
@@ -486,11 +487,23 @@ class IPSOObject {
         // IPSOObject has none
         return this;
     }
+    /**
+     * Restores property values that are known to be bugged
+     * but the gateway still expects them that way
+     */
+    restoreBuggedProperties() {
+        // IPSOObject has none
+        return this;
+    }
 }
 __decorate([
     exports.doNotSerialize,
     __metadata("design:type", Object)
 ], IPSOObject.prototype, "options", void 0);
+__decorate([
+    exports.doNotSerialize,
+    __metadata("design:type", Object)
+], IPSOObject.prototype, "originalPayload", void 0);
 __decorate([
     exports.doNotSerialize,
     __metadata("design:type", Boolean)

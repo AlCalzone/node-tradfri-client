@@ -15,6 +15,7 @@ const ipsoDevice_1 = require("./ipsoDevice");
 const ipsoObject_1 = require("./ipsoObject");
 const math_1 = require("./math");
 const predefined_colors_1 = require("./predefined-colors");
+const lightNameRegex = /(FLOALT panel|TRADFRI bulb)/ig;
 class Light extends ipsoDevice_1.IPSODevice {
     constructor(options, accessory) {
         super(options);
@@ -37,6 +38,12 @@ class Light extends ipsoDevice_1.IPSODevice {
             accessory.deviceInfo.modelNumber.length > 0) {
             this._modelName = accessory.deviceInfo.modelNumber;
         }
+    }
+    /**
+     * Returns true of the provided name should belong to a light accessory
+     */
+    static shouldBeALight(accessoryName) {
+        return lightNameRegex.test(accessoryName);
     }
     /**
      * Returns true if the current lightbulb is dimmable

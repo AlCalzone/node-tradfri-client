@@ -823,6 +823,10 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		// ensure the ipso options were not lost on the user side
 		newObj.options = this.ipsoOptions;
 
+		// create clones with bugged properties reset to how the gateway expects them
+		newObj = newObj.clone().restoreBuggedProperties();
+		reference = reference.clone().restoreBuggedProperties();
+
 		log(`updateResource(${path}) > comparing ${JSON.stringify(newObj)} with the reference ${JSON.stringify(reference)}`, "debug");
 
 		const serializedObj = newObj.serialize(reference);

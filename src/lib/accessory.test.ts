@@ -3,7 +3,7 @@
 require("reflect-metadata");
 
 import { assert, expect } from "chai";
-import { Accessory } from "./accessory";
+import { Accessory, AccessoryTypes } from "./accessory";
 import { DeviceInfo } from "./deviceInfo";
 import { Light } from "./light";
 // tslint:disable:no-unused-expression
@@ -144,5 +144,88 @@ describe("ipso/accessory => ", () => {
 	it("the name of RGB bulbs (v1.3.002) should be parsed correctly", () => {
 		const rgb = new Accessory().parse(rgbTemplate);
 		expect(rgb.name).to.equal(rgbTemplate["9001"]);
+	});
+});
+
+describe("ipso/accessory => firmware bugfixes => ", () => {
+	// repro for GH#67
+	describe("lights announced as remote controls => ", () => {
+
+		const brokenPayload = {
+			3: {
+				0: "IKEA of Sweden",
+				1: "TRADFRI bulb E27 WS opal 980lm",
+				2: "",
+				3: "1.2.217",
+				6: 1,
+			},
+			5750: 0,
+			9001: "Sauna Light",
+			9002: 1520186295,
+			9003: 65561,
+			9019: 1,
+			9020: 1521830451,
+			9054: 0,
+			15009: [
+				{
+					5706: "efd275",
+					5709: 33137,
+					5710: 27211,
+					5711: 454,
+					5717: 0,
+					5850: 0,
+					5851: 254,
+					9003: 0,
+				},
+			],
+		};
+
+		const parsed = new Accessory().parse(brokenPayload).fixBuggedProperties();
+
+		it("should be parsed correctly with fixBuggedProperties()", () => {
+			parsed.type.should.equal(AccessoryTypes.lightbulb);
+			expect(parsed.lightList).to.not.be.null;
+			expect(parsed.lightList).to.have.length(1);
+			expect(parsed.switchList).to.be.null;
+		});
+
+		// as this is a WS bulb, some properties won't be serialized
+		const expectedPayload = {
+			3: {
+				0: "IKEA of Sweden",
+				1: "TRADFRI bulb E27 WS opal 980lm",
+				2: "",
+				3: "1.2.217",
+				6: 1,
+			},
+			5750: 0,
+			9001: "Sauna Light",
+			9002: 1520186295,
+			9003: 65561,
+			9019: 1,
+			9020: 1521830451,
+			9054: 0,
+			15009: [
+				{
+					// - 5706: "efd275",
+					// - 5709: 33137,
+					// - 5710: 27211,
+					5711: 454,
+					/* + */ 5712: 5, // always present in serialized payloads
+					5717: 0,
+					5850: 0,
+					5851: 254,
+					/* + */ 9001: "",	// these are usually not serialized with a reference object
+					/* + */ 9002: 0,	// these are usually not serialized with a reference object
+					9003: 0,
+				},
+			],
+		};
+
+		it("should be serialized correctly with restoreBuggedProperties()", () => {
+			expect(parsed.restoreBuggedProperties().serialize()).to.deep.equal(
+				expectedPayload,
+			);
+		});
 	});
 });

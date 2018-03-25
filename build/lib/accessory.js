@@ -30,6 +30,17 @@ class Accessory extends ipsoDevice_1.IPSODevice {
         this.alive = false;
         this.lastSeen = 0;
         this.otaUpdateState = 0; // boolean?
+        /**
+         * Remember if this is a light but incorrectly announced as a remote
+         * Fixes this firmware bug: GH#67
+         * @internal
+         */
+        this.isLightAnnouncedAsRemote = false;
+    }
+    clone() {
+        const ret = super.clone();
+        ret.isLightAnnouncedAsRemote = this.isLightAnnouncedAsRemote;
+        return ret;
     }
     /**
      * Link this object to a TradfriClient for a simplified API.
@@ -68,6 +79,17 @@ class Accessory extends ipsoDevice_1.IPSODevice {
      */
     fixBuggedProperties() {
         super.fixBuggedProperties();
+        // Fix GH#67
+        if (this.type !== AccessoryTypes.lightbulb &&
+            this.deviceInfo != null &&
+            light_1.Light.shouldBeALight(this.deviceInfo.modelNumber) &&
+            (this.lightList == null || this.lightList.length === 0) &&
+            (this.switchList != null && this.switchList.length !== null)) {
+            this.isLightAnnouncedAsRemote = true;
+            this.type = AccessoryTypes.lightbulb;
+            this.lightList = this.switchList.map(swtch => new light_1.Light(this.options, this).parse(swtch.originalPayload));
+            this.switchList = null;
+        }
         if (this.lightList != null) {
             this.lightList = this.lightList.map(light => light.fixBuggedProperties());
         }
@@ -83,6 +105,31 @@ class Accessory extends ipsoDevice_1.IPSODevice {
         if (this.switchList != null) {
             this.switchList = this.switchList.map(swtch => swtch.fixBuggedProperties());
         }
+        return this;
+    }
+    restoreBuggedProperties() {
+        if (this.lightList != null) {
+            this.lightList = this.lightList.map(light => light.restoreBuggedProperties());
+        }
+        /* istanbul ignore next */
+        if (this.plugList != null) {
+            this.plugList = this.plugList.map(plug => plug.restoreBuggedProperties());
+        }
+        /* istanbul ignore next */
+        if (this.sensorList != null) {
+            this.sensorList = this.sensorList.map(sensor => sensor.restoreBuggedProperties());
+        }
+        /* istanbul ignore next */
+        if (this.switchList != null) {
+            this.switchList = this.switchList.map(swtch => swtch.restoreBuggedProperties());
+        }
+        // Fix GH#67
+        if (this.isLightAnnouncedAsRemote) {
+            this.type = AccessoryTypes.remote;
+            this.switchList = this.lightList; // we want to serialize lights!
+            this.lightList = undefined;
+        }
+        super.restoreBuggedProperties();
         return this;
     }
 }
@@ -127,4 +174,8 @@ __decorate([
     ipsoObject_1.ipsoKey("9054"),
     __metadata("design:type", Number)
 ], Accessory.prototype, "otaUpdateState", void 0);
+__decorate([
+    ipsoObject_1.doNotSerialize,
+    __metadata("design:type", Boolean)
+], Accessory.prototype, "isLightAnnouncedAsRemote", void 0);
 exports.Accessory = Accessory;

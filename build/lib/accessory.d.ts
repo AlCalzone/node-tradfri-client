@@ -18,8 +18,10 @@ export declare class Accessory extends IPSODevice {
     sensorList: Sensor[];
     switchList: IPSODevice[];
     otaUpdateState: number;
+    clone(): this;
     /**
      * Fixes property values that are known to be bugged
      */
     fixBuggedProperties(): this;
+    restoreBuggedProperties(): this;
 }
