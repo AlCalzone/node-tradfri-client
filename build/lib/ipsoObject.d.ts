@@ -80,4 +80,9 @@ export declare class IPSOObject {
      * Fixes property values that are known to be bugged
      */
     fixBuggedProperties(): this;
+    /**
+     * Restores property values that are known to be bugged
+     * but the gateway still expects them that way
+     */
+    restoreBuggedProperties(): this;
 }

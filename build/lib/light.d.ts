@@ -20,6 +20,10 @@ export declare class Light extends IPSODevice {
     powerFactor: number;
     unit: string;
     /**
+     * Returns true of the provided name should belong to a light accessory
+     */
+    static shouldBeALight(accessoryName: string): boolean;
+    /**
      * Returns true if the current lightbulb is dimmable
      */
     readonly isDimmable: boolean;

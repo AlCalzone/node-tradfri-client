@@ -262,6 +262,7 @@ class IPSOObject {
             // and remember it - we are now sure propname is a keyof this
             this[propName] = parsedValue;
         }
+        this.originalPayload = obj;
         return this;
     }
     // parses a value, depending on the value type and defined parsers
@@ -393,6 +394,7 @@ class IPSOObject {
      */
     clone(...constructorArgs) {
         const constructor = this.constructor;
+        logger_1.log(`cloning ${constructor.name}...`, "silly");
         const ret = new constructor(this.options, ...constructorArgs);
         // serialize the old values
         const serialized = this.serialize();
@@ -484,6 +486,16 @@ class IPSOObject {
      */
     fixBuggedProperties() {
         // IPSOObject has none
+        logger_1.log(`IPSOObject: restoring bugged properties`, "silly");
+        return this;
+    }
+    /**
+     * Restores property values that are known to be bugged
+     * but the gateway still expects them that way
+     */
+    restoreBuggedProperties() {
+        // IPSOObject has none
+        logger_1.log(`IPSOObject: fixing bugged properties`, "silly");
         return this;
     }
 }
@@ -491,6 +503,10 @@ __decorate([
     exports.doNotSerialize,
     __metadata("design:type", Object)
 ], IPSOObject.prototype, "options", void 0);
+__decorate([
+    exports.doNotSerialize,
+    __metadata("design:type", Object)
+], IPSOObject.prototype, "originalPayload", void 0);
 __decorate([
     exports.doNotSerialize,
     __metadata("design:type", Boolean)

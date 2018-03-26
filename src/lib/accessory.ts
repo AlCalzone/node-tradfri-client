@@ -1,7 +1,8 @@
 import { DeviceInfo } from "./deviceInfo";
 import { IPSODevice } from "./ipsoDevice";
-import { deserializeWith, ipsoKey, required, serializeWith } from "./ipsoObject";
+import { deserializeWith, doNotSerialize, ipsoKey, required, serializeWith } from "./ipsoObject";
 import { Light } from "./light";
+import { log } from "./logger";
 import { OperationProvider } from "./operation-provider";
 import { Plug } from "./plug";
 import { Sensor } from "./sensor";
@@ -49,6 +50,20 @@ export class Accessory extends IPSODevice {
 	public otaUpdateState: number = 0; // boolean?
 
 	/**
+	 * Remember if this is a light but incorrectly announced as a remote
+	 * Fixes this firmware bug: GH#67
+	 * @internal
+	 */
+	@doNotSerialize
+	private isLightAnnouncedAsRemote: boolean = false;
+
+	public clone(): this {
+		const ret = super.clone() as this;
+		ret.isLightAnnouncedAsRemote = this.isLightAnnouncedAsRemote;
+		return ret;
+	}
+
+	/**
 	 * Link this object to a TradfriClient for a simplified API.
 	 * @param client The client instance to link this object to
 	 * @internal
@@ -85,7 +100,25 @@ export class Accessory extends IPSODevice {
 	 * Fixes property values that are known to be bugged
 	 */
 	public fixBuggedProperties(): this {
+		log(`Accessory: fixing bugged properties`, "silly");
 		super.fixBuggedProperties();
+
+		// Fix GH#67
+		if (
+			this.type !== AccessoryTypes.lightbulb &&
+			this.deviceInfo != null &&
+			Light.shouldBeALight(this.deviceInfo.modelNumber) &&
+			(this.lightList == null || this.lightList.length === 0) &&
+			(this.switchList != null && this.switchList.length !== null)
+		) {
+			this.isLightAnnouncedAsRemote = true;
+			this.type = AccessoryTypes.lightbulb;
+			this.lightList = this.switchList.map(
+				swtch => new Light(this.options, this).parse(swtch.originalPayload),
+			);
+			this.switchList = null;
+		}
+
 		if (this.lightList != null) {
 			this.lightList = this.lightList.map(light => light.fixBuggedProperties());
 		}
@@ -101,6 +134,37 @@ export class Accessory extends IPSODevice {
 		if (this.switchList != null) {
 			this.switchList = this.switchList.map(swtch => swtch.fixBuggedProperties());
 		}
+		return this;
+	}
+
+	public restoreBuggedProperties(): this {
+		log(`Accessory: restoring bugged properties`, "silly");
+
+		if (this.lightList != null) {
+			this.lightList = this.lightList.map(light => light.restoreBuggedProperties());
+		}
+		/* istanbul ignore next */
+		if (this.plugList != null) {
+			this.plugList = this.plugList.map(plug => plug.restoreBuggedProperties());
+		}
+		/* istanbul ignore next */
+		if (this.sensorList != null) {
+			this.sensorList = this.sensorList.map(sensor => sensor.restoreBuggedProperties());
+		}
+		/* istanbul ignore next */
+		if (this.switchList != null) {
+			this.switchList = this.switchList.map(swtch => swtch.restoreBuggedProperties());
+		}
+
+		// Fix GH#67
+		if (this.isLightAnnouncedAsRemote) {
+			this.type = AccessoryTypes.remote;
+			this.switchList = this.lightList; // we want to serialize lights!
+			this.lightList = undefined;
+			this.isLightAnnouncedAsRemote = false; // we just reverted it
+		}
+
+		super.restoreBuggedProperties();
 		return this;
 	}
 

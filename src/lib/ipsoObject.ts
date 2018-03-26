@@ -275,6 +275,14 @@ export class IPSOObject {
 	@doNotSerialize
 	public options: IPSOOptions;
 
+	/**
+	 * Internal copy of the parsed payload
+	 * Used to repair some gateway bugs, especially GH#67
+	 * @internal
+	 */
+	@doNotSerialize
+	public originalPayload: Record<string, any>;
+
 	constructor(options: IPSOOptions = {}) {
 		this.options = options;
 	}
@@ -309,6 +317,7 @@ export class IPSOObject {
 			// and remember it - we are now sure propname is a keyof this
 			this[propName as keyof this] = parsedValue;
 		}
+		this.originalPayload = obj;
 		return this;
 	}
 
@@ -443,6 +452,7 @@ export class IPSOObject {
 			new(options?: IPSOOptions, ...constructorArgs: any[]): T;
 		}
 		const constructor = this.constructor as Constructable<this>;
+		log(`cloning ${constructor.name}...`, "silly");
 		const ret = new constructor(this.options, ...constructorArgs);
 		// serialize the old values
 		const serialized = this.serialize();
@@ -544,6 +554,17 @@ export class IPSOObject {
 	 */
 	public fixBuggedProperties(): this {
 		// IPSOObject has none
+		log(`IPSOObject: restoring bugged properties`, "silly");
+		return this;
+	}
+
+	/**
+	 * Restores property values that are known to be bugged
+	 * but the gateway still expects them that way
+	 */
+	public restoreBuggedProperties(): this {
+		// IPSOObject has none
+		log(`IPSOObject: fixing bugged properties`, "silly");
 		return this;
 	}
 

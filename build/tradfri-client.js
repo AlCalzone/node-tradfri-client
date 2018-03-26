@@ -631,6 +631,9 @@ class TradfriClient extends events_1.EventEmitter {
         return __awaiter(this, void 0, void 0, function* () {
             // ensure the ipso options were not lost on the user side
             newObj.options = this.ipsoOptions;
+            // create clones with bugged properties reset to how the gateway expects them
+            newObj = newObj.clone().restoreBuggedProperties();
+            reference = reference.clone().restoreBuggedProperties();
             logger_1.log(`updateResource(${path}) > comparing ${JSON.stringify(newObj)} with the reference ${JSON.stringify(reference)}`, "debug");
             const serializedObj = newObj.serialize(reference);
             // If the serialized object contains no properties, we don't need to send anything

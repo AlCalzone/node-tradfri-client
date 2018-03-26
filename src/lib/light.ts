@@ -5,8 +5,7 @@ import { deserializeWith, doNotSerialize, ipsoKey, IPSOOptions, PropertyTransfor
 import { clamp } from "./math";
 import { MAX_COLOR, predefinedColors, whiteSpectrumHex } from "./predefined-colors";
 
-// see https://github.com/hreichert/smarthome/blob/master/extensions/binding/org.eclipse.smarthome.binding.tradfri/src/main/java/org/eclipse/smarthome/binding/modules/internal/TradfriColor.java
-// for some color conversion
+const lightNameRegex: RegExp = /(FLOALT panel|TRADFRI bulb)/ig;
 
 export type LightOperation = Partial<Pick<Light,
 	"onOff" | "dimmer" |
@@ -101,6 +100,13 @@ export class Light extends IPSODevice {
 
 	@ipsoKey("5701")
 	public unit: string;
+
+	/**
+	 * Returns true of the provided name should belong to a light accessory
+	 */
+	public static shouldBeALight(accessoryName: string): boolean {
+		return lightNameRegex.test(accessoryName);
+	}
 
 	/**
 	 * Returns true if the current lightbulb is dimmable
