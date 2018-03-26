@@ -131,6 +131,7 @@ class Accessory extends ipsoDevice_1.IPSODevice {
             this.type = AccessoryTypes.remote;
             this.switchList = this.lightList; // we want to serialize lights!
             this.lightList = undefined;
+            this.isLightAnnouncedAsRemote = false; // we just reverted it
         }
         super.restoreBuggedProperties();
         return this;

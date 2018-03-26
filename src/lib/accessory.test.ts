@@ -147,7 +147,7 @@ describe("ipso/accessory => ", () => {
 	});
 });
 
-describe("ipso/accessory => firmware bugfixes => ", () => {
+describe.only("ipso/accessory => firmware bugfixes => ", () => {
 	// repro for GH#67
 	describe("lights announced as remote controls => ", () => {
 
@@ -223,9 +223,11 @@ describe("ipso/accessory => firmware bugfixes => ", () => {
 		};
 
 		it("should be serialized correctly with restoreBuggedProperties()", () => {
-			expect(parsed.restoreBuggedProperties().serialize()).to.deep.equal(
-				expectedPayload,
-			);
+			for (let tries = 1; tries <= 3; tries++) {
+				expect(parsed.restoreBuggedProperties().serialize()).to.deep.equal(
+					expectedPayload, `try ${tries} failed`,
+				);
+			}
 		});
 	});
 });
