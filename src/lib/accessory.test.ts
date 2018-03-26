@@ -147,7 +147,7 @@ describe("ipso/accessory => ", () => {
 	});
 });
 
-describe.only("ipso/accessory => firmware bugfixes => ", () => {
+describe("ipso/accessory => firmware bugfixes => ", () => {
 	// repro for GH#67
 	describe("lights announced as remote controls => ", () => {
 
