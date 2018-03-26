@@ -126,7 +126,7 @@ jobs:
 
       - run:
           name: Upload it to coveralls.io
-          command: COVERALLS_SERVICE_NAME="CircleCI" COVERALLS_SERVICE_JOB_ID="$CIRCLE_BUILD_NUM" npm run coveralls
+          command: npm run coveralls
 
 # ----------------------------------------------------
 # generates a clean build of the TypeScript sources
