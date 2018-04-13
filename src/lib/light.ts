@@ -131,11 +131,9 @@ export class Light extends IPSODevice {
 			// determine the spectrum
 			if (this.hue != null && this.saturation != null) {
 				this._spectrum = "rgb";
-			}
-			else if (this.colorTemperature != null) {
+			} else if (this.colorTemperature != null) {
 				this._spectrum = "white";
-			}
-			else {
+			} else {
 				this._spectrum = "none";
 			}
 		}

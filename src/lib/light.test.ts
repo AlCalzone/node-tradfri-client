@@ -19,7 +19,7 @@ import { MAX_COLOR, predefinedColors, whiteSpectrumHex } from "./predefined-colo
 should();
 
 function buildAccessory(modelName: string, spectrum: Spectrum) {
-	let attributes = {
+	const attributes = {
 		3: {
 			0: "IKEA of Sweden",
 			1: modelName,
@@ -45,15 +45,17 @@ function buildAccessory(modelName: string, spectrum: Spectrum) {
 		9020: 1507456927,
 		9054: 0,
 	};
-	
-	switch(spectrum) {
+
+	switch (spectrum) {
 		case "rgb": {
 			attributes["3311"][0]["5707"] = 38079;
-			attributes["3311"][0]["5708"] = 43737; 
-			attributes["3311"][0]["5711"] = 0; 
+			attributes["3311"][0]["5708"] = 43737;
+			attributes["3311"][0]["5711"] = 0;
+			break;
 		}
 		case "white": {
-			attributes["3311"][0]["5711"] = 0; 
+			attributes["3311"][0]["5711"] = 0;
+			break;
 		}
 	}
 	return attributes;
