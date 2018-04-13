@@ -18,8 +18,8 @@ import { MAX_COLOR, predefinedColors, whiteSpectrumHex } from "./predefined-colo
 // enable the should interface with sinon
 should();
 
-function buildAccessory(modelName: string) {
-	return {
+function buildAccessory(modelName: string, spectrum: Spectrum) {
+	let attributes = {
 		3: {
 			0: "IKEA of Sweden",
 			1: modelName,
@@ -30,11 +30,8 @@ function buildAccessory(modelName: string) {
 		3311: [
 			{
 				5706: "010203",
-				5707: 38079,
-				5708: 43737,
 				5709: 0,
 				5710: 0,
-				5711: 0,
 				5850: 1,
 				5851: 254,
 				9003: 0,
@@ -48,6 +45,19 @@ function buildAccessory(modelName: string) {
 		9020: 1507456927,
 		9054: 0,
 	};
+	
+	switch(spectrum) {
+		case "rgb": {
+			attributes["3311"][0]["5707"] = 38079;
+			attributes["3311"][0]["5708"] = 43737; 
+			attributes["3311"][0]["5711"] = 0; 
+		}
+		case "white": {
+			attributes["3311"][0]["5711"] = 0; 
+		}
+	}
+	return attributes;
+
 }
 
 function assertPayload(actual: any, expected: {}, message?: string) {
@@ -97,7 +107,7 @@ describe("ipso/light => basic functionality =>", () => {
 
 	it("supported features should be detected correctly", () => {
 		for (const device of deviceTable.values()) {
-			const acc = new Accessory().parse(buildAccessory(device.name));
+			const acc = new Accessory().parse(buildAccessory(device.name, device.spectrum));
 			const light = acc.lightList[0];
 
 			expect(light.isSwitchable).to.equal(device.isSwitchable, `${device.name} should ${device.isSwitchable ? "" : "not "}be switchable`);
@@ -108,7 +118,7 @@ describe("ipso/light => basic functionality =>", () => {
 
 	it("setting the hex color on an RGB bulb should update hue and saturation", () => {
 		const rgb = new Accessory()
-			.parse(buildAccessory("TRADFRI bulb E27 C/WS opal 600lm"))
+			.parse(buildAccessory("TRADFRI bulb E27 C/WS opal 600lm", "rgb"))
 			.createProxy()
 			;
 		const light = rgb.lightList[0];
@@ -121,7 +131,7 @@ describe("ipso/light => basic functionality =>", () => {
 
 	it("the payload to set RGB color should include hue/saturation and transitionTime", () => {
 		const rgb = new Accessory()
-			.parse(buildAccessory("TRADFRI bulb E27 C/WS opal 600lm"))
+			.parse(buildAccessory("TRADFRI bulb E27 C/WS opal 600lm", "rgb"))
 			.createProxy()
 			;
 		const original = rgb.clone();
@@ -139,7 +149,7 @@ describe("ipso/light => basic functionality =>", () => {
 	describe("updating RGB to a predefined color should send the predefined hue/saturation values", () => {
 		it("with the simplified scale", () => {
 			const rgb = new Accessory()
-				.parse(buildAccessory("TRADFRI bulb E27 C/WS opal 600lm"))
+				.parse(buildAccessory("TRADFRI bulb E27 C/WS opal 600lm", "rgb"))
 				.createProxy()
 				;
 			const original = rgb.clone();
@@ -160,7 +170,7 @@ describe("ipso/light => basic functionality =>", () => {
 		});
 		it("with raw CoAP values", () => {
 			const rgb = new Accessory({skipValueSerializers: true})
-				.parse(buildAccessory("TRADFRI bulb E27 C/WS opal 600lm"))
+				.parse(buildAccessory("TRADFRI bulb E27 C/WS opal 600lm", "rgb"))
 				.createProxy()
 				;
 			const original = rgb.clone();
@@ -183,7 +193,7 @@ describe("ipso/light => basic functionality =>", () => {
 
 	it("when updating hue, saturation should be sent as well", () => {
 		const rgb = new Accessory()
-			.parse(buildAccessory("TRADFRI bulb E27 C/WS opal 600lm"))
+			.parse(buildAccessory("TRADFRI bulb E27 C/WS opal 600lm", "rgb"))
 			.createProxy()
 			;
 		const original = rgb.clone();
@@ -200,7 +210,7 @@ describe("ipso/light => basic functionality =>", () => {
 
 	it("when updating saturation, hue should be sent as well", () => {
 		const rgb = new Accessory()
-			.parse(buildAccessory("TRADFRI bulb E27 C/WS opal 600lm"))
+			.parse(buildAccessory("TRADFRI bulb E27 C/WS opal 600lm", "rgb"))
 			.createProxy()
 			;
 		const original = rgb.clone();
@@ -216,7 +226,7 @@ describe("ipso/light => basic functionality =>", () => {
 	});
 
 	it("parsing an RGB light should result in a valid hex color", () => {
-		const source = buildAccessory("TRADFRI bulb E27 C/WS opal 600lm");
+		const source = buildAccessory("TRADFRI bulb E27 C/WS opal 600lm", "rgb");
 		delete source["3311"][0]["5706"];
 		source["3311"][0]["5709"] = 24567;
 		source["3311"][0]["5710"] = 30987;
@@ -228,7 +238,7 @@ describe("ipso/light => basic functionality =>", () => {
 	});
 
 	it("parsing an RGB light without any color properties should result in a valid hex color", () => {
-		const source = buildAccessory("TRADFRI bulb E27 C/WS opal 600lm");
+		const source = buildAccessory("TRADFRI bulb E27 C/WS opal 600lm", "rgb");
 		delete source["3311"][0]["5706"];
 		delete source["3311"][0]["5709"];
 		delete source["3311"][0]["5710"];
@@ -240,7 +250,7 @@ describe("ipso/light => basic functionality =>", () => {
 	});
 
 	it("floating point values should be supported", () => {
-		const source = buildAccessory("TRADFRI bulb E27 C/WS opal 600lm");
+		const source = buildAccessory("TRADFRI bulb E27 C/WS opal 600lm", "rgb");
 		source["3311"][0]["5851"] = 179;
 		const rgb = new Accessory()
 			.parse(source)
@@ -262,7 +272,7 @@ describe("ipso/light => basic functionality =>", () => {
 		};
 
 		for (const [prop, test] of entries(tests)) {
-			const source = buildAccessory(test.rgb ? "TRADFRI bulb E12 CWS opal 600" : "TRADFRI bulb E27 C/WS opal 600lm");
+			const source = buildAccessory(test.rgb ? "TRADFRI bulb E12 CWS opal 600" : "TRADFRI bulb E27 C/WS opal 600lm", "rgb");
 			const acc = new Accessory({skipValueSerializers: true})
 				.parse(source)
 				.createProxy()
@@ -287,7 +297,7 @@ describe("ipso/light => basic functionality =>", () => {
 	});
 
 	it("cloning a light should correctly copy the model name", () => {
-		const source = buildAccessory("TRADFRI bulb E27 C/WS opal 600lm");
+		const source = buildAccessory("TRADFRI bulb E27 C/WS opal 600lm", "rgb");
 		const acc = new Accessory().parse(source);
 		const light = acc.lightList[0];
 		const clone = light.clone();
@@ -343,15 +353,15 @@ describe("ipso/light => simplified API => ", () => {
 	});
 
 	const accNoSpectrum = new Accessory().parse(
-		buildAccessory("TRADFRI bulb E26 opal 1000lm"),
+		buildAccessory("TRADFRI bulb E26 opal 1000lm", "none"),
 	).link(tradfri);
 	const lightNoSpectrum = accNoSpectrum.lightList[0];
 	const accWhiteSpectrum = new Accessory().parse(
-		buildAccessory("TRADFRI bulb E27 WS clear 950lm"),
+		buildAccessory("TRADFRI bulb E27 WS clear 950lm", "white"),
 	).link(tradfri);
 	const lightWhiteSpectrum = accWhiteSpectrum.lightList[0];
 	const accRGBSpectrum = new Accessory().parse(
-		buildAccessory("TRADFRI bulb E27 C/WS opal 600lm"),
+		buildAccessory("TRADFRI bulb E27 C/WS opal 600lm", "rgb"),
 	).link(tradfri);
 	const lightRGBSpectrum = accRGBSpectrum.lightList[0];
 	const allLights = [
