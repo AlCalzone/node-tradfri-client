@@ -58,16 +58,14 @@ class Light extends ipsoDevice_1.IPSODevice {
     get spectrum() {
         if (this._spectrum == null) {
             // determine the spectrum
-            this._spectrum = "none";
-            if (this._modelName != null) {
-                if (this._modelName.indexOf(" WS ") > -1) {
-                    // WS = white spectrum
-                    this._spectrum = "white";
-                }
-                else if (this._modelName.indexOf(" C/WS ") > -1 || this._modelName.indexOf(" CWS ") > -1) {
-                    // CWS = color + white spectrum
-                    this._spectrum = "rgb";
-                }
+            if (this.hue != null && this.saturation != null) {
+                this._spectrum = "rgb";
+            }
+            else if (this.colorTemperature != null) {
+                this._spectrum = "white";
+            }
+            else {
+                this._spectrum = "none";
             }
         }
         return this._spectrum;

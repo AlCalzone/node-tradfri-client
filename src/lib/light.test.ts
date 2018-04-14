@@ -125,7 +125,7 @@ describe("ipso/light => basic functionality =>", () => {
 			;
 		const light = rgb.lightList[0];
 
-		light.merge({hue: 0, saturation: 0});
+		light.merge({ hue: 0, saturation: 0 });
 		light.color = "BADA55";
 		expect(light.hue).to.not.equal(0);
 		expect(light.saturation).to.not.equal(0);
@@ -171,7 +171,7 @@ describe("ipso/light => basic functionality =>", () => {
 			}
 		});
 		it("with raw CoAP values", () => {
-			const rgb = new Accessory({skipValueSerializers: true})
+			const rgb = new Accessory({ skipValueSerializers: true })
 				.parse(buildAccessory("TRADFRI bulb E27 C/WS opal 600lm", "rgb"))
 				.createProxy()
 				;
@@ -264,21 +264,21 @@ describe("ipso/light => basic functionality =>", () => {
 	describe("values should be rounded in raw CoAP mode => ", () => {
 
 		type TestSet = {
-			[prop in keyof Light]?: {key: number, min: number, max: number, rgb: boolean};
+			[prop in keyof Light]?: { key: number, min: number, max: number, rgb: boolean };
 		};
 		const tests: TestSet = {
-			dimmer: {key: 5851, min: 0, max: 254, rgb: false},
-			colorTemperature: {key: 5711, min: 250, max: 454, rgb: false},
-			hue: {key: 5707, min: 0, max: MAX_COLOR, rgb: true},
-			saturation: {key: 5708, min: 0, max: MAX_COLOR, rgb: true},
+			dimmer: { key: 5851, min: 0, max: 254, rgb: false },
+			colorTemperature: { key: 5711, min: 250, max: 454, rgb: false },
+			hue: { key: 5707, min: 0, max: MAX_COLOR, rgb: true },
+			saturation: { key: 5708, min: 0, max: MAX_COLOR, rgb: true },
 		};
 
 		for (const [prop, test] of entries(tests)) {
 			const source = buildAccessory(test.rgb ? "TRADFRI bulb E12 CWS opal 600" : "TRADFRI bulb E27 C/WS opal 600lm", "rgb");
-			const acc = new Accessory({skipValueSerializers: true})
+			const acc = new Accessory({ skipValueSerializers: true })
 				.parse(source)
 				.createProxy()
-			;
+				;
 			it(`for the ${prop} property`, () => {
 				const changed = acc.clone();
 				// TODO: enable this test at a later stage
@@ -568,7 +568,7 @@ describe("ipso/light => simplified API => ", () => {
 		});
 
 		it("setHue() without transition time", async () => {
-			lightRGBSpectrum.merge({hue: 0, saturation: 100});
+			lightRGBSpectrum.merge({ hue: 0, saturation: 100 });
 			await lightRGBSpectrum.setHue(180).should.become(true);
 			assertPayload(fakeCoap.request.getCall(0).args[2], {
 				3311: [{
@@ -580,7 +580,7 @@ describe("ipso/light => simplified API => ", () => {
 		});
 
 		it("setHue() with transition time", async () => {
-			lightRGBSpectrum.merge({hue: 0, saturation: 100});
+			lightRGBSpectrum.merge({ hue: 0, saturation: 100 });
 			await lightRGBSpectrum.setHue(180, 2).should.become(true);
 			assertPayload(fakeCoap.request.getCall(0).args[2], {
 				3311: [{
@@ -597,7 +597,7 @@ describe("ipso/light => simplified API => ", () => {
 		});
 
 		it("setSaturation() without transition time", async () => {
-			lightRGBSpectrum.merge({hue: 0, saturation: 100});
+			lightRGBSpectrum.merge({ hue: 0, saturation: 100 });
 			await lightRGBSpectrum.setSaturation(50).should.become(true);
 			assertPayload(fakeCoap.request.getCall(0).args[2], {
 				3311: [{
@@ -609,7 +609,7 @@ describe("ipso/light => simplified API => ", () => {
 		});
 
 		it("setSaturation() with transition time", async () => {
-			lightRGBSpectrum.merge({hue: 0, saturation: 100});
+			lightRGBSpectrum.merge({ hue: 0, saturation: 100 });
 			await lightRGBSpectrum.setSaturation(50, 2).should.become(true);
 			assertPayload(fakeCoap.request.getCall(0).args[2], {
 				3311: [{
@@ -652,4 +652,56 @@ describe("ipso/light => simplified API => ", () => {
 		});
 	});
 
+});
+
+describe.only("ipso/light => spectrum detection (GH#70)", () => {
+	// tslint:disable:object-literal-key-quotes
+	const rgbPayloads = [
+		{ "3": { "0": "IKEA of Sweden", "1": "TRADFRI bulb E27 CWS opal 600lm", "2": "", "3": "1.3.002", "6": 1 }, "3311": [{ "5706": "dcf0f8", "5707": 0, "5708": 255, "5709": 21109, "5710": 21738, "5711": 0, "5850": 1, "5851": 106, "9003": 0 }], "5750": 2, "9001": "Woonkamer_Bank_Rechts", "9002": 1508005342, "9003": 65537, "9019": 1, "9020": 1508189142, "9054": 0 },
+		{ "3": { "0": "IKEA of Sweden", "1": "TRADFRI bulb E27 CWS opal 600lm", "2": "", "3": "1.3.002", "6": 1 }, "3311": [{ "5706": "eaf6fb", "5707": 0, "5708": 255, "5709": 22616, "5710": 23042, "5711": 0, "5850": 1, "5851": 106, "9003": 0 }], "5750": 2, "9001": "Woonkamer_Bank_Rechts", "9002": 1508005342, "9003": 65537, "9019": 1, "9020": 1508189142, "9054": 0 },
+		{ "3": { "0": "IKEA of Sweden", "1": "TRADFRI bulb E27 CWS opal 600lm", "2": "", "3": "1.3.002", "6": 1 }, "3311": [{ "5706": "f5faf6", "5707": 0, "5708": 255, "5709": 24930, "5710": 24694, "5711": 0, "5850": 1, "5851": 106, "9003": 0 }], "5750": 2, "9001": "Woonkamer_Bank_Rechts", "9002": 1508005342, "9003": 65537, "9019": 1, "9020": 1508189142, "9054": 0 },
+		{ "3": { "0": "IKEA of Sweden", "1": "TRADFRI bulb E27 CWS opal 600lm", "2": "", "3": "1.3.002", "6": 1 }, "3311": [{ "5706": "f2eccf", "5707": 0, "5708": 255, "5709": 28633, "5710": 26483, "5711": 0, "5850": 1, "5851": 106, "9003": 0 }], "5750": 2, "9001": "Woonkamer_Bank_Rechts", "9002": 1508005342, "9003": 65537, "9019": 1, "9020": 1508189142, "9054": 0 },
+		{ "3": { "0": "IKEA of Sweden", "1": "TRADFRI bulb E27 CWS opal 600lm", "2": "", "3": "1.3.002", "6": 1 }, "3311": [{ "5706": "f1e0b5", "5707": 0, "5708": 255, "5709": 30140, "5710": 26909, "5711": 0, "5850": 1, "5851": 106, "9003": 0 }], "5750": 2, "9001": "Woonkamer_Bank_Rechts", "9002": 1508005342, "9003": 65537, "9019": 1, "9020": 1508189142, "9054": 0 },
+		{ "3": { "0": "IKEA of Sweden", "1": "TRADFRI bulb E27 CWS opal 600lm", "2": "", "3": "1.3.002", "6": 1 }, "3311": [{ "5706": "efd275", "5707": 0, "5708": 255, "5709": 33135, "5710": 27211, "5711": 0, "5850": 1, "5851": 106, "9003": 0 }], "5750": 2, "9001": "Woonkamer_Bank_Rechts", "9002": 1508005342, "9003": 65537, "9019": 1, "9020": 1508189142, "9054": 0 },
+		{ "3": { "0": "IKEA of Sweden", "1": "TRADFRI bulb E27 CWS opal 600lm", "2": "", "3": "1.3.002", "6": 1 }, "3311": [{ "5706": "ebb63e", "5707": 0, "5708": 255, "5709": 35848, "5710": 26214, "5711": 0, "5850": 1, "5851": 106, "9003": 0 }], "5750": 2, "9001": "Woonkamer_Bank_Rechts", "9002": 1508005342, "9003": 65537, "9019": 1, "9020": 1508189142, "9054": 0 },
+		{ "3": { "0": "IKEA of Sweden", "1": "TRADFRI bulb E27 CWS opal 600lm", "2": "", "3": "1.3.002", "6": 1 }, "3311": [{ "5706": "e78834", "5707": 0, "5708": 255, "5709": 38011, "5710": 24904, "5711": 0, "5850": 1, "5851": 106, "9003": 0 }], "5750": 2, "9001": "Woonkamer_Bank_Rechts", "9002": 1508005342, "9003": 65537, "9019": 1, "9020": 1508189142, "9054": 0 },
+		{ "3": { "0": "IKEA of Sweden", "1": "TRADFRI bulb E27 CWS opal 600lm", "2": "", "3": "1.3.002", "6": 1 }, "3311": [{ "5706": "e57345", "5707": 0, "5708": 255, "5709": 38011, "5710": 22938, "5711": 0, "5850": 1, "5851": 106, "9003": 0 }], "5750": 2, "9001": "Woonkamer_Bank_Rechts", "9002": 1508005342, "9003": 65537, "9019": 1, "9020": 1508189142, "9054": 0 },
+		{ "3": { "0": "IKEA of Sweden", "1": "TRADFRI bulb E27 CWS opal 600lm", "2": "", "3": "1.3.002", "6": 1 }, "3311": [{ "5706": "da5d41", "5707": 0, "5708": 255, "5709": 40632, "5710": 22282, "5711": 0, "5850": 1, "5851": 106, "9003": 0 }], "5750": 2, "9001": "Woonkamer_Bank_Rechts", "9002": 1508005342, "9003": 65537, "9019": 1, "9020": 1508189142, "9054": 0 },
+		{ "3": { "0": "IKEA of Sweden", "1": "TRADFRI bulb E27 CWS opal 600lm", "2": "", "3": "1.3.002", "6": 1 }, "3311": [{ "5706": "dc4b31", "5707": 0, "5708": 255, "5709": 42926, "5710": 21299, "5711": 0, "5850": 1, "5851": 106, "9003": 0 }], "5750": 2, "9001": "Woonkamer_Bank_Rechts", "9002": 1508005342, "9003": 65537, "9019": 1, "9020": 1508189142, "9054": 0 },
+		{ "3": { "0": "IKEA of Sweden", "1": "TRADFRI bulb E27 CWS opal 600lm", "2": "", "3": "1.3.002", "6": 1 }, "3311": [{ "5706": "e491af", "5707": 0, "5708": 255, "5709": 32768, "5710": 18350, "5711": 0, "5850": 1, "5851": 106, "9003": 0 }], "5750": 2, "9001": "Woonkamer_Bank_Rechts", "9002": 1508005342, "9003": 65537, "9019": 1, "9020": 1508189142, "9054": 0 },
+		{ "3": { "0": "IKEA of Sweden", "1": "TRADFRI bulb E27 CWS opal 600lm", "2": "", "3": "1.3.002", "6": 1 }, "3311": [{ "5706": "e8bedd", "5707": 0, "5708": 255, "5709": 29491, "5710": 18350, "5711": 0, "5850": 1, "5851": 106, "9003": 0 }], "5750": 2, "9001": "Woonkamer_Bank_Rechts", "9002": 1508005342, "9003": 65537, "9019": 1, "9020": 1508189142, "9054": 0 },
+		{ "3": { "0": "IKEA of Sweden", "1": "TRADFRI bulb E27 CWS opal 600lm", "2": "", "3": "1.3.002", "6": 1 }, "3311": [{ "5706": "d9337c", "5707": 0, "5708": 255, "5709": 32768, "5710": 15729, "5711": 0, "5850": 1, "5851": 106, "9003": 0 }], "5750": 2, "9001": "Woonkamer_Bank_Rechts", "9002": 1508005342, "9003": 65537, "9019": 1, "9020": 1508189142, "9054": 0 },
+		{ "3": { "0": "IKEA of Sweden", "1": "TRADFRI bulb E27 CWS opal 600lm", "2": "", "3": "1.3.002", "6": 1 }, "3311": [{ "5706": "c984bb", "5707": 0, "5708": 255, "5709": 22282, "5710": 12452, "5711": 0, "5850": 1, "5851": 106, "9003": 0 }], "5750": 2, "9001": "Woonkamer_Bank_Rechts", "9002": 1508005342, "9003": 65537, "9019": 1, "9020": 1508189142, "9054": 0 },
+		{ "3": { "0": "IKEA of Sweden", "1": "TRADFRI bulb E27 CWS opal 600lm", "2": "", "3": "1.3.002", "6": 1 }, "3311": [{ "5706": "8f2686", "5707": 0, "5708": 255, "5709": 20316, "5710": 8520, "5711": 0, "5850": 1, "5851": 106, "9003": 0 }], "5750": 2, "9001": "Woonkamer_Bank_Rechts", "9002": 1508005342, "9003": 65537, "9019": 1, "9020": 1508189142, "9054": 0 },
+		{ "3": { "0": "IKEA of Sweden", "1": "TRADFRI bulb E27 CWS opal 600lm", "2": "", "3": "1.3.002", "6": 1 }, "3311": [{ "5706": "4a418a", "5707": 0, "5708": 255, "5709": 11469, "5710": 3277, "5711": 0, "5850": 1, "5851": 106, "9003": 0 }], "5750": 2, "9001": "Woonkamer_Bank_Rechts", "9002": 1508005342, "9003": 65537, "9019": 1, "9020": 1508189142, "9054": 0 },
+		{ "3": { "0": "IKEA of Sweden", "1": "TRADFRI bulb E27 CWS opal 600lm", "2": "", "3": "1.3.002", "6": 1 }, "3311": [{ "5706": "6c83ba", "5707": 0, "5708": 255, "5709": 13107, "5710": 6554, "5711": 0, "5850": 1, "5851": 106, "9003": 0 }], "5750": 2, "9001": "Woonkamer_Bank_Rechts", "9002": 1508005342, "9003": 65537, "9019": 1, "9020": 1508189142, "9054": 0 },
+		{ "3": { "0": "IKEA of Sweden", "1": "TRADFRI bulb E27 CWS opal 600lm", "2": "", "3": "1.3.002", "6": 1 }, "3311": [{ "5706": "a9d62b", "5707": 0, "5708": 255, "5709": 26870, "5710": 33423, "5711": 0, "5850": 1, "5851": 106, "9003": 0 }], "5750": 2, "9001": "Woonkamer_Bank_Rechts", "9002": 1508005342, "9003": 65537, "9019": 1, "9020": 1508189142, "9054": 0 },
+		{ "3": { "0": "IKEA of Sweden", "1": "TRADFRI bulb E27 CWS opal 600lm", "2": "", "3": "1.3.002", "6": 1 }, "3311": [{ "5706": "d6e44b", "5707": 0, "5708": 255, "5709": 29491, "5710": 30802, "5711": 0, "5850": 1, "5851": 106, "9003": 0 }], "5750": 2, "9001": "Woonkamer_Bank_Rechts", "9002": 1508005342, "9003": 65537, "9019": 1, "9020": 1508189142, "9054": 0 },
+	];
+
+	const wsPayloads = [
+		{ "3": { "0": "IKEA of Sweden", "1": "TRADFRI bulb E27 WS opal 980lm", "2": "", "3": "1.2.217", "6": 1 }, "3311": [{ "5706": "f5faf6", "5709": 24933, "5710": 24691, "5711": 250, "5717": 0, "5850": 1, "5851": 135, "9003": 0 }], "5750": 2, "9001": "Strahler hinter Schreibtisch", "9002": 1521372733, "9003": 65537, "9019": 1, "9020": 1523726758, "9054": 0 },
+		{ "3": { "0": "IKEA of Sweden", "1": "TRADFRI bulb E27 WS opal 980lm", "2": "", "3": "1.2.217", "6": 1 }, "3311": [{ "5706": "f5faf6", "5709": 24933, "5710": 24691, "5711": 250, "5717": 0, "5850": 1, "5851": 135, "9003": 0 }], "5750": 2, "9001": "Strahler hinter Couch", "9002": 1521372771, "9003": 65538, "9019": 1, "9020": 1523683530, "9054": 0 },
+		{ "3": { "0": "IKEA of Sweden", "1": "TRADFRI bulb E27 WS opal 980lm", "2": "", "3": "1.2.217", "6": 1 }, "3311": [{ "5706": "efd275", "5709": 33137, "5710": 27211, "5711": 454, "5717": 0, "5850": 1, "5851": 135, "9003": 0 }], "5750": 2, "9001": "Strahler hinter Schreibtisch", "9002": 1521372733, "9003": 65537, "9019": 1, "9020": 1523726758, "9054": 0 },
+		{ "3": { "0": "IKEA of Sweden", "1": "TRADFRI bulb E27 WS opal 980lm", "2": "", "3": "1.2.217", "6": 1 }, "3311": [{ "5706": "efd275", "5709": 33137, "5710": 27211, "5711": 454, "5717": 0, "5850": 1, "5851": 135, "9003": 0 }], "5750": 2, "9001": "Strahler hinter Couch", "9002": 1521372771, "9003": 65538, "9019": 1, "9020": 1523683530, "9054": 0 },
+		{ "3": { "0": "IKEA of Sweden", "1": "TRADFRI bulb E27 WS opal 980lm", "2": "", "3": "1.2.217", "6": 1 }, "3311": [{ "5706": "efd275", "5709": 33137, "5710": 27211, "5711": 454, "5717": 0, "5850": 1, "5851": 92, "9003": 0 }], "5750": 2, "9001": "Strahler hinter Schreibtisch", "9002": 1521372733, "9003": 65537, "9019": 1, "9020": 1523726758, "9054": 0 },
+		{ "3": { "0": "IKEA of Sweden", "1": "TRADFRI bulb E27 WS opal 980lm", "2": "", "3": "1.2.217", "6": 1 }, "3311": [{ "5706": "efd275", "5709": 33137, "5710": 27211, "5711": 454, "5717": 0, "5850": 1, "5851": 92, "9003": 0 }], "5750": 2, "9001": "Strahler hinter Couch", "9002": 1521372771, "9003": 65538, "9019": 1, "9020": 1523683530, "9054": 0 },
+		{ "3": { "0": "IKEA of Sweden", "1": "TRADFRI bulb E27 WS opal 980lm", "2": "", "3": "1.2.217", "6": 1 }, "3311": [{ "5706": "efd275", "5709": 33137, "5710": 27211, "5711": 454, "5717": 0, "5850": 0, "5851": 92, "9003": 0 }], "5750": 2, "9001": "Strahler hinter Schreibtisch", "9002": 1521372733, "9003": 65537, "9019": 1, "9020": 1523726758, "9054": 0 },
+		{ "3": { "0": "IKEA of Sweden", "1": "TRADFRI bulb E27 WS opal 980lm", "2": "", "3": "1.2.217", "6": 1 }, "3311": [{ "5706": "efd275", "5709": 33137, "5710": 27211, "5711": 454, "5717": 0, "5850": 0, "5851": 92, "9003": 0 }], "5750": 2, "9001": "Strahler hinter Couch", "9002": 1521372771, "9003": 65538, "9019": 1, "9020": 1523683530, "9054": 0 },
+	];
+	// tslint:enable:object-literal-key-quotes
+
+	// TODO: add no-spectrum payloads
+
+	it("should correctly detect the spectrum for recorded payloads", () => {
+		for (const payload of rgbPayloads) {
+			const bulb = new Accessory().parse(payload).lightList[0];
+			bulb.spectrum.should.equal("rgb");
+		}
+
+		for (const payload of wsPayloads) {
+			const bulb = new Accessory().parse(payload).lightList[0];
+			bulb.spectrum.should.equal("white");
+		}
+	});
 });
