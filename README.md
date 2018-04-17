@@ -605,6 +605,9 @@ The automatic reconnection tries to restore all previously defined observers as 
 
 ## Changelog
 
+#### __WORK IN PROGRESS__
+* (rogierhofboer) Detect lightbulb spectrum depending on its capabilities instead of the model name.
+
 #### 0.12.2 (2018-03-18)
 * (AlCalzone) Automatic reconnection now restores observers
 

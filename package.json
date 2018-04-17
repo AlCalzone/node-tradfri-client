@@ -18,7 +18,8 @@
     "email": "d.griesel@gmx.net"
   },
   "contributors": [
-    "neophob (https://github.com/neophob)"
+    "neophob (https://github.com/neophob)",
+    "rogierhofboer (https://github.com/rogierhofboer)"
   ],
   "license": "MIT",
   "homepage": "https://github.com/AlCalzone/node-tradfri-client",
