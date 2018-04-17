@@ -654,7 +654,7 @@ describe("ipso/light => simplified API => ", () => {
 
 });
 
-describe.only("ipso/light => spectrum detection (GH#70)", () => {
+describe("ipso/light => spectrum detection (GH#70)", () => {
 	// tslint:disable:object-literal-key-quotes
 	const rgbPayloads = [
 		{ "3": { "0": "IKEA of Sweden", "1": "TRADFRI bulb E27 CWS opal 600lm", "2": "", "3": "1.3.002", "6": 1 }, "3311": [{ "5706": "dcf0f8", "5707": 0, "5708": 255, "5709": 21109, "5710": 21738, "5711": 0, "5850": 1, "5851": 106, "9003": 0 }], "5750": 2, "9001": "Woonkamer_Bank_Rechts", "9002": 1508005342, "9003": 65537, "9019": 1, "9020": 1508189142, "9054": 0 },
