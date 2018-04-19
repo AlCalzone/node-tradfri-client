@@ -605,6 +605,9 @@ The automatic reconnection tries to restore all previously defined observers as 
 
 ## Changelog
 
+#### 1.0.0 (2018-04-19)
+* (AlCalzone) Added tests for groups and scenes and fixed minor found bugs
+
 #### 0.13.0 (2018-04-17)
 * (rogierhofboer) Detect lightbulb spectrum depending on its capabilities instead of the model name.
 
