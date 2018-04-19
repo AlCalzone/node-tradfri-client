@@ -398,7 +398,7 @@ class TradfriClient extends events_1.EventEmitter {
             const addedKeys = array_extensions_1.except(newKeys, oldKeys);
             logger_1.log(`adding groups with keys ${JSON.stringify(addedKeys)}`, "debug");
             // create a deferred promise for each group, so we can wait for them to be fulfilled
-            if (this.observeScenesPromises == null) {
+            if (this.observeGroupsPromise != null && this.observeScenesPromises == null) {
                 this.observeScenesPromises = new Map(newKeys.map(id => [id, defer_promise_1.createDeferredPromise()]));
             }
             const observeGroupPromises = newKeys.map(id => {

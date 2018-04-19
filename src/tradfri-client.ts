@@ -545,7 +545,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		log(`adding groups with keys ${JSON.stringify(addedKeys)}`, "debug");
 
 		// create a deferred promise for each group, so we can wait for them to be fulfilled
-		if (this.observeScenesPromises == null) {
+		if (this.observeGroupsPromise != null && this.observeScenesPromises == null) {
 			this.observeScenesPromises = new Map(
 				newKeys.map(id => [id, createDeferredPromise<void>()] as [number, DeferredPromise<void>]),
 			);
