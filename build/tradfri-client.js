@@ -453,14 +453,14 @@ class TradfriClient extends events_1.EventEmitter {
         for (const id of Object.keys(this.groups)) {
             this.stopObservingGroup(+id);
         }
+        this.stopObservingResource(endpoints_1.endpoints.groups);
     }
     stopObservingGroup(instanceId) {
         this.stopObservingResource(`${endpoints_1.endpoints.groups}/${instanceId}`);
-        const scenesPrefix = `${endpoints_1.endpoints.scenes}/${instanceId}`;
-        for (const path of this.observedPaths) {
-            if (path.startsWith(scenesPrefix)) {
-                this.stopObservingResource(path);
-            }
+        const scenesPrefix = this.getObserverUrl(`${endpoints_1.endpoints.scenes}/${instanceId}`);
+        const pathsToDelete = this.observedPaths.filter(path => path.startsWith(scenesPrefix));
+        for (const path of pathsToDelete) {
+            this.stopObservingResource(path);
         }
     }
     // gets called whenever "get /15004/<instanceId>" updates
@@ -750,9 +750,9 @@ function parsePayload(response) {
         return null;
     switch (response.format) {
         case 0: // text/plain
-        case null:// assume text/plain
+        case null: // assume text/plain
             return response.payload.toString("utf-8");
-        case 50:// application/json
+        case 50: // application/json
             const json = response.payload.toString("utf-8");
             return JSON.parse(json);
         default:

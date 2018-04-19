@@ -606,15 +606,15 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		for (const id of Object.keys(this.groups)) {
 			this.stopObservingGroup(+id);
 		}
+		this.stopObservingResource(coapEndpoints.groups);
 	}
 
 	private stopObservingGroup(instanceId: number) {
 		this.stopObservingResource(`${coapEndpoints.groups}/${instanceId}`);
-		const scenesPrefix = `${coapEndpoints.scenes}/${instanceId}`;
-		for (const path of this.observedPaths) {
-			if (path.startsWith(scenesPrefix)) {
-				this.stopObservingResource(path);
-			}
+		const scenesPrefix = this.getObserverUrl(`${coapEndpoints.scenes}/${instanceId}`);
+		const pathsToDelete = this.observedPaths.filter(path => path.startsWith(scenesPrefix));
+		for (const path of pathsToDelete) {
+			this.stopObservingResource(path);
 		}
 	}
 

@@ -11,7 +11,7 @@ import { TradfriClient } from "./tradfri-client";
 
 import { ContentFormats } from "node-coap-client/build/ContentFormats";
 import { MessageCode, MessageCodes } from "node-coap-client/build/Message";
-import { createEmptyAccessoryResponse, createErrorResponse, createNetworkMock, createResponse, createRGBBulb } from "../test/mocks";
+import { createEmptyAccessoryResponse, createEmptyGroupResponse, createEmptySceneResponse, createErrorResponse, createNetworkMock, createResponse, createRGBBulb } from "../test/mocks";
 import { Accessory, AccessoryTypes, Light, TradfriError, TradfriErrorCodes } from "./";
 import { createDeferredPromise, DeferredPromise } from "./lib/defer-promise";
 import { padStart } from "./lib/strings";
@@ -258,7 +258,7 @@ describe("tradfri-client => retrying the connection => ", () => {
 		fakeCoap.tryToConnect
 			.onFirstCall().returns("timeout")
 			.onSecondCall().returns("timeout")
-		;
+			;
 		fakeCoap.tryToConnect.returns(true);
 
 		const connectionPromise = tradfri.connect("foo", "bar");
@@ -392,6 +392,11 @@ describe("tradfri-client => observing devices => ", () => {
 			await devicesPromise;
 		});
 
+		it("should not call anything when already observing", async () => {
+			await tradfri.observeDevices();
+			fakeCoap.observe.should.not.have.been.called;
+		});
+
 		it("when a device is added, it should only call observe for that one", async () => {
 			const devices = [65536, 65537, 65538];
 			await callbacks.observeDevices(createResponse(devices));
@@ -445,7 +450,7 @@ describe("tradfri-client => observing devices => ", () => {
 				tradfri.removeAllListeners();
 			});
 
-			it(`when the server returns code "${code}" to observeDevice(instanceID), ${code === "4.04" ? "don't" : "only"} emit an error and don't emit "device removed"`, async () => {
+			it(`when the server returns code "${code}" to observeDevice(instanceID), ${code === "4.04" ? "don't" : "only"} emit an error and don't emit "device updated"`, async () => {
 				const updatedSpy = spy();
 				const errorSpy = spy();
 				tradfri
@@ -842,4 +847,263 @@ describe("tradfri-client => custom requests => ", () => {
 			tradfri.request(null, null);
 		});
 	});
+});
+
+describe("tradfri-client => observing groups => ", () => {
+
+	// Setup the mock
+	const {
+		tradfri,
+		groupsUrl,
+		scenesUrl,
+		fakeCoap,
+		callbacks,
+		createStubs,
+		restoreStubs,
+		resetStubHistory,
+	} = createNetworkMock();
+	before(createStubs);
+	after(restoreStubs);
+	afterEach(resetStubHistory);
+
+	describe("observeGroupsAndScenes => ", () => {
+
+		it("should call coap.observe for the groups endpoint, each observed group, its scenes endpoint and each scene", async () => {
+			// remember the deferred promise as this only resolves after all responses have been received
+			const groupsAndScenesPromise = tradfri.observeGroupsAndScenes();
+
+			fakeCoap.observe.should.have.been.calledOnce;
+			fakeCoap.observe.should.have.been.calledWith(groupsUrl);
+			fakeCoap.observe.resetHistory();
+
+			const groups = [123456, 123457];
+			await callbacks.observeGroups(createResponse(groups));
+
+			// The groups endpoint should be called for each group
+			fakeCoap.observe.should.have.been.calledTwice;
+			fakeCoap.observe.should.have.been.calledWith(`${groupsUrl}/123456`);
+			fakeCoap.observe.should.have.been.calledWith(`${groupsUrl}/123457`);
+			fakeCoap.observe.resetHistory();
+
+			// now provide the faked responses so the observe process can continue with scenes
+			await callbacks.observeGroup[123456](createEmptyGroupResponse(123456));
+			await callbacks.observeGroup[123457](createEmptyGroupResponse(123457));
+
+			// The scenes endpoint should be called for each group
+			fakeCoap.observe.should.have.been.calledTwice;
+			fakeCoap.observe.should.have.been.calledWith(`${scenesUrl}/123456`);
+			fakeCoap.observe.should.have.been.calledWith(`${scenesUrl}/123457`);
+			fakeCoap.observe.resetHistory();
+
+			// provide the fake scenes so those can be observed too
+			const scenes = {
+				123456: [654321, 654322],
+				123457: [654323, 654324],
+			};
+			await callbacks.observeScenes[123456](createResponse(scenes[123456]));
+			await callbacks.observeScenes[123457](createResponse(scenes[123457]));
+
+			// The scene endpoint should be called for each scene
+			fakeCoap.observe.callCount.should.equal(4);
+			fakeCoap.observe.should.have.been.calledWith(`${scenesUrl}/123456/654321`);
+			fakeCoap.observe.should.have.been.calledWith(`${scenesUrl}/123456/654322`);
+			fakeCoap.observe.should.have.been.calledWith(`${scenesUrl}/123457/654323`);
+			fakeCoap.observe.should.have.been.calledWith(`${scenesUrl}/123457/654324`);
+			fakeCoap.observe.resetHistory();
+
+			// the scenes have to be provided aswell
+			await callbacks.observeScene["123456/654321"](createEmptySceneResponse(654321));
+			await callbacks.observeScene["123456/654322"](createEmptySceneResponse(654322));
+			await callbacks.observeScene["123457/654323"](createEmptySceneResponse(654323));
+			await callbacks.observeScene["123457/654324"](createEmptySceneResponse(654324));
+
+			// now the deferred promise should have resolved
+			await groupsAndScenesPromise;
+		});
+
+		it("should not call anything when already observing", async () => {
+			await tradfri.observeGroupsAndScenes();
+			fakeCoap.observe.should.not.have.been.called;
+		});
+
+		it("when a group is added, it should only call observe for that one and its scenes", async () => {
+			const groups = [123456, 123457, 123458];
+			await callbacks.observeGroups(createResponse(groups));
+
+			// group endpoint
+			fakeCoap.observe.should.have.been.calledOnce;
+			fakeCoap.observe.should.have.been.calledWith(`${groupsUrl}/123458`);
+			fakeCoap.observe.resetHistory();
+
+			// now provide the faked responses so the observe process can continue with scenes
+			await callbacks.observeGroup[123458](createEmptyGroupResponse(123458));
+
+			// scenes endpoint for that group
+			fakeCoap.observe.should.have.been.calledOnce;
+			fakeCoap.observe.should.have.been.calledWith(`${scenesUrl}/123458`);
+			fakeCoap.observe.resetHistory();
+
+			// provide the faked response for that one, too
+			const scenes = [654987, 654988];
+			await callbacks.observeScenes[123458](createResponse(scenes));
+
+			// The scene endpoint should be called for each scene
+			fakeCoap.observe.callCount.should.equal(2);
+			fakeCoap.observe.should.have.been.calledWith(`${scenesUrl}/123458/654987`);
+			fakeCoap.observe.should.have.been.calledWith(`${scenesUrl}/123458/654988`);
+			fakeCoap.observe.resetHistory();
+
+			// the scenes have to be provided aswell
+			await callbacks.observeScene["123458/654987"](createEmptySceneResponse(654987));
+			await callbacks.observeScene["123458/654988"](createEmptySceneResponse(654988));
+		});
+
+		it(`when a group is removed, on("group removed") should be called with its id`, async () => {
+
+			const leSpy = spy();
+			tradfri.on("group removed", leSpy);
+
+			const groups = [123456, 123457];
+			await callbacks.observeGroups(createResponse(groups));
+
+			fakeCoap.observe.should.not.have.been.called;
+			leSpy.should.have.been.calledOnce;
+			leSpy.should.have.been.calledWithExactly(123458);
+
+			tradfri.removeAllListeners();
+		});
+
+		for (const error of [
+			MessageCodes.clientError.unauthorized,
+			MessageCodes.clientError.forbidden,
+			MessageCodes.clientError.notFound,
+		]) {
+			const code = error.toString();
+			it(`when the server returns code "${code}" to observeGroups, only emit an error, not "group removed"`, async () => {
+
+				const removedSpy = spy();
+				const errorSpy = spy();
+				tradfri
+					.on("group removed", removedSpy)
+					.on("error", errorSpy)
+					;
+
+				await callbacks.observeGroups(createErrorResponse(error));
+
+				fakeCoap.observe.should.not.have.been.called;
+				removedSpy.should.not.have.been.called;
+				errorSpy.should.have.been.calledOnce;
+				expect(errorSpy.getCall(0).args[0]).to.be.an.instanceOf(Error);
+				expect(errorSpy.getCall(0).args[0].message.startsWith("unexpected")).to.be.true;
+
+				tradfri.removeAllListeners();
+			});
+
+			it(`when the server returns code "${code}" to observeGroup(instanceID), ${code === "4.04" ? "don't" : "only"} emit an error and don't emit "group updated"`, async () => {
+				const updatedSpy = spy();
+				const errorSpy = spy();
+				tradfri
+					.on("error", errorSpy)
+					.on("group updated", updatedSpy)
+					;
+
+				// at this point we have groups 123456 and 123457. Fake an error to one of them
+				await callbacks.observeGroup[123457](createErrorResponse(error));
+
+				updatedSpy.should.not.have.been.called;
+				if (code !== "4.04") {
+					errorSpy.should.have.been.calledOnce;
+					expect(errorSpy.getCall(0).args[0]).to.be.an.instanceOf(Error);
+					expect(errorSpy.getCall(0).args[0].message.startsWith("unexpected")).to.be.true;
+				} else {
+					errorSpy.should.not.have.been.called;
+				}
+
+				tradfri.removeAllListeners();
+			});
+
+			it(`when the server returns code "${code}" to observeScenes(groupId), only emit an error, not "scene removed"`, async () => {
+
+				const removedSpy = spy();
+				const errorSpy = spy();
+				tradfri
+					.on("scene removed", removedSpy)
+					.on("error", errorSpy)
+					;
+
+				await callbacks.observeScenes[123457](createErrorResponse(error));
+
+				fakeCoap.observe.should.not.have.been.called;
+				removedSpy.should.not.have.been.called;
+				errorSpy.should.have.been.calledOnce;
+				expect(errorSpy.getCall(0).args[0]).to.be.an.instanceOf(Error);
+				expect(errorSpy.getCall(0).args[0].message.startsWith("unexpected")).to.be.true;
+
+				tradfri.removeAllListeners();
+			});
+
+			it(`when the server returns code "${code}" to observeScene(groupId, instanceId), ${code === "4.04" ? "don't" : "only"} emit an error and don't emit "scene updated"`, async () => {
+				const updatedSpy = spy();
+				const errorSpy = spy();
+				tradfri
+					.on("error", errorSpy)
+					.on("scene updated", updatedSpy)
+					;
+
+				await callbacks.observeScene["123457/654323"](createErrorResponse(error));
+
+				updatedSpy.should.not.have.been.called;
+				if (code !== "4.04") {
+					errorSpy.should.have.been.calledOnce;
+					expect(errorSpy.getCall(0).args[0]).to.be.an.instanceOf(Error);
+					expect(errorSpy.getCall(0).args[0].message.startsWith("unexpected")).to.be.true;
+				} else {
+					errorSpy.should.not.have.been.called;
+				}
+
+				tradfri.removeAllListeners();
+			});
+		}
+
+	});
+
+	describe("stopObservingGroups => ", () => {
+		it("should call coap.stopObserving for each observed group and scene and the endpoints for groups and <group>/scenes", () => {
+			tradfri.stopObservingGroups();
+
+			fakeCoap.stopObserving.callCount.should.equal(9);
+			fakeCoap.stopObserving.should.have.been.calledWith(`${groupsUrl}`);
+			fakeCoap.stopObserving.should.have.been.calledWith(`${groupsUrl}/123456`);
+			fakeCoap.stopObserving.should.have.been.calledWith(`${groupsUrl}/123457`);
+			fakeCoap.stopObserving.should.have.been.calledWith(`${scenesUrl}/123456`);
+			fakeCoap.stopObserving.should.have.been.calledWith(`${scenesUrl}/123456/654321`);
+			fakeCoap.stopObserving.should.have.been.calledWith(`${scenesUrl}/123456/654322`);
+			fakeCoap.stopObserving.should.have.been.calledWith(`${scenesUrl}/123457`);
+			fakeCoap.stopObserving.should.have.been.calledWith(`${scenesUrl}/123457/654323`);
+			fakeCoap.stopObserving.should.have.been.calledWith(`${scenesUrl}/123457/654324`);
+		});
+	});
+
+	describe("observeGroupsAndScenes (with errors) => ", () => {
+		it("should be rejected when one of the group or scene callbacks receives an invalid response", async () => {
+
+			// the error spy has to be used our chai fails our test
+			const errorSpy = spy();
+			tradfri.on("error", errorSpy);
+
+			const groupsPromise = tradfri.observeGroupsAndScenes();
+			const groups = [123456];
+			await callbacks.observeGroups(createResponse(groups));
+
+			// provide an error to the observer callback
+			await callbacks.observeGroup[123456](createErrorResponse(MessageCodes.clientError.forbidden));
+
+			errorSpy.should.have.been.called;
+			tradfri.removeAllListeners();
+
+			// now the deferred promise should have been rejected
+			await groupsPromise.should.be.rejectedWith("could not be observed");
+		});
+	});
+
 });
