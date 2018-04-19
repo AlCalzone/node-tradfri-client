@@ -27,18 +27,26 @@ import { argv } from "yargs";
 
 const rootDir = path.resolve(__dirname, "../");
 
-const packPath = path.join(rootDir, "package.json");
-const pack = require(packPath);
-const readmePath = path.join(rootDir, "README.md");
-let readme = fs.readFileSync(readmePath, "utf8");
-// const ioPackPath = path.join(rootDir, "io-package.json");
-// const ioPack = require(ioPackPath);
-
 function fail(reason: string) {
 	console.error("");
 	console.error(colors.red(reason));
 	console.error("");
 	process.exit(0);
+}
+
+const packPath = path.join(rootDir, "package.json");
+const pack = require(packPath);
+const readmePath = path.join(rootDir, "README.md");
+let readme = fs.readFileSync(readmePath, "utf8");
+const README_PLACEHOLDER = "#### __WORK IN PROGRESS__";
+
+// check if the readme contains exactly 1 occurence of the changelog placeholder
+switch ((readme.match(new RegExp("^" + README_PLACEHOLDER + "$", "gm")) || []).length) {
+	case 0:
+		fail(colors.red("Cannot continue, the changelog placeholder is missing from the readme!"));
+	case 1: break; // all good
+	default:
+		fail(colors.red("Cannot continue, there is more than one changelog placeholder in the readme!"));
 }
 
 // check if there are untracked changes
@@ -97,7 +105,7 @@ if (argv.dry) {
 	console.log(`updating changelog in README.md`);
 	const d = new Date();
 	readme = readme.replace(
-		"#### __WORK IN PROGRESS__",
+		README_PLACEHOLDER,
 		`#### ${newVersion} (${d.getFullYear()}-${padStart("" + (d.getMonth() + 1), 2, "0")}-${padStart("" + d.getDate(), 2, "0")})`,
 	);
 	fs.writeFileSync(readmePath, readme, "utf8");
