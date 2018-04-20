@@ -16,6 +16,7 @@ const accessory_1 = require("./lib/accessory");
 const array_extensions_1 = require("./lib/array-extensions");
 const defer_promise_1 = require("./lib/defer-promise");
 const endpoints_1 = require("./lib/endpoints");
+const gatewayDetails_1 = require("./lib/gatewayDetails");
 const group_1 = require("./lib/group");
 const logger_1 = require("./lib/logger");
 const object_polyfill_1 = require("./lib/object-polyfill");
@@ -566,6 +567,49 @@ class TradfriClient extends events_1.EventEmitter {
         this.emit("scene updated", groupId, scene.link(this));
         return true;
     }
+    /**
+     * Sets up an observer for the gateway
+     * @returns A promise that resolves when the gateway information has been received for the first time
+     */
+    observeGateway() {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.isObserving(endpoints_1.endpoints.gatewayDetails))
+                return;
+            this.observeGatewayPromise = defer_promise_1.createDeferredPromise();
+            // although we return another promise, await the observeResource promise
+            // so errors don't fall through the gaps
+            yield this.observeResource(endpoints_1.endpoints.gatewayDetails, (resp) => this.observeGateway_callback(resp));
+            return this.observeGatewayPromise;
+        });
+    }
+    observeGateway_callback(response) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // check response code
+            if (response.code.toString() !== "2.05") {
+                if (!this.handleNonSuccessfulResponse(response, `observeGateway()`, false))
+                    return;
+            }
+            logger_1.log(`got gateway information`);
+            const result = parsePayload(response);
+            // parse gw info
+            const gateway = new gatewayDetails_1.GatewayDetails(this.ipsoOptions)
+                .parse(result)
+                .fixBuggedProperties()
+                .createProxy();
+            // and notify all listeners about the update
+            this.emit("gateway updated", gateway.link(this));
+            if (this.observeGatewayPromise != null) {
+                this.observeGatewayPromise.resolve();
+                this.observeGatewayPromise = null;
+            }
+        });
+    }
+    stopObservingGateway() {
+        this.stopObservingResource(`${this.requestBase}${endpoints_1.endpoints.gatewayDetails}`);
+    }
+    // =================================================================================
+    // =================================================================================
+    // =================================================================================
     /**
      * Handles a non-successful response, e.g. by error logging
      * @param resp The response with a code that indicates an unsuccessful request

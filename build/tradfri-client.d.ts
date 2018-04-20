@@ -163,6 +163,14 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
     private observeGroup_callback(instanceId, response);
     private observeScenes_callback(groupId, response);
     private observeScene_callback(groupId, instanceId, response);
+    private observeGatewayPromise;
+    /**
+     * Sets up an observer for the gateway
+     * @returns A promise that resolves when the gateway information has been received for the first time
+     */
+    observeGateway(): Promise<void>;
+    private observeGateway_callback(response);
+    stopObservingGateway(): void;
     /**
      * Handles a non-successful response, e.g. by error logging
      * @param resp The response with a code that indicates an unsuccessful request

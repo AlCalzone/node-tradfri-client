@@ -7,6 +7,7 @@ import { Accessory, AccessoryTypes } from "./lib/accessory";
 import { except } from "./lib/array-extensions";
 import { createDeferredPromise, DeferredPromise } from "./lib/defer-promise";
 import { endpoints as coapEndpoints } from "./lib/endpoints";
+import { GatewayDetails } from "./lib/gatewayDetails";
 import { Group, GroupInfo, GroupOperation } from "./lib/group";
 import { IPSOObject, IPSOOptions } from "./lib/ipsoObject";
 import { LightOperation } from "./lib/light";
@@ -391,6 +392,10 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		}
 	}
 
+	// =================================================================================
+	// =================================================================================
+	// =================================================================================
+
 	private observeDevicesPromise: DeferredPromise<void>;
 	/**
 	 * Sets up an observer for all devices
@@ -502,6 +507,10 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		this.emit("device updated", accessory.link(this));
 		return true;
 	}
+
+	// =================================================================================
+	// =================================================================================
+	// =================================================================================
 
 	private observeGroupsPromise: DeferredPromise<void>;
 	private observeScenesPromises: Map<number, DeferredPromise<void>>;
@@ -745,6 +754,64 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 
 		return true;
 	}
+
+	// =================================================================================
+	// =================================================================================
+	// =================================================================================
+
+	private observeGatewayPromise: DeferredPromise<void>;
+	/**
+	 * Sets up an observer for the gateway
+	 * @returns A promise that resolves when the gateway information has been received for the first time
+	 */
+	public async observeGateway(): Promise<void> {
+		if (this.isObserving(coapEndpoints.gatewayDetails)) return;
+
+		this.observeGatewayPromise = createDeferredPromise<void>();
+		// although we return another promise, await the observeResource promise
+		// so errors don't fall through the gaps
+		await this.observeResource(
+			coapEndpoints.gatewayDetails,
+			(resp) => this.observeGateway_callback(resp),
+		);
+		return this.observeGatewayPromise;
+	}
+
+	private async observeGateway_callback(response: CoapResponse) {
+
+		// check response code
+		if (response.code.toString() !== "2.05") {
+			if (!this.handleNonSuccessfulResponse(
+				response, `observeGateway()`, false,
+			)) return;
+		}
+
+		log(`got gateway information`);
+
+		const result = parsePayload(response);
+		// parse gw info
+		const gateway = new GatewayDetails(this.ipsoOptions)
+			.parse(result)
+			.fixBuggedProperties()
+			.createProxy()
+			;
+		// and notify all listeners about the update
+		this.emit("gateway updated", gateway.link(this));
+
+		if (this.observeGatewayPromise != null) {
+			this.observeGatewayPromise.resolve();
+			this.observeGatewayPromise = null;
+		}
+
+	}
+
+	public stopObservingGateway() {
+		this.stopObservingResource(`${this.requestBase}${coapEndpoints.gatewayDetails}`);
+	}
+
+	// =================================================================================
+	// =================================================================================
+	// =================================================================================
 
 	/**
 	 * Handles a non-successful response, e.g. by error logging

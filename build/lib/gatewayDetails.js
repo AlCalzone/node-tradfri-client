@@ -15,33 +15,56 @@ const ipsoObject_1 = require("./ipsoObject");
 class GatewayDetails extends ipsoObject_1.IPSOObject {
     constructor() {
         super(...arguments);
+        this.commissioningMode = 0; // some enum => which one?
+        this.currentTimestamp = 0; // <long>
+        this.timeSource = -1; // <int>
         this.ntpServerUrl = "";
         this.version = "";
-        this.updateState = 0; // => which enum?
-        this.updateProgress = 100; // <int>
-        this.updateDetailsURL = ""; // <string> => what is this?
-        this.currentTimestamp = 0; // <long>
         this.UNKNOWN1 = ""; // <string> => something to do with commissioning? XML-Date
-        this.commissioningMode = 0; // <int> => which enum?
         this.UNKNOWN2 = 0; // <int> => something more with commissioning?
-        this.updatePriority = updatePriority.normal;
+        this.updateProgress = 100; // <int>
+        this.updatePriority = UpdatePriority.Normal;
         this.updateAcceptedTimestamp = 0; // <int>
-        this.timeSource = -1; // <int>
-        this.UNKNOWN3 = 0; // <int/bool> => what is this?
-        this.UNKNOWN4 = 0; // <int/bool> => what is this?
-        this.UNKNOWN5 = 0; // <int/bool> => what is this?
-        this.UNKNOWN6 = 0; // <int/bool> => what is this?
-        this.UNKNOWN7 = 0; // <int/bool> => what is this?
-        this.UNKNOWN8 = 0; // <int/bool> => what is this?
-        this.UNKNOWN9 = 0; // <int/bool> => what is this?
-        this.UNKNOWN10 = 0; // <int/bool> => what is this?
-        this.UNKNOWN11 = 0; // <int/bool> => what is this?
+        this.releaseNotes = ""; // <string> => what is this?
+        this.dstStartMonth = 0;
+        this.dstStartDay = 0;
+        this.dstStartHour = 0;
+        this.dstStartMinute = 0;
+        this.dstEndMonth = 0;
+        this.dstEndDay = 0;
+        this.dstEndHour = 0;
+        this.dstEndMinute = 0;
+        this.dstTimeOffset = 0;
         this.UNKNOWN12 = ""; // some kind of hex code
         // are those used?
-        this.FORCE_CHECK_OTA_UPDATE = "";
+        this.forceOtaUpdateCheck = "";
         this.name = "";
     }
 }
+__decorate([
+    ipsoObject_1.ipsoKey("9093"),
+    __metadata("design:type", Boolean)
+], GatewayDetails.prototype, "alexaPairStatus", void 0);
+__decorate([
+    ipsoObject_1.ipsoKey("9105"),
+    __metadata("design:type", Boolean)
+], GatewayDetails.prototype, "googleHomePairStatus", void 0);
+__decorate([
+    ipsoObject_1.ipsoKey("9093"),
+    __metadata("design:type", Boolean)
+], GatewayDetails.prototype, "certificateProvisioned", void 0);
+__decorate([
+    ipsoObject_1.ipsoKey("9061"),
+    __metadata("design:type", Number)
+], GatewayDetails.prototype, "commissioningMode", void 0);
+__decorate([
+    ipsoObject_1.ipsoKey("9059"),
+    __metadata("design:type", Number)
+], GatewayDetails.prototype, "currentTimestamp", void 0);
+__decorate([
+    ipsoObject_1.ipsoKey("9071"),
+    __metadata("design:type", Number)
+], GatewayDetails.prototype, "timeSource", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("9023"),
     __metadata("design:type", String)
@@ -51,33 +74,21 @@ __decorate([
     __metadata("design:type", String)
 ], GatewayDetails.prototype, "version", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9054"),
-    __metadata("design:type", Number)
-], GatewayDetails.prototype, "updateState", void 0);
-__decorate([
-    ipsoObject_1.ipsoKey("9055"),
-    __metadata("design:type", Number)
-], GatewayDetails.prototype, "updateProgress", void 0);
-__decorate([
-    ipsoObject_1.ipsoKey("9056"),
-    __metadata("design:type", String)
-], GatewayDetails.prototype, "updateDetailsURL", void 0);
-__decorate([
-    ipsoObject_1.ipsoKey("9059"),
-    __metadata("design:type", Number)
-], GatewayDetails.prototype, "currentTimestamp", void 0);
-__decorate([
     ipsoObject_1.ipsoKey("9060"),
     __metadata("design:type", String)
 ], GatewayDetails.prototype, "UNKNOWN1", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9061"),
-    __metadata("design:type", Number)
-], GatewayDetails.prototype, "commissioningMode", void 0);
-__decorate([
     ipsoObject_1.ipsoKey("9062"),
     __metadata("design:type", Number)
 ], GatewayDetails.prototype, "UNKNOWN2", void 0);
+__decorate([
+    ipsoObject_1.ipsoKey("9054"),
+    __metadata("design:type", Boolean)
+], GatewayDetails.prototype, "otaUpdateState", void 0);
+__decorate([
+    ipsoObject_1.ipsoKey("9055"),
+    __metadata("design:type", Number)
+], GatewayDetails.prototype, "updateProgress", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("9066"),
     __metadata("design:type", Number)
@@ -87,45 +98,45 @@ __decorate([
     __metadata("design:type", Number)
 ], GatewayDetails.prototype, "updateAcceptedTimestamp", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9071"),
-    __metadata("design:type", Number)
-], GatewayDetails.prototype, "timeSource", void 0);
+    ipsoObject_1.ipsoKey("9056"),
+    __metadata("design:type", String)
+], GatewayDetails.prototype, "releaseNotes", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("9072"),
     __metadata("design:type", Number)
-], GatewayDetails.prototype, "UNKNOWN3", void 0);
+], GatewayDetails.prototype, "dstStartMonth", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("9073"),
     __metadata("design:type", Number)
-], GatewayDetails.prototype, "UNKNOWN4", void 0);
+], GatewayDetails.prototype, "dstStartDay", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("9074"),
     __metadata("design:type", Number)
-], GatewayDetails.prototype, "UNKNOWN5", void 0);
+], GatewayDetails.prototype, "dstStartHour", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("9075"),
     __metadata("design:type", Number)
-], GatewayDetails.prototype, "UNKNOWN6", void 0);
+], GatewayDetails.prototype, "dstStartMinute", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("9076"),
     __metadata("design:type", Number)
-], GatewayDetails.prototype, "UNKNOWN7", void 0);
+], GatewayDetails.prototype, "dstEndMonth", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("9077"),
     __metadata("design:type", Number)
-], GatewayDetails.prototype, "UNKNOWN8", void 0);
+], GatewayDetails.prototype, "dstEndDay", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("9078"),
     __metadata("design:type", Number)
-], GatewayDetails.prototype, "UNKNOWN9", void 0);
+], GatewayDetails.prototype, "dstEndHour", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("9079"),
     __metadata("design:type", Number)
-], GatewayDetails.prototype, "UNKNOWN10", void 0);
+], GatewayDetails.prototype, "dstEndMinute", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("9080"),
     __metadata("design:type", Number)
-], GatewayDetails.prototype, "UNKNOWN11", void 0);
+], GatewayDetails.prototype, "dstTimeOffset", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("9081"),
     __metadata("design:type", String)
@@ -133,16 +144,16 @@ __decorate([
 __decorate([
     ipsoObject_1.ipsoKey("9032"),
     __metadata("design:type", String)
-], GatewayDetails.prototype, "FORCE_CHECK_OTA_UPDATE", void 0);
+], GatewayDetails.prototype, "forceOtaUpdateCheck", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("9035"),
     __metadata("design:type", String)
 ], GatewayDetails.prototype, "name", void 0);
 exports.GatewayDetails = GatewayDetails;
-var updatePriority;
-(function (updatePriority) {
-    updatePriority[updatePriority["normal"] = 0] = "normal";
-    updatePriority[updatePriority["critical"] = 1] = "critical";
-    updatePriority[updatePriority["required"] = 2] = "required";
-    updatePriority[updatePriority["forced"] = 5] = "forced";
-})(updatePriority = exports.updatePriority || (exports.updatePriority = {}));
+var UpdatePriority;
+(function (UpdatePriority) {
+    UpdatePriority[UpdatePriority["Normal"] = 0] = "Normal";
+    UpdatePriority[UpdatePriority["Critical"] = 1] = "Critical";
+    UpdatePriority[UpdatePriority["Required"] = 2] = "Required";
+    UpdatePriority[UpdatePriority["Forced"] = 5] = "Forced";
+})(UpdatePriority = exports.UpdatePriority || (exports.UpdatePriority = {}));
