@@ -16,12 +16,12 @@ class GatewayDetails extends ipsoObject_1.IPSOObject {
     constructor() {
         super(...arguments);
         this.commissioningMode = 0; // some enum => which one?
-        this.currentTimestamp = 0; // <long>
+        this.utcNowUnixTimestamp = 0;
+        this.utcNowISODate = "";
         this.timeSource = -1; // <int>
         this.ntpServerUrl = "";
         this.version = "";
-        this.UNKNOWN1 = ""; // <string> => something to do with commissioning? XML-Date
-        this.UNKNOWN2 = 0; // <int> => something more with commissioning?
+        this.UNKNOWN_9062 = 0; // <int> => something more with commissioning?
         this.updateProgress = 100; // <int>
         this.updatePriority = UpdatePriority.Normal;
         this.updateAcceptedTimestamp = 0; // <int>
@@ -35,7 +35,7 @@ class GatewayDetails extends ipsoObject_1.IPSOObject {
         this.dstEndHour = 0;
         this.dstEndMinute = 0;
         this.dstTimeOffset = 0;
-        this.UNKNOWN12 = ""; // some kind of hex code
+        this.UNKNOWN_9081 = ""; // some kind of hex code
         // are those used?
         this.forceOtaUpdateCheck = "";
         this.name = "";
@@ -58,9 +58,17 @@ __decorate([
     __metadata("design:type", Number)
 ], GatewayDetails.prototype, "commissioningMode", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9059"),
+    ipsoObject_1.ipsoKey("9059")
+    /** Current UTC time in seconds since 1970 (unix timestamp) */
+    ,
     __metadata("design:type", Number)
-], GatewayDetails.prototype, "currentTimestamp", void 0);
+], GatewayDetails.prototype, "utcNowUnixTimestamp", void 0);
+__decorate([
+    ipsoObject_1.ipsoKey("9060")
+    /** Current UTC time as XML (ISO) date */
+    ,
+    __metadata("design:type", String)
+], GatewayDetails.prototype, "utcNowISODate", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("9071"),
     __metadata("design:type", Number)
@@ -74,13 +82,9 @@ __decorate([
     __metadata("design:type", String)
 ], GatewayDetails.prototype, "version", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9060"),
-    __metadata("design:type", String)
-], GatewayDetails.prototype, "UNKNOWN1", void 0);
-__decorate([
     ipsoObject_1.ipsoKey("9062"),
     __metadata("design:type", Number)
-], GatewayDetails.prototype, "UNKNOWN2", void 0);
+], GatewayDetails.prototype, "UNKNOWN_9062", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("9054"),
     __metadata("design:type", Boolean)
@@ -140,7 +144,23 @@ __decorate([
 __decorate([
     ipsoObject_1.ipsoKey("9081"),
     __metadata("design:type", String)
-], GatewayDetails.prototype, "UNKNOWN12", void 0);
+], GatewayDetails.prototype, "UNKNOWN_9081", void 0);
+__decorate([
+    ipsoObject_1.ipsoKey("9082"),
+    __metadata("design:type", Boolean)
+], GatewayDetails.prototype, "UNKNOWN_9082", void 0);
+__decorate([
+    ipsoObject_1.ipsoKey("9083"),
+    __metadata("design:type", String)
+], GatewayDetails.prototype, "UNKNOWN_9083", void 0);
+__decorate([
+    ipsoObject_1.ipsoKey("9092"),
+    __metadata("design:type", Number)
+], GatewayDetails.prototype, "UNKNOWN_9092", void 0);
+__decorate([
+    ipsoObject_1.ipsoKey("9106"),
+    __metadata("design:type", Number)
+], GatewayDetails.prototype, "UNKNOWN_9106", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("9032"),
     __metadata("design:type", String)

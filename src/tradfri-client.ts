@@ -30,6 +30,7 @@ export type SceneUpdatedCallback = (groupId: number, scene: Scene) => void;
 export type SceneRemovedCallback = (groupId: number, instanceId: number) => void;
 export type ErrorCallback = (e: Error) => void;
 export type ConnectionFailedCallback = (attempt: number, maxAttempts: number) => void;
+export type GatewayUpdatedCallback = (gateway: GatewayDetails) => void;
 
 export type ObservableEvents =
 	"device updated" |
@@ -38,6 +39,7 @@ export type ObservableEvents =
 	"group removed" |
 	"scene updated" |
 	"scene removed" |
+	"gateway updated" |
 	"error" |
 	"connection failed"
 	;
@@ -51,6 +53,7 @@ export interface TradfriClient {
 	on(event: "group removed", callback: GroupRemovedCallback): this;
 	on(event: "scene updated", callback: SceneUpdatedCallback): this;
 	on(event: "scene removed", callback: SceneRemovedCallback): this;
+	on(event: "gateway updated", callback: GatewayUpdatedCallback): this;
 	on(event: "error", callback: ErrorCallback): this;
 	// connection events => is there a nicer way than copy & paste?
 	on(event: "ping succeeded", callback: () => void): this;
@@ -68,6 +71,7 @@ export interface TradfriClient {
 	removeListener(event: "group removed", callback: GroupRemovedCallback): this;
 	removeListener(event: "scene updated", callback: SceneUpdatedCallback): this;
 	removeListener(event: "scene removed", callback: SceneRemovedCallback): this;
+	removeListener(event: "gateway updated", callback: GatewayUpdatedCallback): this;
 	removeListener(event: "error", callback: ErrorCallback): this;
 	// connection events => is there a nicer way than copy & paste?
 	removeListener(event: "ping succeeded", callback: () => void): this;

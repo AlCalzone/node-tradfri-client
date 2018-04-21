@@ -794,9 +794,9 @@ function parsePayload(response) {
         return null;
     switch (response.format) {
         case 0: // text/plain
-        case null: // assume text/plain
+        case null:// assume text/plain
             return response.payload.toString("utf-8");
-        case 50: // application/json
+        case 50:// application/json
             const json = response.payload.toString("utf-8");
             return JSON.parse(json);
         default:

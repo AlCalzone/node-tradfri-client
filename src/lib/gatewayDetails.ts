@@ -16,7 +16,11 @@ export class GatewayDetails extends IPSOObject {
 	public commissioningMode: number = 0; // some enum => which one?
 
 	@ipsoKey("9059")
-	public currentTimestamp: number = 0; // <long>
+	/** Current UTC time in seconds since 1970 (unix timestamp) */
+	public utcNowUnixTimestamp: number = 0;
+	@ipsoKey("9060")
+	/** Current UTC time as XML (ISO) date */
+	public utcNowISODate: string = "";
 
 	@ipsoKey("9071")
 	public timeSource: number = -1; // <int>
@@ -27,10 +31,8 @@ export class GatewayDetails extends IPSOObject {
 	@ipsoKey("9029")
 	public version: string = "";
 
-	@ipsoKey("9060")
-	public UNKNOWN1: string = ""; // <string> => something to do with commissioning? XML-Date
 	@ipsoKey("9062")
-	public UNKNOWN2: number = 0; // <int> => something more with commissioning?
+	public UNKNOWN_9062: number = 0; // <int> => something more with commissioning?
 
 	@ipsoKey("9054")
 	public otaUpdateState: boolean;
@@ -64,7 +66,15 @@ export class GatewayDetails extends IPSOObject {
 	public dstTimeOffset: number = 0;
 
 	@ipsoKey("9081")
-	public UNKNOWN12: string = ""; // some kind of hex code
+	public UNKNOWN_9081: string = ""; // some kind of hex code
+	@ipsoKey("9082")
+	public UNKNOWN_9082: boolean;
+	@ipsoKey("9083")
+	public UNKNOWN_9083: string; // some kind of serial number maybe?
+	@ipsoKey("9092")
+	public UNKNOWN_9092: number;
+	@ipsoKey("9106")
+	public UNKNOWN_9106: number;
 
 	// are those used?
 	@ipsoKey("9032")

@@ -9,7 +9,7 @@ exports.endpoints = {
     notifications: "15006",
     smartTasks: "15010",
     gateway: "15011",
-    gatewayDetails: "15012",
+    gatewayDetails: "15011/15012",
     authentication: "15011/9063",
 };
 // export const gatewayEndpoints = {

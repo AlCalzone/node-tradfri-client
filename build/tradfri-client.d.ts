@@ -2,6 +2,7 @@
 import { EventEmitter } from "events";
 import { CoapResponse, RequestMethod } from "node-coap-client";
 import { Accessory } from "./lib/accessory";
+import { GatewayDetails } from "./lib/gatewayDetails";
 import { Group, GroupInfo, GroupOperation } from "./lib/group";
 import { LightOperation } from "./lib/light";
 import { LoggerFunction } from "./lib/logger";
@@ -18,7 +19,8 @@ export declare type SceneUpdatedCallback = (groupId: number, scene: Scene) => vo
 export declare type SceneRemovedCallback = (groupId: number, instanceId: number) => void;
 export declare type ErrorCallback = (e: Error) => void;
 export declare type ConnectionFailedCallback = (attempt: number, maxAttempts: number) => void;
-export declare type ObservableEvents = "device updated" | "device removed" | "group updated" | "group removed" | "scene updated" | "scene removed" | "error" | "connection failed";
+export declare type GatewayUpdatedCallback = (gateway: GatewayDetails) => void;
+export declare type ObservableEvents = "device updated" | "device removed" | "group updated" | "group removed" | "scene updated" | "scene removed" | "gateway updated" | "error" | "connection failed";
 export interface TradfriClient {
     on(event: "device updated", callback: DeviceUpdatedCallback): this;
     on(event: "device removed", callback: DeviceRemovedCallback): this;
@@ -26,6 +28,7 @@ export interface TradfriClient {
     on(event: "group removed", callback: GroupRemovedCallback): this;
     on(event: "scene updated", callback: SceneUpdatedCallback): this;
     on(event: "scene removed", callback: SceneRemovedCallback): this;
+    on(event: "gateway updated", callback: GatewayUpdatedCallback): this;
     on(event: "error", callback: ErrorCallback): this;
     on(event: "ping succeeded", callback: () => void): this;
     on(event: "ping failed", callback: PingFailedCallback): this;
@@ -41,6 +44,7 @@ export interface TradfriClient {
     removeListener(event: "group removed", callback: GroupRemovedCallback): this;
     removeListener(event: "scene updated", callback: SceneUpdatedCallback): this;
     removeListener(event: "scene removed", callback: SceneRemovedCallback): this;
+    removeListener(event: "gateway updated", callback: GatewayUpdatedCallback): this;
     removeListener(event: "error", callback: ErrorCallback): this;
     removeListener(event: "ping succeeded", callback: () => void): this;
     removeListener(event: "ping failed", callback: PingFailedCallback): this;

@@ -5,12 +5,12 @@ export declare class GatewayDetails extends IPSOObject {
     googleHomePairStatus: boolean;
     certificateProvisioned: boolean;
     commissioningMode: number;
-    currentTimestamp: number;
+    utcNowUnixTimestamp: number;
+    utcNowISODate: string;
     timeSource: number;
     ntpServerUrl: string;
     version: string;
-    UNKNOWN1: string;
-    UNKNOWN2: number;
+    UNKNOWN_9062: number;
     otaUpdateState: boolean;
     updateProgress: number;
     updatePriority: UpdatePriority;
@@ -25,7 +25,11 @@ export declare class GatewayDetails extends IPSOObject {
     dstEndHour: number;
     dstEndMinute: number;
     dstTimeOffset: number;
-    UNKNOWN12: string;
+    UNKNOWN_9081: string;
+    UNKNOWN_9082: boolean;
+    UNKNOWN_9083: string;
+    UNKNOWN_9092: number;
+    UNKNOWN_9106: number;
     forceOtaUpdateCheck: string;
     name: string;
 }
