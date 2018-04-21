@@ -772,22 +772,29 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		if (this.isObserving(coapEndpoints.gatewayDetails)) return;
 
 		this.observeGatewayPromise = createDeferredPromise<void>();
-		// although we return another promise, await the observeResource promise
-		// so errors don't fall through the gaps
-		await this.observeResource(
+		// We have a timing problem here, as the observeGatewayPromise might be
+		// rejected in the callback and set to null. Therefore return it before
+		// starting the observation
+		this.observeResource(
 			coapEndpoints.gatewayDetails,
 			(resp) => this.observeGateway_callback(resp),
-		);
+		).catch(e => {
+			// pass errors through
+			if (this.observeGateway != null) this.observeGatewayPromise.reject(e);
+		});
 		return this.observeGatewayPromise;
 	}
 
 	private async observeGateway_callback(response: CoapResponse) {
+
+		log(`received response to observeGateway(): ${JSON.stringify(response, null, 4)}`);
 
 		// check response code
 		if (response.code.toString() !== "2.05") {
 			if (!this.handleNonSuccessfulResponse(
 				response, `observeGateway()`, false,
 			)) {
+				log(`  => not successful`);
 				if (this.observeGatewayPromise != null) {
 					this.observeGatewayPromise.reject(`The gateway could not be observed`);
 					this.observeGatewayPromise = null;

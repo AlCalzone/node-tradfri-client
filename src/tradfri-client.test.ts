@@ -1196,23 +1196,37 @@ describe("tradfri-client => observing the gateway => ", () => {
 			fakeCoap.stopObserving.should.have.been.calledWith(`${gatewayUrl}`);
 		});
 	});
+});
 
-	describe("observeGateway (with errors) => ", () => {
-		it("should be rejected when an invalid response is received for the initial request", async () => {
+describe("tradfri-client => observing the gateway (with errors) => ", () => {
 
-			// the error spy has to be used or chai fails our test
-			const errorSpy = spy();
-			tradfri.on("error", errorSpy);
+	// Setup the mock
+	const {
+		tradfri,
+		gatewayUrl,
+		fakeCoap,
+		callbacks,
+		createStubs,
+		restoreStubs,
+		resetStubHistory,
+	} = createNetworkMock();
+	before(createStubs);
+	after(restoreStubs);
+	afterEach(resetStubHistory);
 
-			const gatewayPromise = tradfri.observeGateway();
-			await callbacks.observeGateway(createErrorResponse(MessageCodes.clientError.forbidden));
+	it("The promise should be rejected when an invalid response is received for the initial request", async () => {
 
-			errorSpy.should.have.been.called;
-			tradfri.removeAllListeners();
+		// the error spy has to be used our chai fails our test
+		const errorSpy = spy();
+		tradfri.on("error", errorSpy);
 
-			// now the deferred promise should have been rejected
-			await gatewayPromise.should.be.rejectedWith("could not be observed");
-		});
+		const gatewayPromise = tradfri.observeGateway();
+		await callbacks.observeGateway(createErrorResponse(MessageCodes.clientError.forbidden));
+
+		errorSpy.should.have.been.called;
+		tradfri.removeAllListeners();
+
+		// now the deferred promise should have been rejected
+		await gatewayPromise.should.be.rejectedWith("could not be observed");
 	});
-
 });
