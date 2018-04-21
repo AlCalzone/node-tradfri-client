@@ -787,7 +787,13 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		if (response.code.toString() !== "2.05") {
 			if (!this.handleNonSuccessfulResponse(
 				response, `observeGateway()`, false,
-			)) return;
+			)) {
+				if (this.observeGatewayPromise != null) {
+					this.observeGatewayPromise.reject(`The gateway could not be observed`);
+					this.observeGatewayPromise = null;
+				}
+				return;
+			}
 		}
 
 		log(`got gateway information`);

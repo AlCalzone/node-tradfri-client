@@ -586,8 +586,13 @@ class TradfriClient extends events_1.EventEmitter {
         return __awaiter(this, void 0, void 0, function* () {
             // check response code
             if (response.code.toString() !== "2.05") {
-                if (!this.handleNonSuccessfulResponse(response, `observeGateway()`, false))
+                if (!this.handleNonSuccessfulResponse(response, `observeGateway()`, false)) {
+                    if (this.observeGatewayPromise != null) {
+                        this.observeGatewayPromise.reject(`The gateway could not be observed`);
+                        this.observeGatewayPromise = null;
+                    }
                     return;
+                }
             }
             logger_1.log(`got gateway information`);
             const result = parsePayload(response);
