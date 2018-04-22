@@ -202,7 +202,7 @@ try {
     // handle error
 }
 ```
-The returned `identity` and `psk` **have to be stored** for future connections to the gateway. To comply with IKEA's requests, the security code **must not be stored** permanently in your application.
+To comply with IKEA's requests, the security code **must not be stored** permanently in your application. Instead, store the returned `identity` and `psk` and use those for future connections to the gateway. 
 
 If the authentication was not successful, this method throws (or rather rejects with) an error which you should handle. The error `e` should be of type `TradfriError` and gives further information why the authentication failed. To check that, add `TradfriError` and `TradfriErrorCodes` to the list of imports and check as follows:
 ```TS
@@ -363,6 +363,41 @@ tradfri.observeGroupsAndScenes(): Promise<void>;
 ```
 you can set up an observer for all groups and their scenes, which will call the callbacks for `"group updated"`, `"group removed"`, `"scene updated"` and `"scene removed"` on updates. Stopping this observer is possible by calling `stopObservingGroups()`.
 
+### Observing the gateway details
+Using
+```TS
+tradfri.observeGateway(): Promise<void>
+```
+you can set up an observer for the gateway details, which in turn will call the registered callbacks for `"gateway updated"` when something changes. The observation can be stopped by calling `tradfri.stopObservingGateway()`.
+
+The object passed to the callback is of type `GatewayDetails` with the following properties:
+* `alexaPairStatus: boolean` - Whether the gateway is paired with Amazon Alexa or not.
+* `googleHomePairStatus: boolean` - Whether the gateway is paired with Google Home or not.
+* `certificateProvisioned: boolean` - unknown
+* `commissioningMode: number` - Meaning unknown. The possible values belong to some unknown enumeration.
+* `utcNowUnixTimestamp: number` - Current UTC time as a unix timestamp (seconds since 1970-01-01).
+* `utcNowISODate: string` - Current UTC time as an XML (ISO) date string. Includes milliseconds
+* `timeSource: number` - The source of time information. Unsure what the values mean
+* `ntpServerUrl: string` - The URL of the NTP server the gateway takes its time information from
+* `version: string` - Version of the gateway firmware
+* `otaUpdateState: boolean` - Whether a firmware update is available (probably)
+* `updateProgress: number` - The percentage of the current updates's progress
+* `updatePriority: UpdatePriority` - The priority of the firmware update. One of the following values:
+  * `UpdatePriority.Normal (0)`
+  * `UpdatePriority.Critical (1)`
+  * `UpdatePriority.Required (2)`
+  * `UpdatePriority.Forced (5)`
+* `updateAcceptedTimestapm: number` - Unknown
+* `releaseNotes: string` - Additional information about the update. Not sure if it's a changelog or just an URL.
+* The timespan for the daylight saving's time is encoded in the following properties. Not sure if it's currently in use:
+  * Start of DST: `dstStartMonth`, `dstStartDay`, `dstStartHour`, `dstStartMinute` (all numbers)
+  * End of DST: `dstEndMonth`, `dstEndDay`, `dstEndHour`, `dstEndMinute` (all numbers)
+  * `dstTimeOffset: number` - Unsure
+* `forceOtaUpdateCheck: string` - Unknown
+* `name: string` - Name of the gateway, seems unused
+
+**Note:** Many properties are not completely understood at the moment. If you can provide more information, feel free to open an issue.
+
 ### Updating a device on the gateway
 You can change properties of a device on the gateway (e.g. rename it) by calling
 ```TS
@@ -417,6 +452,22 @@ The `path` is the CoAP endpoint to be requested, the payload (if provided) must 
 }
 ```
 where the code is the string representation of one of the defined [CoAP message codes](https://tools.ietf.org/html/rfc7252#section-12.1.2) and the payload is either a string or a JSON object.
+
+### Rebooting the gateway
+Using 
+```TS
+tradfri.rebootGateway(): Promise<boolean>
+```
+you can reboot the gateway. The promise value determines if the reboot was started (`true`) or not (`false`).
+A successful reboot is also indicated by a reboot notification (not implemented yet).
+
+### Performing a factory reset on the gateway.
+Using 
+```TS
+tradfri.resetGateway(): Promise<boolean>
+```
+you can factory reset the gateway. The promise value determines if the reboot was started (`true`) or not (`false`).
+**Warning:** This wipes all configuration, including paired devices, groups and moods/scenes!
 
 ## Data structure
 
