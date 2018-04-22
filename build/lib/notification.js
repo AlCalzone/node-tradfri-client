@@ -9,16 +9,20 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const ipsoDevice_1 = require("./ipsoDevice");
 const ipsoObject_1 = require("./ipsoObject");
-class Notification extends ipsoDevice_1.IPSODevice {
+class Notification extends ipsoObject_1.IPSOObject {
     constructor() {
         super(...arguments);
+        this.timestamp = 0; // Timestamp of the notification as unix time
         this.event = 0;
         this.details = {};
         this.state = 0; // => ?
     }
 }
+__decorate([
+    ipsoObject_1.ipsoKey("9002"),
+    __metadata("design:type", Number)
+], Notification.prototype, "timestamp", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("9015"),
     __metadata("design:type", Number)
@@ -41,6 +45,14 @@ var NotificationTypes;
     NotificationTypes[NotificationTypes["UNKNOWN2"] = 1005] = "UNKNOWN2";
     NotificationTypes[NotificationTypes["LOSS_OF_INTERNET_CONNECTIVITY"] = 5001] = "LOSS_OF_INTERNET_CONNECTIVITY";
 })(NotificationTypes = exports.NotificationTypes || (exports.NotificationTypes = {}));
+var GatewayRebootReason;
+(function (GatewayRebootReason) {
+    GatewayRebootReason[GatewayRebootReason["REBOOT_DEFAULT"] = -1] = "REBOOT_DEFAULT";
+    GatewayRebootReason[GatewayRebootReason["REBOOT_FIRMWARE_UPGRADE"] = 0] = "REBOOT_FIRMWARE_UPGRADE";
+    GatewayRebootReason[GatewayRebootReason["REBOOT_FROM_CLIENT"] = 1] = "REBOOT_FROM_CLIENT";
+    GatewayRebootReason[GatewayRebootReason["REBOOT_HOMEKIT_RESET"] = 3] = "REBOOT_HOMEKIT_RESET";
+    GatewayRebootReason[GatewayRebootReason["REBOOT_SOFT_RESET"] = 2] = "REBOOT_SOFT_RESET";
+})(GatewayRebootReason = exports.GatewayRebootReason || (exports.GatewayRebootReason = {}));
 /**
  * Turns a key=value-Array into a Dictionary object
  */
