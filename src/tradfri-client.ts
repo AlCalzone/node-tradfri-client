@@ -6,7 +6,7 @@ import { CoapClient as coap, CoapResponse, ConnectionResult, RequestMethod } fro
 import { Accessory, AccessoryTypes } from "./lib/accessory";
 import { except } from "./lib/array-extensions";
 import { createDeferredPromise, DeferredPromise } from "./lib/defer-promise";
-import { endpoints as coapEndpoints } from "./lib/endpoints";
+import { endpoints as coapEndpoints, GatewayEndpoints } from "./lib/endpoints";
 import { GatewayDetails } from "./lib/gatewayDetails";
 import { Group, GroupInfo, GroupOperation } from "./lib/group";
 import { IPSOObject, IPSOOptions } from "./lib/ipsoObject";
@@ -262,7 +262,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		let payload: string | Buffer = JSON.stringify({ 9090: identity });
 		payload = Buffer.from(payload);
 		const response = await this.swallowInternalCoapRejections(coap.request(
-			`${this.requestBase}${coapEndpoints.authentication}`,
+			`${this.requestBase}${coapEndpoints.gateway(GatewayEndpoints.Authenticate)}`,
 			"post",
 			payload,
 		));
@@ -769,14 +769,14 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 * @returns A promise that resolves when the gateway information has been received for the first time
 	 */
 	public async observeGateway(): Promise<void> {
-		if (this.isObserving(coapEndpoints.gatewayDetails)) return;
+		if (this.isObserving(coapEndpoints.gateway(GatewayEndpoints.Details))) return;
 
 		this.observeGatewayPromise = createDeferredPromise<void>();
 		// We have a timing problem here, as the observeGatewayPromise might be
 		// rejected in the callback and set to null. Therefore return it before
 		// starting the observation
 		this.observeResource(
-			coapEndpoints.gatewayDetails,
+			coapEndpoints.gateway(GatewayEndpoints.Details),
 			(resp) => this.observeGateway_callback(resp),
 		).catch(e => {
 			// pass errors through
@@ -823,7 +823,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	}
 
 	public stopObservingGateway() {
-		this.stopObservingResource(`${this.requestBase}${coapEndpoints.gatewayDetails}`);
+		this.stopObservingResource(`${this.requestBase}${coapEndpoints.gateway(GatewayEndpoints.Details)}`);
 	}
 
 	// =================================================================================
@@ -1045,6 +1045,12 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 			}
 		});
 	}
+
+	/** Reboots the gateway. This operation is additionally acknowledged with a reboot notification. */
+	public async rebootGateway(): Promise<boolean> {
+		const { code } = await this.request(coapEndpoints.gateway(GatewayEndpoints.Reboot), "post");
+		return code === "2.01";
+	}
 }
 
 /** Normalizes the path to a resource, so it can be used for storing the observer */
@@ -1057,13 +1063,19 @@ function normalizeResourcePath(path: string): string {
 
 function parsePayload(response: CoapResponse): any {
 	if (response.payload == null) return null;
+	log(`parsing payload: ${response.payload}`);
 	switch (response.format) {
 		case 0: // text/plain
 		case null: // assume text/plain
 			return response.payload.toString("utf-8");
 		case 50: // application/json
 			const json = response.payload.toString("utf-8");
-			return JSON.parse(json);
+			try {
+				// This might fail!
+				return JSON.parse(json);
+			} catch (e) {
+				return null;
+			}
 		default:
 			// dunno how to parse this
 			log(`unknown CoAP response format ${response.format}`, "warn");

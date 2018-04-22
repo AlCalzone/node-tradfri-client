@@ -5,7 +5,15 @@ export declare const endpoints: {
     scenes: string;
     notifications: string;
     smartTasks: string;
-    gateway: string;
-    gatewayDetails: string;
-    authentication: string;
+    gateway: (endpoint: GatewayEndpoints) => string;
 };
+export declare enum GatewayEndpoints {
+    Reboot = "9030",
+    Reset = "9031",
+    UpdateFirmware = "9034",
+    Authenticate = "9063",
+    SEND_CERT_TO_GATEWAY = "9094",
+    SEND_COGNITO_ID_TO_GATEWAY = "9095",
+    SEND_GH_COGNITO_ID_TO_GATEWAY = "9104",
+    Details = "15012",
+}

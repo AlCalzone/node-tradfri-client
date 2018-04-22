@@ -150,7 +150,7 @@ class TradfriClient extends events_1.EventEmitter {
             // request creation of new PSK
             let payload = JSON.stringify({ 9090: identity });
             payload = Buffer.from(payload);
-            const response = yield this.swallowInternalCoapRejections(node_coap_client_1.CoapClient.request(`${this.requestBase}${endpoints_1.endpoints.authentication}`, "post", payload));
+            const response = yield this.swallowInternalCoapRejections(node_coap_client_1.CoapClient.request(`${this.requestBase}${endpoints_1.endpoints.gateway(endpoints_1.GatewayEndpoints.Authenticate)}`, "post", payload));
             // check the response
             if (response.code.toString() !== "2.01") {
                 // that didn't work, so the code is wrong
@@ -573,13 +573,13 @@ class TradfriClient extends events_1.EventEmitter {
      */
     observeGateway() {
         return __awaiter(this, void 0, void 0, function* () {
-            if (this.isObserving(endpoints_1.endpoints.gatewayDetails))
+            if (this.isObserving(endpoints_1.endpoints.gateway(endpoints_1.GatewayEndpoints.Details)))
                 return;
             this.observeGatewayPromise = defer_promise_1.createDeferredPromise();
             // We have a timing problem here, as the observeGatewayPromise might be
             // rejected in the callback and set to null. Therefore return it before
             // starting the observation
-            this.observeResource(endpoints_1.endpoints.gatewayDetails, (resp) => this.observeGateway_callback(resp)).catch(e => {
+            this.observeResource(endpoints_1.endpoints.gateway(endpoints_1.GatewayEndpoints.Details), (resp) => this.observeGateway_callback(resp)).catch(e => {
                 // pass errors through
                 if (this.observeGateway != null)
                     this.observeGatewayPromise.reject(e);
@@ -617,7 +617,7 @@ class TradfriClient extends events_1.EventEmitter {
         });
     }
     stopObservingGateway() {
-        this.stopObservingResource(`${this.requestBase}${endpoints_1.endpoints.gatewayDetails}`);
+        this.stopObservingResource(`${this.requestBase}${endpoints_1.endpoints.gateway(endpoints_1.GatewayEndpoints.Details)}`);
     }
     // =================================================================================
     // =================================================================================
@@ -790,6 +790,13 @@ class TradfriClient extends events_1.EventEmitter {
             }
         }));
     }
+    /** Reboots the gateway. This operation is additionally acknowledged with a reboot notification. */
+    rebootGateway() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { code } = yield this.request(endpoints_1.endpoints.gateway(endpoints_1.GatewayEndpoints.Reboot), "post");
+            return code === "2.01";
+        });
+    }
 }
 exports.TradfriClient = TradfriClient;
 /** Normalizes the path to a resource, so it can be used for storing the observer */
@@ -804,13 +811,20 @@ function normalizeResourcePath(path) {
 function parsePayload(response) {
     if (response.payload == null)
         return null;
+    logger_1.log(`parsing payload: ${response.payload}`);
     switch (response.format) {
         case 0: // text/plain
         case null:// assume text/plain
             return response.payload.toString("utf-8");
         case 50:// application/json
             const json = response.payload.toString("utf-8");
-            return JSON.parse(json);
+            try {
+                // This might fail!
+                return JSON.parse(json);
+            }
+            catch (e) {
+                return null;
+            }
         default:
             // dunno how to parse this
             logger_1.log(`unknown CoAP response format ${response.format}`, "warn");

@@ -8,10 +8,19 @@ exports.endpoints = {
     scenes: "15005",
     notifications: "15006",
     smartTasks: "15010",
-    gateway: "15011",
-    gatewayDetails: "15011/15012",
-    authentication: "15011/9063",
+    gateway: (endpoint) => `15011/${endpoint}`,
 };
+var GatewayEndpoints;
+(function (GatewayEndpoints) {
+    GatewayEndpoints["Reboot"] = "9030";
+    GatewayEndpoints["Reset"] = "9031";
+    GatewayEndpoints["UpdateFirmware"] = "9034";
+    GatewayEndpoints["Authenticate"] = "9063";
+    GatewayEndpoints["SEND_CERT_TO_GATEWAY"] = "9094";
+    GatewayEndpoints["SEND_COGNITO_ID_TO_GATEWAY"] = "9095";
+    GatewayEndpoints["SEND_GH_COGNITO_ID_TO_GATEWAY"] = "9104";
+    GatewayEndpoints["Details"] = "15012";
+})(GatewayEndpoints = exports.GatewayEndpoints || (exports.GatewayEndpoints = {}));
 // export const gatewayEndpoints = {
 // 	alexaCertificate: "9094", // DELETE or POST (raw string)
 // 	alexa: "9095", // DELETE or POST (something with cognitoId)

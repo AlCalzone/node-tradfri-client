@@ -14,6 +14,7 @@ import { MessageCode, MessageCodes } from "node-coap-client/build/Message";
 import { createEmptyAccessoryResponse, createEmptyGatewayDetailsResponse, createEmptyGroupResponse, createEmptySceneResponse, createErrorResponse, createNetworkMock, createResponse, createRGBBulb } from "../test/mocks";
 import { Accessory, AccessoryTypes, GatewayDetails, Light, TradfriError, TradfriErrorCodes } from "./";
 import { createDeferredPromise, DeferredPromise } from "./lib/defer-promise";
+import { GatewayEndpoints } from "./lib/endpoints";
 import { padStart } from "./lib/strings";
 
 // enable the should interface with sinon
@@ -1131,13 +1132,13 @@ describe("tradfri-client => observing the gateway => ", () => {
 			const gatewayPromise = tradfri.observeGateway();
 
 			fakeCoap.observe.should.have.been.calledOnce;
-			fakeCoap.observe.should.have.been.calledWith(gatewayUrl);
+			fakeCoap.observe.should.have.been.calledWith(gatewayUrl(GatewayEndpoints.Details));
 
 			fakeCoap.observe.resetHistory();
 
 			// we intercepted the gatewayDetails callback, so we need to manually call it
 			// now for the following tests to work
-			await callbacks.observeGateway(createEmptyGatewayDetailsResponse());
+			await callbacks.observeGatewayDetails(createEmptyGatewayDetailsResponse());
 
 			// now the deferred promise should have resolved
 			await gatewayPromise;
@@ -1153,7 +1154,7 @@ describe("tradfri-client => observing the gateway => ", () => {
 			const leSpy = spy();
 			tradfri.on("gateway updated", leSpy);
 
-			await callbacks.observeGateway(createEmptyGatewayDetailsResponse());
+			await callbacks.observeGatewayDetails(createEmptyGatewayDetailsResponse());
 
 			leSpy.should.have.been.calledOnce;
 			leSpy.firstCall.args[0].should.be.an.instanceof(GatewayDetails);
@@ -1175,7 +1176,7 @@ describe("tradfri-client => observing the gateway => ", () => {
 					.on("gateway updated", updatedSpy)
 					;
 
-				await callbacks.observeGateway(createErrorResponse(error));
+				await callbacks.observeGatewayDetails(createErrorResponse(error));
 
 				updatedSpy.should.not.have.been.called;
 				errorSpy.should.have.been.calledOnce;
@@ -1193,7 +1194,7 @@ describe("tradfri-client => observing the gateway => ", () => {
 			tradfri.stopObservingGateway();
 
 			fakeCoap.stopObserving.should.have.been.calledOnce;
-			fakeCoap.stopObserving.should.have.been.calledWith(`${gatewayUrl}`);
+			fakeCoap.stopObserving.should.have.been.calledWith(gatewayUrl(GatewayEndpoints.Details));
 		});
 	});
 });
@@ -1221,7 +1222,7 @@ describe("tradfri-client => observing the gateway (with errors) => ", () => {
 		tradfri.on("error", errorSpy);
 
 		const gatewayPromise = tradfri.observeGateway();
-		await callbacks.observeGateway(createErrorResponse(MessageCodes.clientError.forbidden));
+		await callbacks.observeGatewayDetails(createErrorResponse(MessageCodes.clientError.forbidden));
 
 		errorSpy.should.have.been.called;
 		tradfri.removeAllListeners();
@@ -1229,4 +1230,62 @@ describe("tradfri-client => observing the gateway (with errors) => ", () => {
 		// now the deferred promise should have been rejected
 		await gatewayPromise.should.be.rejectedWith("could not be observed");
 	});
+});
+
+describe("tradfri-client => gateway actions => ", () => {
+
+	// Setup the mock
+	const {
+		tradfri,
+		gatewayUrl,
+		fakeCoap,
+		callbacks,
+		requestPromises,
+		createStubs,
+		restoreStubs,
+		resetStubHistory,
+	} = createNetworkMock(undefined, undefined, {interceptRequestResponse: true});
+	before(createStubs);
+	after(restoreStubs);
+	afterEach(resetStubHistory);
+
+	describe("rebootGateway() => ", () => {
+
+		const rebootUrl = gatewayUrl(GatewayEndpoints.Reboot);
+
+		it("should send the correct command", () => {
+			tradfri.rebootGateway();
+			coap.request.should.have.been.calledOnce;
+			coap.request.should.have.been.calledWithExactly(rebootUrl, "post", undefined);
+		});
+
+		it("should resolve with true when 2.01 is returned as the code", async () => {
+			const rebootPromise = tradfri.rebootGateway();
+
+			// pass a successful response
+			const successResponse: CoapResponse = {
+				code: MessageCodes.success.created,
+				payload: Buffer.from([]),
+				format: ContentFormats.application_json,
+			};
+			requestPromises[rebootUrl].resolve(successResponse);
+
+			await rebootPromise.should.become(true);
+		});
+
+		it("should resolve with false when anything else is returned as the code", async () => {
+			const rebootPromise = tradfri.rebootGateway();
+
+			// pass a successful response
+			const errorResponse: CoapResponse = {
+				code: MessageCodes.clientError.forbidden,
+				payload: Buffer.from([]),
+				format: ContentFormats.application_json,
+			};
+			requestPromises[rebootUrl].resolve(errorResponse);
+
+			await rebootPromise.should.become(false);
+		});
+	});
+
 });

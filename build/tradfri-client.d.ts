@@ -233,4 +233,6 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
         payload: any;
     }>;
     private swallowInternalCoapRejections<T>(promise);
+    /** Reboots the gateway. This operation is additionally acknowledged with a reboot notification. */
+    rebootGateway(): Promise<boolean>;
 }
