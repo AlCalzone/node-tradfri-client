@@ -3,19 +3,19 @@
 // tslint:disable:variable-name
 
 import { assert, expect, should, use } from "chai";
-import { CoapClient as coap, CoapResponse } from "node-coap-client";
 import { SinonFakeTimers, spy, stub, useFakeTimers } from "sinon";
 import * as sinonChai from "sinon-chai";
-import "./"; // dummy-import so index.ts is covered
-import { TradfriClient } from "./tradfri-client";
 
+import { CoapClient as coap, CoapResponse } from "node-coap-client";
 import { ContentFormats } from "node-coap-client/build/ContentFormats";
 import { MessageCode, MessageCodes } from "node-coap-client/build/Message";
 import { createEmptyAccessoryResponse, createEmptyGatewayDetailsResponse, createEmptyGroupResponse, createEmptySceneResponse, createErrorResponse, createNetworkMock, createResponse, createRGBBulb } from "../test/mocks";
+import "./"; // dummy-import so index.ts is covered
 import { Accessory, AccessoryTypes, GatewayDetails, Light, TradfriError, TradfriErrorCodes } from "./";
 import { createDeferredPromise, DeferredPromise } from "./lib/defer-promise";
 import { GatewayEndpoints } from "./lib/endpoints";
 import { padStart } from "./lib/strings";
+import { TradfriClient } from "./tradfri-client";
 
 // enable the should interface with sinon
 should();
@@ -1285,6 +1285,45 @@ describe("tradfri-client => gateway actions => ", () => {
 			requestPromises[rebootUrl].resolve(errorResponse);
 
 			await rebootPromise.should.become(false);
+		});
+	});
+
+	describe("resetGateway() => ", () => {
+
+		const resetUrl = gatewayUrl(GatewayEndpoints.Reset);
+
+		it("should send the correct command", () => {
+			tradfri.resetGateway();
+			coap.request.should.have.been.calledOnce;
+			coap.request.should.have.been.calledWithExactly(resetUrl, "post", undefined);
+		});
+
+		it("should resolve with true when 2.01 is returned as the code", async () => {
+			const resetPromise = tradfri.resetGateway();
+
+			// pass a successful response
+			const successResponse: CoapResponse = {
+				code: MessageCodes.success.created,
+				payload: Buffer.from([]),
+				format: ContentFormats.application_json,
+			};
+			requestPromises[resetUrl].resolve(successResponse);
+
+			await resetPromise.should.become(true);
+		});
+
+		it("should resolve with false when anything else is returned as the code", async () => {
+			const resetPromise = tradfri.resetGateway();
+
+			// pass a successful response
+			const errorResponse: CoapResponse = {
+				code: MessageCodes.clientError.forbidden,
+				payload: Buffer.from([]),
+				format: ContentFormats.application_json,
+			};
+			requestPromises[resetUrl].resolve(errorResponse);
+
+			await resetPromise.should.become(false);
 		});
 	});
 

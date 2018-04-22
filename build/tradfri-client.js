@@ -797,6 +797,14 @@ class TradfriClient extends events_1.EventEmitter {
             return code === "2.01";
         });
     }
+    /** Factory resets the gateway. WARNING: All configuration will be wiped! */
+    resetGateway() {
+        return __awaiter(this, void 0, void 0, function* () {
+            // TODO: this is untested, need to verify against a real gateway
+            const { code } = yield this.request(endpoints_1.endpoints.gateway(endpoints_1.GatewayEndpoints.Reset), "post");
+            return code === "2.01";
+        });
+    }
 }
 exports.TradfriClient = TradfriClient;
 /** Normalizes the path to a resource, so it can be used for storing the observer */

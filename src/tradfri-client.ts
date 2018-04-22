@@ -1051,6 +1051,13 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		const { code } = await this.request(coapEndpoints.gateway(GatewayEndpoints.Reboot), "post");
 		return code === "2.01";
 	}
+
+	/** Factory resets the gateway. WARNING: All configuration will be wiped! */
+	public async resetGateway(): Promise<boolean> {
+		// TODO: this is untested, need to verify against a real gateway
+		const { code } = await this.request(coapEndpoints.gateway(GatewayEndpoints.Reset), "post");
+		return code === "2.01";
+	}
 }
 
 /** Normalizes the path to a resource, so it can be used for storing the observer */
