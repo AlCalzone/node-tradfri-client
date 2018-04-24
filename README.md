@@ -467,6 +467,7 @@ Using
 tradfri.resetGateway(): Promise<boolean>
 ```
 you can factory reset the gateway. The promise value determines if the reboot was started (`true`) or not (`false`).
+
 **Warning:** This wipes all configuration, including paired devices, groups and moods/scenes!
 
 ## Data structure
