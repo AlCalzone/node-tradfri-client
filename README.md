@@ -605,6 +605,9 @@ The automatic reconnection tries to restore all previously defined observers as 
 
 ## Changelog
 
+#### 1.0.1 (2018-04-27)
+* (AlCalzone) Add support for NodeJS 10
+
 #### 1.0.0 (2018-04-19)
 * (AlCalzone) Added tests for groups and scenes and fixed minor found bugs
 
