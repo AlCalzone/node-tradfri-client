@@ -605,6 +605,9 @@ The automatic reconnection tries to restore all previously defined observers as 
 
 ## Changelog
 
+#### __WORK IN PROGRESS__
+* (AlCalzone) Update CoaP and DTLS libraries so `node-aead-crypto` is no longer necessary on NodeJS 10+
+
 #### 1.0.1 (2018-04-27)
 * (AlCalzone) Add support for NodeJS 10
 
