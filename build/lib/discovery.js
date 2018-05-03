@@ -22,6 +22,8 @@ function discoverGateway(timeout = 10000) {
                 version: service.txt.version,
                 addresses: service.addresses,
             };
+            if (service.host != null)
+                foundDevice.host = service.host;
             resolve(foundDevice);
         });
         if (typeof timeout === "number" && timeout > 0) {
