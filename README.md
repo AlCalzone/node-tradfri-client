@@ -20,13 +20,15 @@ The `result` variable has the following properties:
 ```js
 {
     name: 'gw-abcdef012345',
+    host: 'TRADFRI-Gateway-abcdef123456.local',
     version: '1.3.14',
-    addresses: [ 
+    addresses: [
         // array of strings with IP addresses
     ]
 }
 ```
-
+Note about addresses and host attributes: the addresses array contains ipv4 and/or ipv6 IP addresses and will be always filled. The host contains the mDNS name
+of the gateway - to use this host you need a working mDNS name resolution (should work out of the box for OSX, needs Name Service Switch service and Avahi).
 
 ### Common code for all examples
 ```TS
@@ -165,7 +167,7 @@ interface TradfriOptions {
 }
 ```
 You can provide all the options or just some of them:
-* The custom logger function is used as above. 
+* The custom logger function is used as above.
 * By setting `useRawCoAPValues` to true, you can instruct `TradfriClient` to use raw CoAP values instead of the simplified scales used internally. See below for a detailed description how the scales change.
 * `watchConnection` accepts a boolean to enable/disable connection watching with default parameters or a set of options. See below ("watching the connection") for a detailed description.
 
@@ -312,7 +314,7 @@ The `"error"` event gets emitted when something unexpected happens. The callback
 ```TS
 type ErrorCallback = (e: Error) => void;
 ```
-This doesn't have to be fatal, so you should check which kind of error happened. 
+This doesn't have to be fatal, so you should check which kind of error happened.
 Some errors are of the type `TradfriError` and contain a code which provides more information about the nature of the error. To check that, add `TradfriError` and `TradfriErrorCodes` to the list of imports and check as follows:
 ```TS
 if (e instanceof TradfriError) {
@@ -391,8 +393,8 @@ const requestSent = await tradfri.updateGroup(group: Group);
 
 ```TS
 const requestSent = await tradfri.operateGroup(
-    group: Group, 
-    operation: GroupOperation, 
+    group: Group,
+    operation: GroupOperation,
     [force: boolean = false]
 );
 ```
@@ -553,7 +555,7 @@ interface ConnectionWatcherOptions {
     failedPingCountUntilOffline: number; // DEFAULT: 1
     /**
      * How much the interval between consecutive pings should be increased
-     * while the gateway is offline. The actual interval is calculated by 
+     * while the gateway is offline. The actual interval is calculated by
      * <ping interval> * <backoff factor> ** <offline pings)>,
      * with the number of offline pings capped at 5.
      */
@@ -561,7 +563,7 @@ interface ConnectionWatcherOptions {
 
     /** Whether automatic reconnection and retrying the initial connection is enabled */
     reconnectionEnabled: boolean; // DEFAULT: enabled
-    /** 
+    /**
      * How many pings have to consecutively fail while the gateway is offline
      * until a reconnection is triggered
      */
@@ -574,8 +576,8 @@ interface ConnectionWatcherOptions {
     /** The interval in ms between consecutive connection attempts */
     connectionInterval: number; // DEFAULT: 10000ms
     /**
-     * How much the interval between consecutive connection attempts 
-     * should be increased. The actual interval is calculated by 
+     * How much the interval between consecutive connection attempts
+     * should be increased. The actual interval is calculated by
      * <connection interval> * <backoff factor> ** <failed attempts>
      * with the number of failed attempts capped at 5
      */
@@ -586,7 +588,7 @@ interface ConnectionWatcherOptions {
 All parameters of this object are optional and use the default values if not provided. Monitoring the connection state is possible by subscribing to the following events, similar to [subscribing to updates](#subscribe-to-updates):
 
 * `"ping succeeded"`: Pinging the gateway has succeeded. Callback arguments: none.
-* `"ping failed"`: Pinging the gateway has failed one or multiple times in a row. Callback arguments: 
+* `"ping failed"`: Pinging the gateway has failed one or multiple times in a row. Callback arguments:
   * `failedPingCount`: number
 * `"connection lost"`: Raised after after the first failed ping. Callback arguments: none.
 * `"connection failed"`: Raised when an attempt for the initial connection fails. Callback arguments:
@@ -604,6 +606,9 @@ All parameters of this object are optional and use the default values if not pro
 The automatic reconnection tries to restore all previously defined observers as soon as the connection is alive again.
 
 ## Changelog
+
+#### __WORK IN PROGRESS__
+* (neophob) Include the hostname in the discovery response if present.
 
 #### 1.1.2 (2018-05-01)
 * (AlCalzone) Update CoaP and DTLS libraries so `node-aead-crypto` is no longer necessary on NodeJS 10+

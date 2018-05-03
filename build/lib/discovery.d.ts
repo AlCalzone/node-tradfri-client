@@ -1,5 +1,6 @@
 export interface DiscoveredGateway {
     name: string;
+    host?: string;
     version: string;
     addresses: string[];
 }

@@ -3,6 +3,7 @@ let bonjour: bonjourPackage.Bonjour;
 
 export interface DiscoveredGateway {
 	name: string;
+	host?: string;
 	version: string;
 	addresses: string[];
 }
@@ -23,11 +24,12 @@ export function discoverGateway(timeout: number | false = 10000): Promise<Discov
 				if (!service || !service.txt || !service.name || !service.name.startsWith("gw-")) return;
 
 				if (timer != null) clearTimeout(timer);
-				const foundDevice = {
+				const foundDevice: DiscoveredGateway = {
 					name: service.name,
 					version: service.txt.version,
 					addresses: service.addresses,
 				};
+				if (service.host != null) foundDevice.host = service.host;
 				resolve(foundDevice);
 			},
 		);

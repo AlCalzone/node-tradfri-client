@@ -142,11 +142,13 @@ describe("lib/discovery => ", () => {
 			// correct service response
 			findOneCallback({
 				name: "gw-abcdef123456",
+				host: "TRADFRI-Gateway-abcdef123456.local",
 				txt: { version: "1.2.3" },
 				addresses: ["localhost"],
 			});
 			retVal.should.become({
 				name: "gw-abcdef123456",
+				host: "TRADFRI-Gateway-abcdef123456.local",
 				version: "1.2.3",
 				addresses: ["localhost"],
 			}).then(() => done());
