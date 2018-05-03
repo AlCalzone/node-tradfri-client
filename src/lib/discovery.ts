@@ -25,6 +25,7 @@ export function discoverGateway(timeout: number | false = 10000): Promise<Discov
 				if (timer != null) clearTimeout(timer);
 				const foundDevice = {
 					name: service.name,
+          host: service.host,
 					version: service.txt.version,
 					addresses: service.addresses,
 				};
