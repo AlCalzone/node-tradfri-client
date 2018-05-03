@@ -20,7 +20,7 @@ The `result` variable has the following properties:
 ```js
 {
     name: 'gw-abcdef012345',
-    host: "TRADFRI-Gateway-abcdef123456.local",
+    host: 'TRADFRI-Gateway-abcdef123456.local',
     version: '1.3.14',
     addresses: [
         // array of strings with IP addresses
