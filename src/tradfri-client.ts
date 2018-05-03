@@ -1,6 +1,6 @@
 // load external modules
 import { EventEmitter } from "events";
-import { CoapClient as coap, CoapResponse, RequestMethod } from "node-coap-client";
+import { CoapClient as coap, CoapResponse, ConnectionResult, RequestMethod } from "node-coap-client";
 
 // load internal modules
 import { Accessory, AccessoryTypes } from "./lib/accessory";
@@ -11,9 +11,12 @@ import { Group, GroupInfo, GroupOperation } from "./lib/group";
 import { IPSOObject, IPSOOptions } from "./lib/ipsoObject";
 import { LightOperation } from "./lib/light";
 import { log, LoggerFunction, setCustomLogger } from "./lib/logger";
+import { composeObject, entries } from "./lib/object-polyfill";
 import { OperationProvider } from "./lib/operation-provider";
+import { wait } from "./lib/promises";
 import { Scene } from "./lib/scene";
 import { TradfriError, TradfriErrorCodes } from "./lib/tradfri-error";
+import { ConnectionEvents, ConnectionWatcher, ConnectionWatcherOptions, PingFailedCallback, ReconnectingCallback } from "./lib/watcher";
 
 export type ObserveResourceCallback = (resp: CoapResponse) => void;
 export type ObserveDevicesCallback = (addedDevices: Accessory[], removedDevices: Accessory[]) => void;
@@ -25,6 +28,7 @@ export type GroupRemovedCallback = (instanceId: number) => void;
 export type SceneUpdatedCallback = (groupId: number, scene: Scene) => void;
 export type SceneRemovedCallback = (groupId: number, instanceId: number) => void;
 export type ErrorCallback = (e: Error) => void;
+export type ConnectionFailedCallback = (attempt: number, maxAttempts: number) => void;
 
 export type ObservableEvents =
 	"device updated" |
@@ -33,10 +37,13 @@ export type ObservableEvents =
 	"group removed" |
 	"scene updated" |
 	"scene removed" |
-	"error"
+	"error" |
+	"connection failed"
 	;
 
-export declare interface TradfriClient {
+// tslint:disable:unified-signatures
+export interface TradfriClient {
+	// default events
 	on(event: "device updated", callback: DeviceUpdatedCallback): this;
 	on(event: "device removed", callback: DeviceRemovedCallback): this;
 	on(event: "group updated", callback: GroupUpdatedCallback): this;
@@ -44,6 +51,15 @@ export declare interface TradfriClient {
 	on(event: "scene updated", callback: SceneUpdatedCallback): this;
 	on(event: "scene removed", callback: SceneRemovedCallback): this;
 	on(event: "error", callback: ErrorCallback): this;
+	// connection events => is there a nicer way than copy & paste?
+	on(event: "ping succeeded", callback: () => void): this;
+	on(event: "ping failed", callback: PingFailedCallback): this;
+	on(event: "connection alive", callback: () => void): this;
+	on(event: "connection failed", callback: ConnectionFailedCallback): this;
+	on(event: "connection lost", callback: () => void): this;
+	on(event: "gateway offline", callback: () => void): this;
+	on(event: "reconnecting", callback: ReconnectingCallback): this;
+	on(event: "give up", callback: () => void): this;
 
 	removeListener(event: "device updated", callback: DeviceUpdatedCallback): this;
 	removeListener(event: "device removed", callback: DeviceRemovedCallback): this;
@@ -52,13 +68,27 @@ export declare interface TradfriClient {
 	removeListener(event: "scene updated", callback: SceneUpdatedCallback): this;
 	removeListener(event: "scene removed", callback: SceneRemovedCallback): this;
 	removeListener(event: "error", callback: ErrorCallback): this;
+	// connection events => is there a nicer way than copy & paste?
+	removeListener(event: "ping succeeded", callback: () => void): this;
+	removeListener(event: "ping failed", callback: PingFailedCallback): this;
+	removeListener(event: "connection alive", callback: () => void): this;
+	removeListener(event: "connection failed", callback: ConnectionFailedCallback): this;
+	removeListener(event: "connection lost", callback: () => void): this;
+	removeListener(event: "gateway offline", callback: () => void): this;
+	removeListener(event: "reconnecting", callback: ReconnectingCallback): this;
+	removeListener(event: "give up", callback: () => void): this;
 
-	removeAllListeners(event?: ObservableEvents): this;
+	removeAllListeners(event?: ObservableEvents | ConnectionEvents): this;
 }
+// tslint:enable:unified-signatures
 
 export interface TradfriOptions {
-	customLogger?: LoggerFunction;
-	useRawCoAPValues?: boolean;
+	/** Callback for a custom logger function. */
+	customLogger: LoggerFunction;
+	/** Whether to use raw CoAP values or the simplified scale */
+	useRawCoAPValues: boolean;
+	/** Whether the connection should be automatically watched */
+	watchConnection: boolean | Partial<ConnectionWatcherOptions>;
 }
 
 export class TradfriClient extends EventEmitter implements OperationProvider {
@@ -76,25 +106,47 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	/** Options regarding IPSO objects and serialization */
 	private ipsoOptions: IPSOOptions = {};
 
+	/** Automatic connection watching */
+	private watcher: ConnectionWatcher;
+	/** A dictionary of the observer callbacks. Used to restore it after a soft reset */
+	private rememberedObserveCallbacks = new Map<string, (resp: CoapResponse) => void>();
+
 	// tslint:disable:unified-signatures
 	constructor(hostname: string)
 	constructor(hostname: string, customLogger: LoggerFunction)
-	constructor(hostname: string, options: TradfriOptions)
+	constructor(hostname: string, options: Partial<TradfriOptions>)
 	// tslint:enable:unified-signatures
 	constructor(
 		public readonly hostname: string,
-		optionsOrLogger?: LoggerFunction | TradfriOptions,
+		optionsOrLogger?: LoggerFunction | Partial<TradfriOptions>,
 	) {
 		super();
 		this.requestBase = `coaps://${hostname}:5684/`;
 
-		if (optionsOrLogger != null) {
-			if (typeof optionsOrLogger === "function") {
-				// Legacy version: 2nd parameter is a logger
-				setCustomLogger(optionsOrLogger);
-			} else {
-				if (optionsOrLogger.customLogger != null) setCustomLogger(optionsOrLogger.customLogger);
-				if (optionsOrLogger.useRawCoAPValues) this.ipsoOptions.skipBasicSerializers = true;
+		if (typeof optionsOrLogger === "function") {
+			// Legacy version: 2nd parameter is a logger
+			setCustomLogger(optionsOrLogger);
+		} else if (typeof optionsOrLogger === "object") {
+			if (optionsOrLogger.customLogger != null) setCustomLogger(optionsOrLogger.customLogger);
+
+			if (optionsOrLogger.useRawCoAPValues === true) this.ipsoOptions.skipValueSerializers = true;
+
+			if (optionsOrLogger.watchConnection != null && optionsOrLogger.watchConnection !== false) {
+				// true simply means "use default options" => don't pass a 2nd argument
+				const watcherOptions = optionsOrLogger.watchConnection === true ? undefined : optionsOrLogger.watchConnection;
+				this.watcher = new ConnectionWatcher(this, watcherOptions);
+
+				// in the first iteration of this feature, just pass all events through
+				const eventNames: ConnectionEvents[] = [
+					"ping succeeded", "ping failed",
+					"connection alive", "connection lost",
+					"gateway offline",
+					"reconnecting",
+					"give up",
+				];
+				for (const event of eventNames) {
+					this.watcher.on(event, (...args: any[]) => this.emit(event, ...args));
+				}
 			}
 		}
 	}
@@ -104,8 +156,47 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 * @param identity A previously negotiated identity.
 	 * @param psk The pre-shared key belonging to the identity.
 	 */
-	public connect(identity: string, psk: string): Promise<boolean> {
-		return this.tryToConnect(identity, psk);
+	public async connect(identity: string, psk: string): Promise<true> {
+		const maxAttempts = (this.watcher != null && this.watcher.options.reconnectionEnabled) ?
+			this.watcher.options.maximumConnectionAttempts :
+			1;
+		const interval = this.watcher != null && this.watcher.options.connectionInterval;
+		const backoffFactor = this.watcher != null && this.watcher.options.failedConnectionBackoffFactor;
+
+		for (let attempt = 0; attempt < maxAttempts; attempt++) {
+			if (attempt > 0) {
+				const nextTimeout = Math.round(interval * backoffFactor ** Math.min(5, attempt - 1));
+				log(`retrying connection in ${nextTimeout} ms`, "debug");
+				await wait(nextTimeout);
+			}
+
+			switch (await this.tryToConnect(identity, psk)) {
+				case true: {
+					// start connection watching
+					if (this.watcher != null) this.watcher.start();
+					return true;
+				}
+				case "auth failed": throw new TradfriError(
+					"The provided credentials are not valid. Please re-authenticate!",
+					TradfriErrorCodes.AuthenticationFailed,
+				);
+				case "timeout": {
+					// retry if allowed
+					this.emit("connection failed", attempt + 1, maxAttempts);
+					continue;
+				}
+				case "error": throw new TradfriError(
+					"An unknown error occured while connecting to the gateway",
+					TradfriErrorCodes.ConnectionFailed,
+				);
+			}
+		}
+
+		throw new TradfriError(
+			`The gateway did not respond ${maxAttempts === 1 ? "in time" : `after ${maxAttempts} tries`}.`,
+			TradfriErrorCodes.ConnectionTimedOut,
+		);
+
 	}
 
 	/**
@@ -114,7 +205,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 * @param psk The pre-shared key to use
 	 * @returns true if the connection attempt was successful, otherwise false.
 	 */
-	private async tryToConnect(identity: string, psk: string): Promise<boolean> {
+	private async tryToConnect(identity: string, psk: string): Promise<ConnectionResult> {
 
 		// initialize CoAP client
 		coap.reset();
@@ -124,7 +215,11 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 
 		log(`Attempting connection. Identity = ${identity}, psk = ${psk}`, "debug");
 		const result = await coap.tryToConnect(this.requestBase);
-		log(`Connection ${result ? "" : "un"}successful`, "debug");
+		if (result === true) {
+			log("Connection successful", "debug");
+		} else {
+			log("Connection failed. Reason: " + result, "debug");
+		}
 		return result;
 	}
 
@@ -134,13 +229,26 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 * @returns The identity and psk to use for future connections. Store these!
 	 * @throws TradfriError
 	 */
-	public async authenticate(securityCode: string): Promise<{identity: string, psk: string}> {
+	public async authenticate(securityCode: string): Promise<{ identity: string, psk: string }> {
 		// first, check try to connect with the security code
 		log("authenticate() > trying to connect with the security code", "debug");
-		if (!await this.tryToConnect("Client_identity", securityCode)) {
-			// that didn't work, so the code is wrong
-			throw new TradfriError("The security code is wrong", TradfriErrorCodes.ConnectionFailed);
+		switch (await this.tryToConnect("Client_identity", securityCode)) {
+			case true: break; // all good
+
+			case "auth failed": throw new TradfriError(
+				"The security code is wrong",
+				TradfriErrorCodes.AuthenticationFailed,
+			);
+			case "timeout": throw new TradfriError(
+				"The gateway did not respond in time.",
+				TradfriErrorCodes.ConnectionTimedOut,
+			);
+			case "error": throw new TradfriError(
+				"An unknown error occured while connecting to the gateway",
+				TradfriErrorCodes.ConnectionFailed,
+			);
 		}
+
 		// generate a new identity
 		const identity = `tradfri_${Date.now()}`;
 		log(`authenticating with identity "${identity}"`, "debug");
@@ -148,11 +256,11 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		// request creation of new PSK
 		let payload: string | Buffer = JSON.stringify({ 9090: identity });
 		payload = Buffer.from(payload);
-		const response = await coap.request(
+		const response = await this.swallowInternalCoapRejections(coap.request(
 			`${this.requestBase}${coapEndpoints.authentication}`,
 			"post",
 			payload,
-		);
+		));
 
 		// check the response
 		if (response.code.toString() !== "2.01") {
@@ -166,7 +274,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		const pskResponse = JSON.parse(response.payload.toString("utf8"));
 		const psk = pskResponse["9091"];
 
-		return {identity, psk};
+		return { identity, psk };
 	}
 
 	/**
@@ -183,7 +291,11 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 
 		// start observing
 		this.observedPaths.push(observerUrl);
-		await coap.observe(observerUrl, "get", callback);
+		// and remember the callback to restore it after a soft-reset
+		this.rememberedObserveCallbacks.set(observerUrl, callback);
+		await this.swallowInternalCoapRejections(
+			coap.observe(observerUrl, "get", callback),
+		);
 		return true;
 	}
 
@@ -214,21 +326,24 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 
 		coap.stopObserving(observerUrl);
 		this.observedPaths.splice(index, 1);
+		this.rememberedObserveCallbacks.delete(observerUrl);
 	}
 
 	/**
 	 * Resets the underlying CoAP client and clears all observers.
+	 * @param preserveObservers Whether the active observers should be remembered to restore them later
 	 */
-	public reset(): void {
+	public reset(preserveObservers: boolean = false): void {
 		coap.reset();
 		this.clearObservers();
+		if (!preserveObservers) this.rememberedObserveCallbacks.clear();
 	}
 
 	/**
 	 * Closes the underlying CoAP client and clears all observers.
 	 */
 	public destroy(): void {
-		// TODO: do we need to do more?
+		if (this.watcher != null) this.watcher.stop();
 		this.reset();
 	}
 
@@ -238,6 +353,42 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 */
 	private clearObservers(): void {
 		this.observedPaths = [];
+	}
+
+	/**
+	 * Restores all previously remembered observers with their original callbacks
+	 * Call this AFTER a dead connection was restored
+	 */
+	public async restoreObservers() {
+		log("restoring previously used observers", "debug");
+
+		let devicesRestored: boolean = false;
+		const devicesPath = this.getObserverUrl(coapEndpoints.devices);
+		let groupsAndScenesRestored: boolean = false;
+		const groupsPath = this.getObserverUrl(coapEndpoints.groups);
+		const scenesPath = this.getObserverUrl(coapEndpoints.scenes);
+
+		for (const [path, callback] of this.rememberedObserveCallbacks.entries()) {
+			if (path.indexOf(devicesPath) > -1) {
+				if (!devicesRestored) {
+					// restore all device observers (with a new callback)
+					log("restoring device observers", "debug");
+					await this.observeDevices();
+					devicesRestored = true;
+				}
+			} else if (path.indexOf(groupsPath) > -1 || path.indexOf(scenesPath) > -1) {
+				if (!groupsAndScenesRestored) {
+					// restore all group and scene observers (with a new callback)
+					log("restoring groups and scene observers", "debug");
+					await this.observeGroupsAndScenes;
+					groupsAndScenesRestored = true;
+				}
+			} else {
+				// restore all custom observers with the old callback
+				log(`restoring custom observer for path "${path}"`, "debug");
+				await this.observeResource(path, callback);
+			}
+		}
 	}
 
 	private observeDevicesPromise: DeferredPromise<void>;
@@ -322,7 +473,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		this.observedPaths
 			.filter(p => p.startsWith(pathPrefix))
 			.forEach(p => this.stopObservingResource(p))
-		;
+			;
 	}
 
 	// gets called whenever "get /15001/<instanceId>" updates
@@ -339,7 +490,11 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		const result = parsePayload(response);
 		log(`observeDevice > ` + JSON.stringify(result), "debug");
 		// parse device info
-		const accessory = new Accessory(this.ipsoOptions).parse(result).createProxy();
+		const accessory = new Accessory(this.ipsoOptions)
+			.parse(result)
+			.fixBuggedProperties()
+			.createProxy()
+			;
 		// remember the device object, so we can later use it as a reference for updates
 		// store a clone, so we don't have to care what the calling library does
 		this.devices[instanceId] = accessory.clone();
@@ -390,7 +545,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		log(`adding groups with keys ${JSON.stringify(addedKeys)}`, "debug");
 
 		// create a deferred promise for each group, so we can wait for them to be fulfilled
-		if (this.observeScenesPromises == null) {
+		if (this.observeGroupsPromise != null && this.observeScenesPromises == null) {
 			this.observeScenesPromises = new Map(
 				newKeys.map(id => [id, createDeferredPromise<void>()] as [number, DeferredPromise<void>]),
 			);
@@ -420,7 +575,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 									this.observeGroupsPromise = null;
 									this.observeScenesPromises = null;
 								})
-							;
+								;
 						}
 					} else {
 						this.observeGroupsPromise.reject(`The group with the id ${id} could not be observed`);
@@ -451,15 +606,15 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		for (const id of Object.keys(this.groups)) {
 			this.stopObservingGroup(+id);
 		}
+		this.stopObservingResource(coapEndpoints.groups);
 	}
 
 	private stopObservingGroup(instanceId: number) {
 		this.stopObservingResource(`${coapEndpoints.groups}/${instanceId}`);
-		const scenesPrefix = `${coapEndpoints.scenes}/${instanceId}`;
-		for (const path of this.observedPaths) {
-			if (path.startsWith(scenesPrefix)) {
-				this.stopObservingResource(path);
-			}
+		const scenesPrefix = this.getObserverUrl(`${coapEndpoints.scenes}/${instanceId}`);
+		const pathsToDelete = this.observedPaths.filter(path => path.startsWith(scenesPrefix));
+		for (const path of pathsToDelete) {
+			this.stopObservingResource(path);
 		}
 	}
 
@@ -475,7 +630,11 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 
 		const result = parsePayload(response);
 		// parse group info
-		const group = (new Group(this.ipsoOptions)).parse(result).createProxy();
+		const group = new Group(this.ipsoOptions)
+			.parse(result)
+			.fixBuggedProperties()
+			.createProxy()
+			;
 		// remember the group object, so we can later use it as a reference for updates
 		let groupInfo: GroupInfo;
 		if (!(instanceId in this.groups)) {
@@ -573,7 +732,11 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 
 		const result = parsePayload(response);
 		// parse scene info
-		const scene = (new Scene(this.ipsoOptions)).parse(result).createProxy();
+		const scene = new Scene(this.ipsoOptions)
+			.parse(result)
+			.fixBuggedProperties()
+			.createProxy()
+			;
 		// remember the scene object, so we can later use it as a reference for updates
 		// store a clone, so we don't have to care what the calling library does
 		this.groups[groupId].scenes[instanceId] = scene.clone();
@@ -675,9 +838,9 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		log(`updateResource(${path}) > sending payload: ${payload}`, "debug");
 		payload = Buffer.from(payload);
 
-		await coap.request(
+		await this.swallowInternalCoapRejections(coap.request(
 			`${this.requestBase}${path}`, "put", payload,
-		);
+		));
 		return true;
 	}
 
@@ -685,12 +848,27 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 * Sets some properties on a group
 	 * @param group The group to be updated
 	 * @param operation The properties to be set
+	 * @param force If the provided properties must be sent in any case
 	 * @returns true if a request was sent, false otherwise
 	 */
-	public operateGroup(group: Group, operation: GroupOperation): Promise<boolean> {
+	public operateGroup(group: Group, operation: GroupOperation, force: boolean = false): Promise<boolean> {
 
+		const newGroup = group.clone().merge(operation, true /* all props */);
 		const reference = group.clone();
-		const newGroup = reference.clone().merge(operation, true /* all props */);
+		if (force) {
+			// to force the properties being sent, we need to reset them on the reference
+			const inverseOperation = composeObject<number | boolean>(
+				entries(operation)
+					.map(([key, value]) => {
+						switch (typeof value) {
+							case "number": return [key, Number.NaN] as [string, number];
+							case "boolean": return [key, !value] as [string, boolean];
+							default: return [key, null] as [string, any];
+						}
+					}),
+			);
+			reference.merge(inverseOperation, true);
+		}
 
 		return this.updateResource(
 			`${coapEndpoints.groups}/${group.instanceId}`,
@@ -743,15 +921,45 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		}
 
 		// wait for the CoAP response and respond to the message
-		const resp = await coap.request(
+		const resp = await this.swallowInternalCoapRejections(coap.request(
 			`${this.requestBase}${path}`,
 			method,
 			jsonPayload as Buffer,
-		);
+		));
 		return {
 			code: resp.code.toString(),
 			payload: parsePayload(resp),
 		};
+	}
+
+	private swallowInternalCoapRejections<T>(promise: Promise<T>): Promise<T> {
+		// We use the conventional promise pattern here so we can opt to never
+		// resolve the promise in case we want to redirect it into an emitted error event
+		return new Promise(async (resolve, reject) => {
+			try {
+				// try to resolve the promise normally
+				resolve(await promise);
+			} catch (e) {
+				if (/coap\s?client was reset/i.test(e.message)) {
+					// The CoAP client was reset. This happens when the user
+					// resets the CoAP client while connections or requests
+					// are still pending. It's not an error per se, so just
+					// inform the user about what happened.
+					this.emit("error", new TradfriError(
+						"The network stack was reset. Pending promises will not be fulfilled.",
+						TradfriErrorCodes.NetworkReset,
+					));
+				} else if (/dtls handshake timed out/i.test(e.message)) {
+					// The DTLS layer did not complete a handshake in time.
+					this.emit("error", new TradfriError(
+						"Could not establish a secure connection in time. Pending promises will not be fulfilled.",
+						TradfriErrorCodes.ConnectionTimedOut,
+					));
+				} else {
+					reject(e);
+				}
+			}
+		});
 	}
 }
 

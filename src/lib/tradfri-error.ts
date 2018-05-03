@@ -1,6 +1,8 @@
 export enum TradfriErrorCodes {
 	ConnectionFailed,
+	ConnectionTimedOut,
 	AuthenticationFailed,
+	NetworkReset,
 }
 
 export class TradfriError extends Error {

@@ -10,4 +10,5 @@ export { Plug } from "./lib/plug";
 export { Scene } from "./lib/scene";
 export { Sensor } from "./lib/sensor";
 export { TradfriError, TradfriErrorCodes } from "./lib/tradfri-error";
+export { discoverGateway, DiscoveredGateway } from "./lib/discovery";
 export { DeviceRemovedCallback, DeviceUpdatedCallback, ErrorCallback, GroupRemovedCallback, GroupUpdatedCallback, ObserveDevicesCallback, ObserveResourceCallback, SceneRemovedCallback, SceneUpdatedCallback, TradfriClient } from "./tradfri-client";

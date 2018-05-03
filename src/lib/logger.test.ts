@@ -9,7 +9,7 @@ import * as debugPackage from "debug";
 const debugSpy = stub();
 import * as proxyquire from "proxyquire";
 const { log, setCustomLogger } = proxyquire("./logger", {
-	"debug": stub().callsFake(namespace => {
+	debug: stub().callsFake(namespace => {
 		if (namespace === "node-tradfri-client") return debugSpy;
 		return debugPackage(namespace);
 	}),
@@ -46,7 +46,7 @@ describe("lib/logger => ", () => {
 		log("message");
 		debugSpy.should.have.been.calledOnce;
 		debugSpy.should.have.been.calledWith("message");
-	})
+	});
 
 	it(`using the default logger prepends the severity to the message in UPPERCASE`, () => {
 		// except for info

@@ -36,7 +36,7 @@ export declare function deserializeWith(kernel: PropertyTransformKernel, options
 /**
  * Defines that a property will not be serialized
  */
-export declare const doNotSerialize: (target: object, property: string | symbol) => void;
+export declare const doNotSerialize: <T extends IPSOObject>(target: T, property: string | keyof T) => void;
 /**
  * Provides a set of options regarding IPSO objects and serialization
  */
@@ -45,11 +45,10 @@ export interface IPSOOptions {
      * Determines if basic serializers (i.e. for simple values) should be skipped
      * This is used to support raw CoAP values instead of the simplified scales
      */
-    skipBasicSerializers?: boolean;
+    skipValueSerializers?: boolean;
 }
 export declare class IPSOObject {
     constructor(options?: IPSOOptions);
-    [propName: string]: any;
     /**
      * Reads this instance's properties from the given object
      */
@@ -77,4 +76,8 @@ export declare class IPSOObject {
      */
     createProxy(get?: (me: this, key: PropertyKey) => any, set?: (me: this, key: PropertyKey, value: any, receiver: any) => boolean): this;
     protected client: OperationProvider;
+    /**
+     * Fixes property values that are known to be bugged
+     */
+    fixBuggedProperties(): this;
 }

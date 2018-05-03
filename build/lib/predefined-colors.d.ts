@@ -5,6 +5,8 @@ export interface ColorDefinition {
     colorY: number;
     hue: number;
     saturation: number;
+    hue_raw: number;
+    saturation_raw: number;
     /** Color temperature in Mired (if defined) */
     temperature?: number;
     /** RGB hex color */

@@ -7,6 +7,7 @@ import { LightOperation } from "./lib/light";
 import { LoggerFunction } from "./lib/logger";
 import { OperationProvider } from "./lib/operation-provider";
 import { Scene } from "./lib/scene";
+import { ConnectionEvents, ConnectionWatcherOptions, PingFailedCallback, ReconnectingCallback } from "./lib/watcher";
 export declare type ObserveResourceCallback = (resp: CoapResponse) => void;
 export declare type ObserveDevicesCallback = (addedDevices: Accessory[], removedDevices: Accessory[]) => void;
 export declare type DeviceUpdatedCallback = (device: Accessory) => void;
@@ -16,7 +17,8 @@ export declare type GroupRemovedCallback = (instanceId: number) => void;
 export declare type SceneUpdatedCallback = (groupId: number, scene: Scene) => void;
 export declare type SceneRemovedCallback = (groupId: number, instanceId: number) => void;
 export declare type ErrorCallback = (e: Error) => void;
-export declare type ObservableEvents = "device updated" | "device removed" | "group updated" | "group removed" | "scene updated" | "scene removed" | "error";
+export declare type ConnectionFailedCallback = (attempt: number, maxAttempts: number) => void;
+export declare type ObservableEvents = "device updated" | "device removed" | "group updated" | "group removed" | "scene updated" | "scene removed" | "error" | "connection failed";
 export interface TradfriClient {
     on(event: "device updated", callback: DeviceUpdatedCallback): this;
     on(event: "device removed", callback: DeviceRemovedCallback): this;
@@ -25,6 +27,14 @@ export interface TradfriClient {
     on(event: "scene updated", callback: SceneUpdatedCallback): this;
     on(event: "scene removed", callback: SceneRemovedCallback): this;
     on(event: "error", callback: ErrorCallback): this;
+    on(event: "ping succeeded", callback: () => void): this;
+    on(event: "ping failed", callback: PingFailedCallback): this;
+    on(event: "connection alive", callback: () => void): this;
+    on(event: "connection failed", callback: ConnectionFailedCallback): this;
+    on(event: "connection lost", callback: () => void): this;
+    on(event: "gateway offline", callback: () => void): this;
+    on(event: "reconnecting", callback: ReconnectingCallback): this;
+    on(event: "give up", callback: () => void): this;
     removeListener(event: "device updated", callback: DeviceUpdatedCallback): this;
     removeListener(event: "device removed", callback: DeviceRemovedCallback): this;
     removeListener(event: "group updated", callback: GroupUpdatedCallback): this;
@@ -32,11 +42,23 @@ export interface TradfriClient {
     removeListener(event: "scene updated", callback: SceneUpdatedCallback): this;
     removeListener(event: "scene removed", callback: SceneRemovedCallback): this;
     removeListener(event: "error", callback: ErrorCallback): this;
-    removeAllListeners(event?: ObservableEvents): this;
+    removeListener(event: "ping succeeded", callback: () => void): this;
+    removeListener(event: "ping failed", callback: PingFailedCallback): this;
+    removeListener(event: "connection alive", callback: () => void): this;
+    removeListener(event: "connection failed", callback: ConnectionFailedCallback): this;
+    removeListener(event: "connection lost", callback: () => void): this;
+    removeListener(event: "gateway offline", callback: () => void): this;
+    removeListener(event: "reconnecting", callback: ReconnectingCallback): this;
+    removeListener(event: "give up", callback: () => void): this;
+    removeAllListeners(event?: ObservableEvents | ConnectionEvents): this;
 }
 export interface TradfriOptions {
-    customLogger?: LoggerFunction;
-    useRawCoAPValues?: boolean;
+    /** Callback for a custom logger function. */
+    customLogger: LoggerFunction;
+    /** Whether to use raw CoAP values or the simplified scale */
+    useRawCoAPValues: boolean;
+    /** Whether the connection should be automatically watched */
+    watchConnection: boolean | Partial<ConnectionWatcherOptions>;
 }
 export declare class TradfriClient extends EventEmitter implements OperationProvider {
     readonly hostname: string;
@@ -50,15 +72,19 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
     private requestBase;
     /** Options regarding IPSO objects and serialization */
     private ipsoOptions;
+    /** Automatic connection watching */
+    private watcher;
+    /** A dictionary of the observer callbacks. Used to restore it after a soft reset */
+    private rememberedObserveCallbacks;
     constructor(hostname: string);
     constructor(hostname: string, customLogger: LoggerFunction);
-    constructor(hostname: string, options: TradfriOptions);
+    constructor(hostname: string, options: Partial<TradfriOptions>);
     /**
      * Connect to the gateway
      * @param identity A previously negotiated identity.
      * @param psk The pre-shared key belonging to the identity.
      */
-    connect(identity: string, psk: string): Promise<boolean>;
+    connect(identity: string, psk: string): Promise<true>;
     /**
      * Try to establish a connection to the configured gateway.
      * @param identity The DTLS identity to use
@@ -98,8 +124,9 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
     stopObservingResource(path: string): void;
     /**
      * Resets the underlying CoAP client and clears all observers.
+     * @param preserveObservers Whether the active observers should be remembered to restore them later
      */
-    reset(): void;
+    reset(preserveObservers?: boolean): void;
     /**
      * Closes the underlying CoAP client and clears all observers.
      */
@@ -109,6 +136,11 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
      * This does not stop observing the resources if the observers are still active
      */
     private clearObservers();
+    /**
+     * Restores all previously remembered observers with their original callbacks
+     * Call this AFTER a dead connection was restored
+     */
+    restoreObservers(): Promise<void>;
     private observeDevicesPromise;
     /**
      * Sets up an observer for all devices
@@ -167,9 +199,10 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
      * Sets some properties on a group
      * @param group The group to be updated
      * @param operation The properties to be set
+     * @param force If the provided properties must be sent in any case
      * @returns true if a request was sent, false otherwise
      */
-    operateGroup(group: Group, operation: GroupOperation): Promise<boolean>;
+    operateGroup(group: Group, operation: GroupOperation, force?: boolean): Promise<boolean>;
     /**
      * Sets some properties on a lightbulb
      * @param accessory The parent accessory of the lightbulb
@@ -187,4 +220,5 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
         code: string;
         payload: any;
     }>;
+    private swallowInternalCoapRejections<T>(promise);
 }

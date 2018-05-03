@@ -6,6 +6,8 @@ export interface ColorDefinition {
 
 	hue: number; // gets normalized to 0..65279 => 0..360
 	saturation: number; // gets normalized to 0..65279 => 0..1
+	hue_raw: number;
+	saturation_raw: number;
 
 	/** Color temperature in Mired (if defined) */
 	temperature?: number;
@@ -37,7 +39,9 @@ function defineColor(rgbHex: string, x: number, y: number, hue: number, saturati
 		colorX: Math.round(x * MAX_COLOR),
 		colorY: Math.round(y * MAX_COLOR),
 		hue: hue * 360 / MAX_COLOR,
+		hue_raw: hue,
 		saturation: saturation * 100 / MAX_COLOR,
+		saturation_raw: saturation,
 		rgbHex,
 	};
 	if (temperature != null) definition.temperature = temperature;

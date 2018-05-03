@@ -129,15 +129,12 @@ export class Light extends IPSODevice {
 	public get spectrum(): Spectrum {
 		if (this._spectrum == null) {
 			// determine the spectrum
-			this._spectrum = "none";
-			if (this._modelName != null) {
-				if (this._modelName.indexOf(" WS ") > -1) {
-					// WS = white spectrum
-					this._spectrum = "white";
-				} else if (this._modelName.indexOf(" C/WS ") > -1 || this._modelName.indexOf(" CWS ") > -1) {
-					// CWS = color + white spectrum
-					this._spectrum = "rgb";
-				}
+			if (this.hue != null && this.saturation != null) {
+				this._spectrum = "rgb";
+			} else if (this.colorTemperature != null) {
+				this._spectrum = "white";
+			} else {
+				this._spectrum = "none";
 			}
 		}
 		return this._spectrum;
@@ -147,9 +144,13 @@ export class Light extends IPSODevice {
 	 * Creates a proxy which redirects the properties to the correct internal one
 	 */
 	public createProxy(): this {
+		const raw = this._accessory instanceof Accessory ?
+			this._accessory.options.skipValueSerializers :
+			false
+		;
 		switch (this.spectrum) {
 			case "rgb": {
-				const proxy = createRGBProxy();
+				const proxy = createRGBProxy(raw);
 				return super.createProxy(proxy.get, proxy.set);
 			}
 			default:
@@ -307,7 +308,20 @@ export class Light extends IPSODevice {
 			transitionTime: this.transitionTime,
 		};
 	}
+
+	/**
+	 * Fixes property values that are known to be bugged
+	 */
+	public fixBuggedProperties(): this {
+		super.fixBuggedProperties();
+		// For some reason the gateway reports lights with brightness 1 after turning off
+		if (this.onOff === false && this.dimmer === MIN_BRIGHTNESS) this.dimmer = 0;
+		return this;
+	}
 }
+
+// remember the minimum possible non-zero brightness to fix the bugged properties;
+const MIN_BRIGHTNESS = deserializers.brightness(1);
 
 export type Spectrum = "none" | "white" | "rgb";
 
@@ -317,7 +331,7 @@ const rgbRegex = /^[0-9A-Fa-f]{6}$/;
  * Creates a proxy for an RGB lamp,
  * which converts RGB color to CIE xy
  */
-function createRGBProxy<T extends Light>() {
+function createRGBProxy<T extends Light>(raw: boolean = false) {
 	function get(me: T, key: PropertyKey) {
 		switch (key) {
 			case "color": {
@@ -330,7 +344,7 @@ function createRGBProxy<T extends Light>() {
 					return conversions.rgbToString(r, g, b);
 				}
 			}
-			default: return me[key];
+			default: return me[key as keyof T];
 		}
 	}
 	function set(me: T, key: PropertyKey, value: any, receiver: any) {
@@ -339,21 +353,31 @@ function createRGBProxy<T extends Light>() {
 				if (predefinedColors.has(value)) {
 					// its a predefined color, use the predefined values
 					const definition = predefinedColors.get(value);
-					me.hue = definition.hue;
-					me.saturation = definition.saturation;
+					if (raw) {
+						me.hue = definition.hue_raw;
+						me.saturation = definition.saturation_raw;
+					} else {
+						me.hue = definition.hue;
+						me.saturation = definition.saturation;
+					}
 				} else {
 					// only accept HEX colors
 					if (rgbRegex.test(value)) {
 						// calculate the X/Y values
 						const { r, g, b } = conversions.rgbFromString(value);
 						const { h, s, v } = conversions.rgbToHSV(r, g, b);
-						me.hue = h;
-						me.saturation = s * 100;
+						if (raw) {
+							me.hue = Math.round(h / 360 * MAX_COLOR);
+							me.saturation = Math.round(s * MAX_COLOR);
+						} else {
+							me.hue = h;
+							me.saturation = s * 100;
+						}
 					}
 				}
 				break;
 			}
-			default: me[key] = value;
+			default: me[key as keyof T] = value;
 		}
 		return true;
 	}

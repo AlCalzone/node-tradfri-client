@@ -18,8 +18,11 @@ const defer_promise_1 = require("./lib/defer-promise");
 const endpoints_1 = require("./lib/endpoints");
 const group_1 = require("./lib/group");
 const logger_1 = require("./lib/logger");
+const object_polyfill_1 = require("./lib/object-polyfill");
+const promises_1 = require("./lib/promises");
 const scene_1 = require("./lib/scene");
 const tradfri_error_1 = require("./lib/tradfri-error");
+const watcher_1 = require("./lib/watcher");
 class TradfriClient extends events_1.EventEmitter {
     // tslint:enable:unified-signatures
     constructor(hostname, optionsOrLogger) {
@@ -33,17 +36,33 @@ class TradfriClient extends events_1.EventEmitter {
         this.groups = {};
         /** Options regarding IPSO objects and serialization */
         this.ipsoOptions = {};
+        /** A dictionary of the observer callbacks. Used to restore it after a soft reset */
+        this.rememberedObserveCallbacks = new Map();
         this.requestBase = `coaps://${hostname}:5684/`;
-        if (optionsOrLogger != null) {
-            if (typeof optionsOrLogger === "function") {
-                // Legacy version: 2nd parameter is a logger
-                logger_1.setCustomLogger(optionsOrLogger);
-            }
-            else {
-                if (optionsOrLogger.customLogger != null)
-                    logger_1.setCustomLogger(optionsOrLogger.customLogger);
-                if (optionsOrLogger.useRawCoAPValues)
-                    this.ipsoOptions.skipBasicSerializers = true;
+        if (typeof optionsOrLogger === "function") {
+            // Legacy version: 2nd parameter is a logger
+            logger_1.setCustomLogger(optionsOrLogger);
+        }
+        else if (typeof optionsOrLogger === "object") {
+            if (optionsOrLogger.customLogger != null)
+                logger_1.setCustomLogger(optionsOrLogger.customLogger);
+            if (optionsOrLogger.useRawCoAPValues === true)
+                this.ipsoOptions.skipValueSerializers = true;
+            if (optionsOrLogger.watchConnection != null && optionsOrLogger.watchConnection !== false) {
+                // true simply means "use default options" => don't pass a 2nd argument
+                const watcherOptions = optionsOrLogger.watchConnection === true ? undefined : optionsOrLogger.watchConnection;
+                this.watcher = new watcher_1.ConnectionWatcher(this, watcherOptions);
+                // in the first iteration of this feature, just pass all events through
+                const eventNames = [
+                    "ping succeeded", "ping failed",
+                    "connection alive", "connection lost",
+                    "gateway offline",
+                    "reconnecting",
+                    "give up",
+                ];
+                for (const event of eventNames) {
+                    this.watcher.on(event, (...args) => this.emit(event, ...args));
+                }
             }
         }
     }
@@ -53,7 +72,36 @@ class TradfriClient extends events_1.EventEmitter {
      * @param psk The pre-shared key belonging to the identity.
      */
     connect(identity, psk) {
-        return this.tryToConnect(identity, psk);
+        return __awaiter(this, void 0, void 0, function* () {
+            const maxAttempts = (this.watcher != null && this.watcher.options.reconnectionEnabled) ?
+                this.watcher.options.maximumConnectionAttempts :
+                1;
+            const interval = this.watcher != null && this.watcher.options.connectionInterval;
+            const backoffFactor = this.watcher != null && this.watcher.options.failedConnectionBackoffFactor;
+            for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                if (attempt > 0) {
+                    const nextTimeout = Math.round(interval * Math.pow(backoffFactor, Math.min(5, attempt - 1)));
+                    logger_1.log(`retrying connection in ${nextTimeout} ms`, "debug");
+                    yield promises_1.wait(nextTimeout);
+                }
+                switch (yield this.tryToConnect(identity, psk)) {
+                    case true: {
+                        // start connection watching
+                        if (this.watcher != null)
+                            this.watcher.start();
+                        return true;
+                    }
+                    case "auth failed": throw new tradfri_error_1.TradfriError("The provided credentials are not valid. Please re-authenticate!", tradfri_error_1.TradfriErrorCodes.AuthenticationFailed);
+                    case "timeout": {
+                        // retry if allowed
+                        this.emit("connection failed", attempt + 1, maxAttempts);
+                        continue;
+                    }
+                    case "error": throw new tradfri_error_1.TradfriError("An unknown error occured while connecting to the gateway", tradfri_error_1.TradfriErrorCodes.ConnectionFailed);
+                }
+            }
+            throw new tradfri_error_1.TradfriError(`The gateway did not respond ${maxAttempts === 1 ? "in time" : `after ${maxAttempts} tries`}.`, tradfri_error_1.TradfriErrorCodes.ConnectionTimedOut);
+        });
     }
     /**
      * Try to establish a connection to the configured gateway.
@@ -70,7 +118,12 @@ class TradfriClient extends events_1.EventEmitter {
             });
             logger_1.log(`Attempting connection. Identity = ${identity}, psk = ${psk}`, "debug");
             const result = yield node_coap_client_1.CoapClient.tryToConnect(this.requestBase);
-            logger_1.log(`Connection ${result ? "" : "un"}successful`, "debug");
+            if (result === true) {
+                logger_1.log("Connection successful", "debug");
+            }
+            else {
+                logger_1.log("Connection failed. Reason: " + result, "debug");
+            }
             return result;
         });
     }
@@ -84,9 +137,11 @@ class TradfriClient extends events_1.EventEmitter {
         return __awaiter(this, void 0, void 0, function* () {
             // first, check try to connect with the security code
             logger_1.log("authenticate() > trying to connect with the security code", "debug");
-            if (!(yield this.tryToConnect("Client_identity", securityCode))) {
-                // that didn't work, so the code is wrong
-                throw new tradfri_error_1.TradfriError("The security code is wrong", tradfri_error_1.TradfriErrorCodes.ConnectionFailed);
+            switch (yield this.tryToConnect("Client_identity", securityCode)) {
+                case true: break; // all good
+                case "auth failed": throw new tradfri_error_1.TradfriError("The security code is wrong", tradfri_error_1.TradfriErrorCodes.AuthenticationFailed);
+                case "timeout": throw new tradfri_error_1.TradfriError("The gateway did not respond in time.", tradfri_error_1.TradfriErrorCodes.ConnectionTimedOut);
+                case "error": throw new tradfri_error_1.TradfriError("An unknown error occured while connecting to the gateway", tradfri_error_1.TradfriErrorCodes.ConnectionFailed);
             }
             // generate a new identity
             const identity = `tradfri_${Date.now()}`;
@@ -94,7 +149,7 @@ class TradfriClient extends events_1.EventEmitter {
             // request creation of new PSK
             let payload = JSON.stringify({ 9090: identity });
             payload = Buffer.from(payload);
-            const response = yield node_coap_client_1.CoapClient.request(`${this.requestBase}${endpoints_1.endpoints.authentication}`, "post", payload);
+            const response = yield this.swallowInternalCoapRejections(node_coap_client_1.CoapClient.request(`${this.requestBase}${endpoints_1.endpoints.authentication}`, "post", payload));
             // check the response
             if (response.code.toString() !== "2.01") {
                 // that didn't work, so the code is wrong
@@ -121,7 +176,9 @@ class TradfriClient extends events_1.EventEmitter {
                 return false;
             // start observing
             this.observedPaths.push(observerUrl);
-            yield node_coap_client_1.CoapClient.observe(observerUrl, "get", callback);
+            // and remember the callback to restore it after a soft-reset
+            this.rememberedObserveCallbacks.set(observerUrl, callback);
+            yield this.swallowInternalCoapRejections(node_coap_client_1.CoapClient.observe(observerUrl, "get", callback));
             return true;
         });
     }
@@ -150,19 +207,24 @@ class TradfriClient extends events_1.EventEmitter {
             return;
         node_coap_client_1.CoapClient.stopObserving(observerUrl);
         this.observedPaths.splice(index, 1);
+        this.rememberedObserveCallbacks.delete(observerUrl);
     }
     /**
      * Resets the underlying CoAP client and clears all observers.
+     * @param preserveObservers Whether the active observers should be remembered to restore them later
      */
-    reset() {
+    reset(preserveObservers = false) {
         node_coap_client_1.CoapClient.reset();
         this.clearObservers();
+        if (!preserveObservers)
+            this.rememberedObserveCallbacks.clear();
     }
     /**
      * Closes the underlying CoAP client and clears all observers.
      */
     destroy() {
-        // TODO: do we need to do more?
+        if (this.watcher != null)
+            this.watcher.stop();
         this.reset();
     }
     /**
@@ -171,6 +233,43 @@ class TradfriClient extends events_1.EventEmitter {
      */
     clearObservers() {
         this.observedPaths = [];
+    }
+    /**
+     * Restores all previously remembered observers with their original callbacks
+     * Call this AFTER a dead connection was restored
+     */
+    restoreObservers() {
+        return __awaiter(this, void 0, void 0, function* () {
+            logger_1.log("restoring previously used observers", "debug");
+            let devicesRestored = false;
+            const devicesPath = this.getObserverUrl(endpoints_1.endpoints.devices);
+            let groupsAndScenesRestored = false;
+            const groupsPath = this.getObserverUrl(endpoints_1.endpoints.groups);
+            const scenesPath = this.getObserverUrl(endpoints_1.endpoints.scenes);
+            for (const [path, callback] of this.rememberedObserveCallbacks.entries()) {
+                if (path.indexOf(devicesPath) > -1) {
+                    if (!devicesRestored) {
+                        // restore all device observers (with a new callback)
+                        logger_1.log("restoring device observers", "debug");
+                        yield this.observeDevices();
+                        devicesRestored = true;
+                    }
+                }
+                else if (path.indexOf(groupsPath) > -1 || path.indexOf(scenesPath) > -1) {
+                    if (!groupsAndScenesRestored) {
+                        // restore all group and scene observers (with a new callback)
+                        logger_1.log("restoring groups and scene observers", "debug");
+                        yield this.observeGroupsAndScenes;
+                        groupsAndScenesRestored = true;
+                    }
+                }
+                else {
+                    // restore all custom observers with the old callback
+                    logger_1.log(`restoring custom observer for path "${path}"`, "debug");
+                    yield this.observeResource(path, callback);
+                }
+            }
+        });
     }
     /**
      * Sets up an observer for all devices
@@ -255,7 +354,10 @@ class TradfriClient extends events_1.EventEmitter {
         const result = parsePayload(response);
         logger_1.log(`observeDevice > ` + JSON.stringify(result), "debug");
         // parse device info
-        const accessory = new accessory_1.Accessory(this.ipsoOptions).parse(result).createProxy();
+        const accessory = new accessory_1.Accessory(this.ipsoOptions)
+            .parse(result)
+            .fixBuggedProperties()
+            .createProxy();
         // remember the device object, so we can later use it as a reference for updates
         // store a clone, so we don't have to care what the calling library does
         this.devices[instanceId] = accessory.clone();
@@ -296,7 +398,7 @@ class TradfriClient extends events_1.EventEmitter {
             const addedKeys = array_extensions_1.except(newKeys, oldKeys);
             logger_1.log(`adding groups with keys ${JSON.stringify(addedKeys)}`, "debug");
             // create a deferred promise for each group, so we can wait for them to be fulfilled
-            if (this.observeScenesPromises == null) {
+            if (this.observeGroupsPromise != null && this.observeScenesPromises == null) {
                 this.observeScenesPromises = new Map(newKeys.map(id => [id, defer_promise_1.createDeferredPromise()]));
             }
             const observeGroupPromises = newKeys.map(id => {
@@ -351,14 +453,14 @@ class TradfriClient extends events_1.EventEmitter {
         for (const id of Object.keys(this.groups)) {
             this.stopObservingGroup(+id);
         }
+        this.stopObservingResource(endpoints_1.endpoints.groups);
     }
     stopObservingGroup(instanceId) {
         this.stopObservingResource(`${endpoints_1.endpoints.groups}/${instanceId}`);
-        const scenesPrefix = `${endpoints_1.endpoints.scenes}/${instanceId}`;
-        for (const path of this.observedPaths) {
-            if (path.startsWith(scenesPrefix)) {
-                this.stopObservingResource(path);
-            }
+        const scenesPrefix = this.getObserverUrl(`${endpoints_1.endpoints.scenes}/${instanceId}`);
+        const pathsToDelete = this.observedPaths.filter(path => path.startsWith(scenesPrefix));
+        for (const path of pathsToDelete) {
+            this.stopObservingResource(path);
         }
     }
     // gets called whenever "get /15004/<instanceId>" updates
@@ -370,7 +472,10 @@ class TradfriClient extends events_1.EventEmitter {
         }
         const result = parsePayload(response);
         // parse group info
-        const group = (new group_1.Group(this.ipsoOptions)).parse(result).createProxy();
+        const group = new group_1.Group(this.ipsoOptions)
+            .parse(result)
+            .fixBuggedProperties()
+            .createProxy();
         // remember the group object, so we can later use it as a reference for updates
         let groupInfo;
         if (!(instanceId in this.groups)) {
@@ -450,7 +555,10 @@ class TradfriClient extends events_1.EventEmitter {
         }
         const result = parsePayload(response);
         // parse scene info
-        const scene = (new scene_1.Scene(this.ipsoOptions)).parse(result).createProxy();
+        const scene = new scene_1.Scene(this.ipsoOptions)
+            .parse(result)
+            .fixBuggedProperties()
+            .createProxy();
         // remember the scene object, so we can later use it as a reference for updates
         // store a clone, so we don't have to care what the calling library does
         this.groups[groupId].scenes[instanceId] = scene.clone();
@@ -534,7 +642,7 @@ class TradfriClient extends events_1.EventEmitter {
             let payload = JSON.stringify(serializedObj);
             logger_1.log(`updateResource(${path}) > sending payload: ${payload}`, "debug");
             payload = Buffer.from(payload);
-            yield node_coap_client_1.CoapClient.request(`${this.requestBase}${path}`, "put", payload);
+            yield this.swallowInternalCoapRejections(node_coap_client_1.CoapClient.request(`${this.requestBase}${path}`, "put", payload));
             return true;
         });
     }
@@ -542,11 +650,24 @@ class TradfriClient extends events_1.EventEmitter {
      * Sets some properties on a group
      * @param group The group to be updated
      * @param operation The properties to be set
+     * @param force If the provided properties must be sent in any case
      * @returns true if a request was sent, false otherwise
      */
-    operateGroup(group, operation) {
+    operateGroup(group, operation, force = false) {
+        const newGroup = group.clone().merge(operation, true /* all props */);
         const reference = group.clone();
-        const newGroup = reference.clone().merge(operation, true /* all props */);
+        if (force) {
+            // to force the properties being sent, we need to reset them on the reference
+            const inverseOperation = object_polyfill_1.composeObject(object_polyfill_1.entries(operation)
+                .map(([key, value]) => {
+                switch (typeof value) {
+                    case "number": return [key, Number.NaN];
+                    case "boolean": return [key, !value];
+                    default: return [key, null];
+                }
+            }));
+            reference.merge(inverseOperation, true);
+        }
         return this.updateResource(`${endpoints_1.endpoints.groups}/${group.instanceId}`, newGroup, reference);
     }
     /**
@@ -580,12 +701,38 @@ class TradfriClient extends events_1.EventEmitter {
                 jsonPayload = Buffer.from(jsonPayload);
             }
             // wait for the CoAP response and respond to the message
-            const resp = yield node_coap_client_1.CoapClient.request(`${this.requestBase}${path}`, method, jsonPayload);
+            const resp = yield this.swallowInternalCoapRejections(node_coap_client_1.CoapClient.request(`${this.requestBase}${path}`, method, jsonPayload));
             return {
                 code: resp.code.toString(),
                 payload: parsePayload(resp),
             };
         });
+    }
+    swallowInternalCoapRejections(promise) {
+        // We use the conventional promise pattern here so we can opt to never
+        // resolve the promise in case we want to redirect it into an emitted error event
+        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                // try to resolve the promise normally
+                resolve(yield promise);
+            }
+            catch (e) {
+                if (/coap\s?client was reset/i.test(e.message)) {
+                    // The CoAP client was reset. This happens when the user
+                    // resets the CoAP client while connections or requests
+                    // are still pending. It's not an error per se, so just
+                    // inform the user about what happened.
+                    this.emit("error", new tradfri_error_1.TradfriError("The network stack was reset. Pending promises will not be fulfilled.", tradfri_error_1.TradfriErrorCodes.NetworkReset));
+                }
+                else if (/dtls handshake timed out/i.test(e.message)) {
+                    // The DTLS layer did not complete a handshake in time.
+                    this.emit("error", new tradfri_error_1.TradfriError("Could not establish a secure connection in time. Pending promises will not be fulfilled.", tradfri_error_1.TradfriErrorCodes.ConnectionTimedOut));
+                }
+                else {
+                    reject(e);
+                }
+            }
+        }));
     }
 }
 exports.TradfriClient = TradfriClient;
@@ -603,9 +750,9 @@ function parsePayload(response) {
         return null;
     switch (response.format) {
         case 0: // text/plain
-        case null:// assume text/plain
+        case null: // assume text/plain
             return response.payload.toString("utf-8");
-        case 50:// application/json
+        case 50: // application/json
             const json = response.payload.toString("utf-8");
             return JSON.parse(json);
         default:

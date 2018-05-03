@@ -31,5 +31,7 @@ exports.Sensor = sensor_1.Sensor;
 var tradfri_error_1 = require("./lib/tradfri-error");
 exports.TradfriError = tradfri_error_1.TradfriError;
 exports.TradfriErrorCodes = tradfri_error_1.TradfriErrorCodes;
+var discovery_1 = require("./lib/discovery");
+exports.discoverGateway = discovery_1.discoverGateway;
 var tradfri_client_1 = require("./tradfri-client");
 exports.TradfriClient = tradfri_client_1.TradfriClient;

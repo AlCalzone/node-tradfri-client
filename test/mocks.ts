@@ -4,16 +4,13 @@
 
 import { assert, expect, should, use } from "chai";
 import { spy, stub } from "sinon";
-import * as sinonChai from "sinon-chai";
-
-// enable the should interface with sinon
-should();
-use(sinonChai);
 
 import { CoapClient as coap, CoapResponse } from "node-coap-client";
 import { ContentFormats } from "node-coap-client/build/ContentFormats";
 import { MessageCode, MessageCodes } from "node-coap-client/build/Message";
-import { Accessory, Light, TradfriClient } from "../src";
+import { ConnectionWatcherOptions } from "../build/lib/watcher";
+import { Accessory, Group, Light, Scene, TradfriClient } from "../src";
+import { TradfriOptions } from "../src/tradfri-client";
 
 export function createResponse(
 	payload: Buffer | string | any | null,
@@ -47,11 +44,14 @@ export function createErrorResponse(code: MessageCode = MessageCodes.clientError
  */
 export function createNetworkMock(
 	hostname: string = "localhost",
+	options?: Partial<TradfriOptions>,
 ) {
 
-	const tradfri = new TradfriClient(hostname);
+	const tradfri = new TradfriClient(hostname, options);
 
 	const devicesUrl = `coaps://${hostname}:5684/15001`;
+	const groupsUrl = `coaps://${hostname}:5684/15004`;
+	const scenesUrl = `coaps://${hostname}:5684/15005`;
 
 	const fakeCoap = {
 		observe: null as sinon.SinonStub,
@@ -65,18 +65,37 @@ export function createNetworkMock(
 	const callbacks = {
 		observeDevices: null as (response: CoapResponse) => Promise<void>,
 		observeDevice: {} as Record<string, (response: CoapResponse) => Promise<void>>,
+		observeGroups: null as (response: CoapResponse) => Promise<void>,
+		observeGroup: {} as Record<string, (response: CoapResponse) => Promise<void>>,
+		observeScenes: {} as Record<string, (response: CoapResponse) => Promise<void>>,
+		observeScene: {} as Record<string, (response: CoapResponse) => Promise<void>>,
 	};
 	const devices = new Map<number, Accessory>();
+	const groups = new Map<number, Group>();
+	const scenes = new Map<number, Scene>();
 
 	/**
 	 * Remembers a callback for later tests
 	 */
-	function rememberCallback(path: string, cb) {
+	function rememberCallback(path: string, cb: (response: CoapResponse) => Promise<void>) {
 		if (path === devicesUrl) {
 			callbacks.observeDevices = cb;
 		} else if (path.indexOf(devicesUrl) > -1) {
 			const instanceId = path.substr(path.lastIndexOf("/") + 1);
 			callbacks.observeDevice[instanceId] = cb;
+		} else if (path === groupsUrl) {
+			callbacks.observeGroups = cb;
+		} else if (path.indexOf(groupsUrl) > -1) {
+			const instanceId = path.substr(path.lastIndexOf("/") + 1);
+			callbacks.observeGroup[instanceId] = cb;
+		} else if (path.startsWith(scenesUrl)) {
+			const remainder = path.substr(scenesUrl.length + 1);
+			const [groupId, sceneId] = remainder.split("/");
+			if (sceneId == null) {
+				callbacks.observeScenes[groupId] = cb;
+			} else {
+				callbacks.observeScene[`${groupId}/${sceneId}`] = cb;
+			}
 		}
 	}
 
@@ -110,6 +129,8 @@ export function createNetworkMock(
 	return {
 		tradfri,
 		devicesUrl,
+		groupsUrl,
+		scenesUrl,
 		fakeCoap,
 		callbacks,
 		createStubs,
@@ -125,6 +146,24 @@ export function createEmptyAccessory(instanceId: number = 65536) {
 }
 export function createEmptyAccessoryResponse(instanceId?: number) {
 	return createResponse(createEmptyAccessory(instanceId));
+}
+
+export function createEmptyGroup(instanceId: number = 123456) {
+	const ret = new Group();
+	ret.instanceId = instanceId;
+	return ret.serialize();
+}
+export function createEmptyGroupResponse(instanceId?: number) {
+	return createResponse(createEmptyGroup(instanceId));
+}
+
+export function createEmptyScene(instanceId: number = 654321) {
+	const ret = new Scene();
+	ret.instanceId = instanceId;
+	return ret.serialize();
+}
+export function createEmptySceneResponse(instanceId?: number) {
+	return createResponse(createEmptyScene(instanceId));
 }
 
 export function createEmptyLight(instanceId: number = 65536) {

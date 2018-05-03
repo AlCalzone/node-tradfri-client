@@ -63,7 +63,8 @@ export const ipsoKey = (key: string): PropertyDecorator => {
  * Returns a property name if the key was given, or the key if a property name was given.
  * @param keyOrProperty - ipso key or property name to lookup
  */
-function lookupKeyOrProperty(target: object, keyOrProperty: string | symbol): string | symbol {
+// TODO: in TS 2.8 type keyOrProperty with conditional types
+function lookupKeyOrProperty<T extends IPSOObject>(target: T, keyOrProperty: string | keyof T): string | keyof T {
 	// get the class constructor
 	const constr = target.constructor;
 	// retrieve the current metadata
@@ -76,7 +77,7 @@ function lookupKeyOrProperty(target: object, keyOrProperty: string | symbol): st
  * Declares that a property is required to be present in a serialized CoAP object
  */
 export const required = (predicate: boolean | RequiredPredicate = true): PropertyDecorator => {
-	return (target: object, property: string | symbol) => {
+	return <T extends IPSOObject>(target: T, property: keyof T | string) => {
 		// get the class constructor
 		const constr = target.constructor;
 		// retrieve the current metadata
@@ -91,7 +92,7 @@ export const required = (predicate: boolean | RequiredPredicate = true): Propert
  * Checks if a property is required to be present in a serialized CoAP object
  * @param property - property name to lookup
  */
-function isRequired(target: object, reference: object, property: string | symbol): boolean {
+function isRequired<T extends IPSOObject>(target: T, reference: T, property: keyof T): boolean {
 	// get the class constructor
 	const constr = target.constructor;
 	log(`${constr.name}: checking if ${property} is required...`, "silly");
@@ -100,7 +101,7 @@ function isRequired(target: object, reference: object, property: string | symbol
 	if (metadata.hasOwnProperty(property)) {
 		const ret = metadata[property];
 		if (typeof ret === "boolean") return ret;
-		if (typeof ret === "function") return (ret as RequiredPredicate)(target as IPSOObject, reference as IPSOObject);
+		if (typeof ret === "function") return (ret as RequiredPredicate)(target, reference);
 	}
 	return false;
 }
@@ -110,7 +111,7 @@ function isRequired(target: object, reference: object, property: string | symbol
  * In contrast to `isRequired`, this leaves out properties that depend on others.
  * @param property - property name to lookup
  */
-function isAlwaysRequired(target: object, property: string | symbol): boolean {
+function isAlwaysRequired<T extends IPSOObject>(target: T, property: keyof T): boolean {
 	// get the class constructor
 	const constr = target.constructor;
 	log(`${constr.name}: checking if ${property} is always required...`, "silly");
@@ -130,7 +131,7 @@ function isAlwaysRequired(target: object, property: string | symbol): boolean {
  */
 export function serializeWith(kernel: PropertyTransformKernel, options?: { splitArrays?: boolean, neverSkip?: boolean}): PropertyDecorator {
 	const transform = buildPropertyTransform(kernel, options);
-	return (target: object, property: string | symbol) => {
+	return <T extends IPSOObject>(target: T, property: keyof T | string) => {
 		// get the class constructor
 		const constr = target.constructor;
 		// retrieve the current metadata
@@ -150,7 +151,7 @@ const defaultSerializers: Record<string, PropertyTransform> = {
 /**
  * Retrieves the serializer for a given property
  */
-function getSerializer(target: object, property: string | symbol): PropertyTransform {
+function getSerializer<T extends IPSOObject>(target: T, property: string | keyof T): PropertyTransform {
 	// get the class constructor
 	const constr = target.constructor;
 	// retrieve the current metadata
@@ -170,7 +171,7 @@ function getSerializer(target: object, property: string | symbol): PropertyTrans
  */
 export function deserializeWith(kernel: PropertyTransformKernel, options?: { splitArrays?: boolean, neverSkip?: boolean}): PropertyDecorator {
 	const transform = buildPropertyTransform(kernel, options);
-	return (target: object, property: string | symbol) => {
+	return <T extends IPSOObject>(target: T, property: keyof T | string) => {
 		// get the class constructor
 		const constr = target.constructor;
 		// retrieve the current metadata
@@ -185,7 +186,7 @@ export function deserializeWith(kernel: PropertyTransformKernel, options?: { spl
 /**
  * Defines that a property will not be serialized
  */
-export const doNotSerialize = (target: object, property: string | symbol) => {
+export const doNotSerialize = <T extends IPSOObject>(target: T, property: keyof T | string) => {
 	// get the class constructor
 	const constr = target.constructor;
 	// retrieve the current metadata
@@ -198,7 +199,7 @@ export const doNotSerialize = (target: object, property: string | symbol) => {
 /**
  * Checks if a given property will be serialized or not
  */
-function isSerializable(target: object, property: string | symbol): boolean {
+function isSerializable<T extends IPSOObject>(target: T, property: keyof T): boolean {
 	// get the class constructor
 	const constr = target.constructor;
 	// retrieve the current metadata
@@ -215,7 +216,7 @@ const defaultDeserializers: Record<string, PropertyTransform> = {
 /**
  * Retrieves the deserializer for a given property
  */
-function getDeserializer(target: object, property: string | symbol): PropertyTransform {
+function getDeserializer<T extends IPSOObject>(target: T, property: string | keyof T): PropertyTransform {
 	// get the class constructor
 	const constr = target.constructor;
 	// retrieve the current metadata
@@ -235,7 +236,7 @@ function getDeserializer(target: object, property: string | symbol): PropertyTra
  * Finds the design type for a given property
  */
 // tslint:disable-next-line:ban-types
-function getPropertyType(target: object, property: string | symbol): Function {
+function getPropertyType<T extends IPSOObject>(target: T, property: string | keyof T): Function {
 	return Reflect.getMetadata("design:type", target, property);
 }
 
@@ -261,7 +262,7 @@ export interface IPSOOptions {
 	 * Determines if basic serializers (i.e. for simple values) should be skipped
 	 * This is used to support raw CoAP values instead of the simplified scales
 	 */
-	skipBasicSerializers?: boolean;
+	skipValueSerializers?: boolean;
 }
 
 // common base class for all objects that are transmitted somehow
@@ -278,8 +279,8 @@ export class IPSOObject {
 		this.options = options;
 	}
 
-	// provide an index signature so TypeScript shuts up when using --noImplicitAny
-	[propName: string]: any;
+	// // provide an index signature so TypeScript shuts up when using --noImplicitAny
+	// [propName: string]: any;
 
 	/**
 	 * Reads this instance's properties from the given object
@@ -288,7 +289,7 @@ export class IPSOObject {
 		for (const [key, value] of entries(obj)) {
 			let deserializer: PropertyTransform = getDeserializer(this, key);
 			// key might be ipso key or property name
-			let propName: string | symbol;
+			let propName: keyof this | string;
 			if (deserializer == null) {
 				// deserializers are defined by property name, so key is actually the key
 				propName = lookupKeyOrProperty(this, key);
@@ -305,8 +306,8 @@ export class IPSOObject {
 			// parse the value
 			const requiresArraySplitting: boolean = deserializer ? deserializer.splitArrays : true;
 			const parsedValue = this.parseValue(key, value, deserializer, requiresArraySplitting);
-			// and remember it
-			this[propName] = parsedValue;
+			// and remember it - we are now sure propname is a keyof this
+			this[propName as keyof this] = parsedValue;
 		}
 		return this;
 	}
@@ -323,7 +324,7 @@ export class IPSOObject {
 			} else {
 				log(`could not find deserializer for key ${propKey}`, "warn");
 			}
-		} else if (transform && (transform.neverSkip || !this.options.skipBasicSerializers)) {
+		} else if (transform && (transform.neverSkip || !this.options.skipValueSerializers)) {
 			return transform(value, this);
 		} else {
 			// otherwise just return the value
@@ -337,7 +338,8 @@ export class IPSOObject {
 	public merge(obj: Partial<this>, allProperties: boolean = false): this {
 		for (const [key, value] of entries(obj as Record<string, any>)) {
 			if (allProperties || this.hasOwnProperty(key)) {
-				this[key] = value;
+				// we can't be sure that this has a property `key`
+				(this as any)[key] = value;
 			}
 		}
 		return this;
@@ -355,7 +357,7 @@ export class IPSOObject {
 
 		const ret: Record<string, any> = {};
 
-		const serializeValue = (propName: string | symbol, value: any, refValue: any, transform?: PropertyTransform) => {
+		const serializeValue = (propName: keyof this, value: any, refValue: any, transform?: PropertyTransform) => {
 			const _required = isRequired(this, reference, propName);
 			let _ret = value;
 			if (value instanceof IPSOObject) {
@@ -371,14 +373,16 @@ export class IPSOObject {
 					// there is no default value, just remember the actual value
 				}
 			}
-			if (transform && (transform.neverSkip || !this.options.skipBasicSerializers)) {
+			if (transform && (transform.neverSkip || !this.options.skipValueSerializers)) {
 				_ret = transform(_ret, this);
+			} else if (typeof _ret === "number" && this.options.skipValueSerializers) {
+				_ret = Math.round(_ret);
 			}
 			return _ret;
 		};
 
 		// check all set properties
-		for (const propName of Object.keys(this)) {
+		for (const propName of Object.keys(this) as (keyof this)[]) {
 			// check if this property is going to be serialized
 			if (
 				// properties starting with "_" are private by convention
@@ -391,7 +395,7 @@ export class IPSOObject {
 				// find IPSO key
 				const key = lookupKeyOrProperty(this, propName);
 				// find value and reference (default) value
-				let value = this[propName];
+				let value: any = this[propName];
 				let refValue: any = null;
 				if (reference != null && reference.hasOwnProperty(propName)) {
 					refValue = reference[propName];
@@ -449,7 +453,7 @@ export class IPSOObject {
 	private isSerializedObjectEmpty(obj: Record<string, any>): boolean {
 		// Prüfen, ob eine nicht-benötigte Eigenschaft angegeben ist. => nicht leer
 		for (const key of Object.keys(obj)) {
-			const propName = lookupKeyOrProperty(this, key);
+			const propName = lookupKeyOrProperty(this, key) as keyof this;
 			if (!isAlwaysRequired(this, propName)) {
 				return false;
 			}
@@ -480,7 +484,7 @@ export class IPSOObject {
 	): this {
 		// per default create a proxy that proxies all IPSOObject instances (single or array)
 		return new Proxy(this, {
-			get: (me: this, key: PropertyKey) => {
+			get: (me: any, key: PropertyKey) => {
 				// add some metadata
 				if (key === "isProxy") return true;
 				if (key === "underlyingObject") return me;
@@ -512,7 +516,7 @@ export class IPSOObject {
 				// return all other properties
 				return me[key];
 			},
-			set: (me: this, key: PropertyKey, value, receiver) => {
+			set: (me: any, key: PropertyKey, value, receiver) => {
 				// if defined, call the overloaded setter
 				if (set != null) return set(me, key, value, receiver);
 				// else continue with predefined behaviour
@@ -532,6 +536,14 @@ export class IPSOObject {
 	 */
 	public link(client: OperationProvider): this {
 		this.client = client;
+		return this;
+	}
+
+	/**
+	 * Fixes property values that are known to be bugged
+	 */
+	public fixBuggedProperties(): this {
+		// IPSOObject has none
 		return this;
 	}
 

@@ -1,19 +1,44 @@
 # node-tradfri-client
 Library to talk to IKEA Trådfri Gateways without external binaries
 
-[![Build Status](https://travis-ci.org/AlCalzone/node-tradfri-client.svg?branch=master)](https://travis-ci.org/AlCalzone/node-tradfri-client)
-[![Coverage Status](https://coveralls.io/repos/github/AlCalzone/node-tradfri-client/badge.svg)](https://coveralls.io/github/AlCalzone/node-tradfri-client)
+[![node](https://img.shields.io/node/v/node-tradfri-client.svg) ![npm](https://img.shields.io/npm/v/node-tradfri-client.svg)](https://www.npmjs.com/package/node-tradfri-client)
 
-*Requires NodeJS >= 6.x*
+[![Build Status](https://img.shields.io/circleci/project/github/AlCalzone/node-tradfri-client.svg)](https://circleci.com/gh/AlCalzone/node-tradfri-client)
+[![Coverage Status](https://img.shields.io/coveralls/github/AlCalzone/node-tradfri-client.svg)](https://coveralls.io/github/AlCalzone/node-tradfri-client)
 
 ## Example usage
+
+### Discover a Gateway
+```js
+import { discoverGateway } from "node-tradfri-client";
+
+// later:
+const result = await discoverGateway();
+```
+
+The `result` variable has the following properties:
+```js
+{
+    name: 'gw-abcdef012345',
+    version: '1.3.14',
+    addresses: [ 
+        // array of strings with IP addresses
+    ]
+}
+```
+
+
 ### Common code for all examples
 ```TS
 import { TradfriClient, Accessory, AccessoryTypes } from "node-tradfri-client";
 
 // connect
 const tradfri = new TradfriClient("gw-abcdef012345");
-await tradfri.connect(identity, psk);
+try {
+    await tradfri.connect(identity, psk);
+} catch (e) {
+    // handle error - see below for details
+}
 ```
 
 ### Make a lightbulb blink
@@ -34,7 +59,7 @@ function tradfri_deviceUpdated(device: Accessory) {
 }
 
 function tradfri_deviceRemoved(instanceId: number) {
-	// clean up
+    // clean up
 }
 
 // later...
@@ -80,21 +105,53 @@ tradfri.destroy();
 
 ## Detailed usage
 
+### Import the necessary methods
 ```TS
 const tradfriLib = require("node-tradfri-client");
+// for normal usage:
 const TradfriClient = tradfriLib.TradfriClient;
-// or with the new import syntax
-import { TradfriClient /*, more imports */ } from "node-tradfri-client";
+// for discovery:
+const discoverGateway = tradfriLib.discoverGateway;
 
+// or with the new import syntax
+import { discoverGateway, TradfriClient /*, more imports */ } from "node-tradfri-client";
+```
+
+### Auto-detect your gateway
+You can automatically discover a Trådfri gateway on the local network with the `discoverGateway` method. Discovery will return the first gateway found, finding multiple ones is not possible yet.
+
+The method has the following signatures:
+```TS
+const discovered = await discoverGateway();
+const discovered = await discoverGateway(timeout: number);
+const discovered = await discoverGateway(false);
+```
+The timeout parameter is the time in milliseconds (default 10000) the discovery will run before returning `null` to indicate that no gateway was found. By passing a negative value or `false` you can instruct the discovery to run *forever*.
+
+The return value is of the type `DiscoveredGateway` which looks as follows:
+```ts
+{
+    // hostname of the gateway, has the form "gw-abcdef012345"
+    name: string,
+    // firmware version of the gateway
+    version: string,
+    // array of IP addresses the gateway responds to
+    addresses: string[],
+}
+```
+
+
+### Create a client instance
+```TS
 // one of the following
 const tradfri = new TradfriClient(hostname: string);
 const tradfri = new TradfriClient(hostname: string, customLogger: LoggerFunction);
 const tradfri = new TradfriClient(hostname: string, options: TradfriOptions);
 ```
-As the 2nd parameter, you can provide a custom logger function or some options. By providing a custom logger function to the constructor, all diagnostic output will be sent to that function. By default, the `debug` module is used instead. The logger function has the following signature:
+As the 2nd parameter, you can provide a custom logger function or an object with some or all of the options shown below. By providing a custom logger function to the constructor, all diagnostic output will be sent to that function. By default, the `debug` module is used instead. The logger function has the following signature:
 ```TS
 type LoggerFunction = (
-    message: string, 
+    message: string,
     [severity: "info" | "warn" | "debug" | "error" | "silly"]
 ) => void;
 ```
@@ -102,11 +159,15 @@ type LoggerFunction = (
 The options object looks as follows:
 ```TS
 interface TradfriOptions {
-	customLogger?: LoggerFunction,
-	useRawCoAPValues?: boolean,
+    customLogger: LoggerFunction,
+    useRawCoAPValues: boolean,
+    watchConnection: boolean | ConnectionWatcherOptions,
 }
 ```
-The custom logger function is used as above. By setting `useRawCoAPValues` to true, you can instruct `TradfriClient` to use raw CoAP values instead of the simplified scales used internally. See below for a detailed description how the scales change.
+You can provide all the options or just some of them:
+* The custom logger function is used as above. 
+* By setting `useRawCoAPValues` to true, you can instruct `TradfriClient` to use raw CoAP values instead of the simplified scales used internally. See below for a detailed description how the scales change.
+* `watchConnection` accepts a boolean to enable/disable connection watching with default parameters or a set of options. See below ("watching the connection") for a detailed description.
 
 The following code samples use the new `async/await` syntax which is available through TypeScript/Babel or in ES7. If that is no option for you, you can also consume the library by using promises:
 ```TS
@@ -141,16 +202,20 @@ try {
 ```
 The returned `identity` and `psk` **have to be stored** for future connections to the gateway. To comply with IKEA's requests, the security code **must not be stored** permanently in your application.
 
-The call throws an error if it wasn't successful which you should handle. The error `e` should be of type `TradfriError` and gives further information why the authentication failed. To check that, add `TradfriError` and `TradfriErrorCodes` to the list of imports and check as follows:
+If the authentication was not successful, this method throws (or rather rejects with) an error which you should handle. The error `e` should be of type `TradfriError` and gives further information why the authentication failed. To check that, add `TradfriError` and `TradfriErrorCodes` to the list of imports and check as follows:
 ```TS
 if (e instanceof TradfriError) {
     switch (e.code) {
-        case TradfriErrorCodes.ConnectionFailed: {
-            // Gateway unreachable or security code wrong
+        case TradfriErrorCodes.ConnectionTimedOut: {
+            // The gateway is unreachable or did not respond in time
         }
         case TradfriErrorCodes.AuthenticationFailed: {
-            // Something went wrong with the authentication.
-            // It might be that this library has to be updated to be compatible with a new firmware.
+            // The security code is wrong or something else went wrong with the authentication.
+            // Check the error message for details. It might be that this library has to be updated
+            // to be compatible with a new firmware.
+        }
+        case TradfriErrorCodes.ConnectionFailed: {
+            // An unknown error happened while trying to connect
         }
     }
 }
@@ -159,9 +224,26 @@ if (e instanceof TradfriError) {
 ### Connecting to the gateway
 When you have a valid identity and psk, you can connect to the gateway using the `connect` method:
 ```TS
-const success = await tradfri.connect(identity, psk);
+try {
+    await tradfri.connect(identity, psk);
+} catch (e: TradfriError) {
+    // handle error
+    switch (e.code) {
+        case TradfriErrorCodes.ConnectionTimedOut: {
+            // The gateway is unreachable or did not respond in time
+        }
+        case TradfriErrorCodes.AuthenticationFailed: {
+            // The provided credentials are not valid. You need to re-authenticate using `authenticate()`.
+        }
+        case TradfriErrorCodes.ConnectionFailed: {
+            // An unknown error happened while trying to connect
+        }
+    }
+}
 ```
-If the connection was unsuccessful, either the gateway was unreachable or the identity/psk pair isn't valid.
+If you have [automatic reconnection](#automatically-watching-the-connection-and-reconnecting) enabled, this method can retry for a long time before resolving or rejecting, depending on the configuration.
+
+**NOTE:** As of v0.6.0, this no longer resolves with `false` if the connection was unsuccessful. Instead, it throws (or rejects with) a `TradfriError` which contains details about why the connection failed.
 
 ### Pinging the gateway
 ```TS
@@ -173,11 +255,17 @@ Check the reachability of the gateway using inexpensive CoAP pings. The optional
 
 ### Resetting the connection
 ```TS
-tradfri.reset();
+tradfri.reset([preserveObservers: boolean]);
 ```
-After a connection loss or reboot of another endpoint, the currently active connection params might no longer be valid. In this case, use the reset method to invalidate the stored connection params, so the next request will use a fresh connection.
+After a connection loss or reboot of the gateway, the currently active connection params might no longer be valid. In this case, use the reset method to invalidate the stored connection params, so the next request will use a fresh connection.
 
-This causes all requests to be dropped and clears all observations.
+This causes all requests to be dropped and clears all observations. To preserve the observers, pass `true` to the method. When the connection is alive again, you can then call
+```TS
+await tradfri.restoreObservers();
+```
+to re-activate all observers and their callbacks.
+
+**Note:** Promises belonging to any pending connections, requests or observers will not be fulfilled anymore and you should delete all references to them. In that case, the `"error"` event will be emitted (once or multiple times) with an error with code `TradfriClient.NetworkReset`.
 
 ### Closing the connection
 ```TS
@@ -186,7 +274,7 @@ tradfri.destroy();
 Call this before shutting down your application so the gateway may clean up its resources.
 
 ### Subscribe to updates
-The `TradfriClient` notifies registered listeners when observed resources are updated or removed. It is using the standard `EventEmitter` [interface](https://nodejs.org/api/events.html), so you can add listeners with `on("event", handler)` and remove them with `removeListener` and `removeAllListeners`.
+The `TradfriClient` notifies registered listeners when observed resources are updated or removed. It is using the standard [`EventEmitter` interface](https://nodejs.org/api/events.html), so you can add listeners with `on("event", handler)` and remove them with `removeListener` and `removeAllListeners`.
 The currently supported events and their handler signatures are:
 
 #### `"device updated"` - A device was added or changed
@@ -219,17 +307,29 @@ type SceneUpdatedCallback = (groupId: number, scene: Scene) => void;
 type SceneRemovedCallback = (groupId: number, instanceId: number) => void;
 ```
 
-#### `"error"` - An error occured
+### Handle errors
+The `"error"` event gets emitted when something unexpected happens. The callback has the following form.
 ```TS
 type ErrorCallback = (e: Error) => void;
 ```
-This doesn't have to be fatal and can be called when an unexpected response code is received.
+This doesn't have to be fatal, so you should check which kind of error happened. 
+Some errors are of the type `TradfriError` and contain a code which provides more information about the nature of the error. To check that, add `TradfriError` and `TradfriErrorCodes` to the list of imports and check as follows:
+```TS
+if (e instanceof TradfriError) {
+    // handle the error depending on `e.code`
+} else {
+    // handle the error as you normally would.
+}
+```
+The currently supported error codes are:
+* `TradfriErrorCode.NetworkReset`: The `reset()` method was called while some requests or connection attempts were still pending. Those promises will not be fulfilled anymore, and you should delete all references to them.
+* `TradfriErrorCode.ConnectionTimedOut`: While some requests or connection attempts were still pending, a secure connection could not be established within the timeout. The promises related to those requests or connection attempts will not be fulfilled anymore, and you should delete all references to them.
 
 ### Observe a resource
 The standard way to receive updates to a Trådfri (or CoAP) resource is by observing it. The TradfriClient provides a couple of methods to observe resources, with the most generic one being
 ```TS
 const success = await tradfri.observeResource(
-    path: string, 
+    path: string,
     callback: (resp: CoapResponse) => void
 );
 ```
@@ -290,9 +390,13 @@ const requestSent = await tradfri.updateGroup(group: Group);
 **NOTE:** To switch all lights in a group or to change their properties, prefer the `operateGroup` method.
 
 ```TS
-const requestSent = await tradfri.operateGroup(group: Group, operation: GroupOperation);
+const requestSent = await tradfri.operateGroup(
+    group: Group, 
+    operation: GroupOperation, 
+    [force: boolean = false]
+);
 ```
-It is similar to the `operateLight` method, see the chapter "Data structures" below for a complete list of all properties.
+It is similar to the `operateLight` method, see the chapter "Data structures" below for a complete list of all properties. Because the gateway does not report back group properties, the sent payloads are computed using the old properties of the group. To ensure the entire `GroupOperation` is always present in the payload, set the `force` parameter to `true`. **Note:** `force = true` might become the default in a future release.
 
 ### Custom requests
 For all one-time requests currently not possible through specialized methods, you can use
@@ -360,8 +464,8 @@ The additional properties are either for internal use (`colorX`/`colorY`) or not
 If the light object was returned from a library function and not created by you, the following methods are available to change its appearance directly. You can await them to make sure the commands were sent or just fire-and-forget them. The returned Promises resolve to true if a command was sent, otherwise to false.
 * `turnOn()` - Turns the light on.
 * `turnOff()` - Turns the light off.
-* `toggle([value: boolean])` - Toggles the light's state to the given value or the opposite of its current state. 
-* `setBrightness(value: number [, transitionTime: number])` - Dims the light to the given brightness. 
+* `toggle([value: boolean])` - Toggles the light's state to the given value or the opposite of its current state.
+* `setBrightness(value: number [, transitionTime: number])` - Dims the light to the given brightness.
 * `setColorTemperature(value: string [, transitionTime: number])` - Changes a white spectrum lightbulb's color temperature to the given value.
 * `setColor(value: string [, transitionTime: number])` - Changes an RGB lightbulb's hex color to the given value. May also be use for white spectrum bulbs to target one of the predefined colors `f5faf6` (cold), `f1e0b5` (normal) and `efd275` (warm).
 * `setHue(value: number [, transitionTime: number])` - Changes an RGB lightbulb's hue to the given value.
@@ -388,7 +492,7 @@ or a subset thereof.
 A group contains several devices, usually a remote control or dimmer and some lightbulbs. To control the group's lightbulbs, use the following properties:
 * `onOff: boolean` - Turn the group's lightbulbs on (`true`) or off (`false`)
 * `dimmer: number` - Set the brightness of the group's lightbulbs in percent [0..100%]. _Note:_ When using raw values, this range is [0..254].
-* `transitionTime: number` - The duration of state changes in seconds. Not supported for on/off. 
+* `transitionTime: number` - The duration of state changes in seconds. Not supported for on/off.
 In contrast to controlling lightbulbs, the default transition time for groups is 0s (no transition).
 
 **Note:** The Trådfri gateway does not update those values when lights change, so they should be considered write-only.
@@ -400,8 +504,8 @@ Additionally, these properties are also supported:
 Similar to lightbulbs, groups provide the following methods if they were returned from a library function. You can await them to make sure the commands were sent or just fire-and-forget them. The returned Promises resolve to true if a command was sent, otherwise to false.
 * `turnOn()` - Turns all lights on.
 * `turnOff()` - Turns all lights off.
-* `toggle(value: boolean)` - Sets all lights' state to the given value. 
-* `setBrightness(value: number [, transitionTime: number])` - Dims all lights to the given brightness. 
+* `toggle(value: boolean)` - Sets all lights' state to the given value.
+* `setBrightness(value: number [, transitionTime: number])` - Dims all lights to the given brightness.
 
 ### `GroupOperation`
 A GroupOperation is an object containing at least one of a `Group`'s controllable properties, which are:
@@ -424,17 +528,123 @@ A DeviceInfo object contains general information about a device. It has the foll
 * `manufacturer: string` - The device manufacturer. Usually `"IKEA of Sweden"`.
 * `modelNumber: string` - The name/type of the device, e.g. `"TRADFRI bulb E27 CWS opal 600lm"`
 * `power: PowerSources` - How the device is powered. One of the following enum values:
-	* `Unknown (0)`
-	* `InternalBattery (1)`
-	* `ExternalBattery (2)`
-	* `Battery (3)` - Although not in the specs, this is apparently used by the remote
-	* `PowerOverEthernet (4)`
-	* `USB (5)`
-	* `AC_Power (6)`
-	* `Solar (7)`
+    * `Unknown (0)`
+    * `InternalBattery (1)`
+    * `ExternalBattery (2)`
+    * `Battery (3)` - Although not in the specs, this is apparently used by the remote
+    * `PowerOverEthernet (4)`
+    * `USB (5)`
+    * `AC_Power (6)`
+    * `Solar (7)`
 * `serialNumber: string` - Not used currently. Always `""`
 
+
+## Automatically watching the connection and reconnecting
+**Note:** This feature is currently experimental
+
+This library allows you to watch the connection and automatically reconnect without shipping your own reconnection routine. Retrying the initial connection is also possible **if you have already authenticated**.
+
+You can enable it by setting the `watchConnection` param of the constructor options to `true` or an options object with the following structure:
+```TS
+interface ConnectionWatcherOptions {
+    /** The interval in ms between consecutive pings */
+    pingInterval: number; // DEFAULT: 10000ms
+    /** How many pings have to consecutively fail until the gateway is assumed offline */
+    failedPingCountUntilOffline: number; // DEFAULT: 1
+    /**
+     * How much the interval between consecutive pings should be increased
+     * while the gateway is offline. The actual interval is calculated by 
+     * <ping interval> * <backoff factor> ** <offline pings)>,
+     * with the number of offline pings capped at 5.
+     */
+    failedPingBackoffFactor: number; // DEFAULT: 1.5
+
+    /** Whether automatic reconnection and retrying the initial connection is enabled */
+    reconnectionEnabled: boolean; // DEFAULT: enabled
+    /** 
+     * How many pings have to consecutively fail while the gateway is offline
+     * until a reconnection is triggered
+     */
+    offlinePingCountUntilReconnect: number; // DEFAULT: 3
+    /** After how many failed reconnects we give up */
+    maximumReconnects: number; // DEFAULT: infinite
+
+    /** How many tries for the initial connection should be attempted */
+    maximumConnectionAttempts: number; // DEFAULT: infinite
+    /** The interval in ms between consecutive connection attempts */
+    connectionInterval: number; // DEFAULT: 10000ms
+    /**
+     * How much the interval between consecutive connection attempts 
+     * should be increased. The actual interval is calculated by 
+     * <connection interval> * <backoff factor> ** <failed attempts>
+     * with the number of failed attempts capped at 5
+     */
+    failedConnectionBackoffFactor: number; // DEFAULT: 1.5
+
+}
+```
+All parameters of this object are optional and use the default values if not provided. Monitoring the connection state is possible by subscribing to the following events, similar to [subscribing to updates](#subscribe-to-updates):
+
+* `"ping succeeded"`: Pinging the gateway has succeeded. Callback arguments: none.
+* `"ping failed"`: Pinging the gateway has failed one or multiple times in a row. Callback arguments: 
+  * `failedPingCount`: number
+* `"connection lost"`: Raised after after the first failed ping. Callback arguments: none.
+* `"connection failed"`: Raised when an attempt for the initial connection fails. Callback arguments:
+  * `connectionAttempt`: number
+  * `maximumAttempts`: number
+* `"connection alive"`: The connection is alive again after one or more pings have failed. Callback arguments: none.
+* `"gateway offline"`: The threshold for consecutive failed pings has been reached, so the gateway is assumed offline. Callback arguments: none.
+* `"reconnecting"`: The threshold for failed pings while the gateway is offline has been reached. A reconnect attempt was started. Callback arguments:
+  * `reconnectAttempt`: number
+  * `maximumReconnects`: number
+* `"give up"`: The maximum amount of reconnect attempts has been reached. No further attempts will be made until the connection is restored.
+
+**Note:** Reconnection internally calls the `reset()` method. This means pending connections and promises will be dropped and the `"error"` event may be emitted aswell. See [resetting the connection](#resetting-the-connection) for details.
+
+The automatic reconnection tries to restore all previously defined observers as soon as the connection is alive again.
+
 ## Changelog
+
+#### 1.1.2 (2018-05-01)
+* (AlCalzone) Update CoaP and DTLS libraries so `node-aead-crypto` is no longer necessary on NodeJS 10+
+
+#### 1.0.1 (2018-04-27)
+* (AlCalzone) Add support for NodeJS 10
+
+#### 1.0.0 (2018-04-19)
+* (AlCalzone) Added tests for groups and scenes and fixed minor found bugs
+
+#### 0.13.0 (2018-04-17)
+* (rogierhofboer) Detect lightbulb spectrum depending on its capabilities instead of the model name.
+
+#### 0.12.2 (2018-03-18)
+* (AlCalzone) Automatic reconnection now restores observers
+
+#### 0.12.1 (2018-03-18)
+* (AlCalzone) Added automatic retrying of the initial connection (if already authenticated)
+
+#### 0.12.0 (2018-03-17)
+* (AlCalzone) Fix rounding and hue/saturation when using raw CoAP values
+* (AlCalzone) Experimental support for automatic connection watching and reconnection
+
+#### 0.11.0 (2018-03-15) - WARNING: BREAKING CHANGES!
+* (AlCalzone) **BREAKING**: The `connect()` method now either resolves with `true` or rejects with an error detailing why the connection failed.
+* (AlCalzone) The error thrown by `authentication()` now correctly reflects why the authentication failed.
+* (AlCalzone) Swallow `"DTLS handshake timed out"` promise rejections and emit an `"error"` instead
+
+#### 0.10.1 (2018-03-15)
+* (AlCalzone) Ensure all changes are being sent when using the simplified API for groups.
+
+#### 0.10.0 (2018-03-15)
+* (AlCalzone) Swallow `"CoapClient was reset"` promise rejections and emit an `"error"` instead
+* (AlCalzone) Avoid sending `5712: null` in payloads when a group's transition time is `null` for some reason
+
+#### 0.9.1 (2018-03-09)
+* (AlCalzone) Fix properties which are wrongly reported by the gateway
+
+#### 0.9.0 (2018-03-09)
+* (neophob) Added gateway discovery
+* (AlCalzone) Added timeout and tests for gateway discovery
 
 #### 0.8.7 (2018-03-08)
 * (AlCalzone) Greatly enhanced test coverage

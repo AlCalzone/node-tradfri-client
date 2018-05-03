@@ -4,20 +4,21 @@
 
 import { assert, expect, should, use } from "chai";
 import { CoapClient as coap, CoapResponse } from "node-coap-client";
-import { spy, stub } from "sinon";
+import { SinonFakeTimers, spy, stub, useFakeTimers } from "sinon";
+import * as sinonChai from "sinon-chai";
 import "./"; // dummy-import so index.ts is covered
 import { TradfriClient } from "./tradfri-client";
 
 import { ContentFormats } from "node-coap-client/build/ContentFormats";
 import { MessageCode, MessageCodes } from "node-coap-client/build/Message";
-import * as sinonChai from "sinon-chai";
-import { createEmptyAccessoryResponse, createErrorResponse, createNetworkMock, createResponse, createRGBBulb } from "../test/mocks";
+import { createEmptyAccessoryResponse, createEmptyGroupResponse, createEmptySceneResponse, createErrorResponse, createNetworkMock, createResponse, createRGBBulb } from "../test/mocks";
 import { Accessory, AccessoryTypes, Light, TradfriError, TradfriErrorCodes } from "./";
 import { createDeferredPromise, DeferredPromise } from "./lib/defer-promise";
 import { padStart } from "./lib/strings";
 
 // enable the should interface with sinon
 should();
+// improve stubs for testing
 use(sinonChai);
 
 function assertPayload(actual: any, expected: {}) {
@@ -59,13 +60,9 @@ describe("tradfri-client => infrastructure => ", () => {
 		const identity = "IDENTITY";
 		const psk = "PSK";
 
-		it("should reset the CoAP client, provide new security params and return the result from tryToConnect", async () => {
-			// test if both possible responses are passed through
+		it("should reset the CoAP client, provide new security params and resolve with true on success", async () => {
 			fakeCoap.tryToConnect.returns(Promise.resolve(true));
 			await tradfri.connect(identity, psk).should.become(true);
-
-			fakeCoap.tryToConnect.returns(Promise.resolve(false));
-			await tradfri.connect(identity, psk).should.become(false);
 
 			fakeCoap.reset.should.have.been.called;
 			fakeCoap.setSecurityParams.should.have.been.called;
@@ -74,6 +71,33 @@ describe("tradfri-client => infrastructure => ", () => {
 			});
 			fakeCoap.tryToConnect.should.have.been.called;
 
+			fakeCoap.tryToConnect.resetBehavior();
+		});
+
+		it("should reject with a `TradfriError` with code ConnectionTimedOut when the connection times out", async () => {
+			fakeCoap.tryToConnect.returns(Promise.resolve("timeout"));
+			await tradfri.connect(identity, psk).should.be.rejected.then(err => {
+				expect(err).to.be.an.instanceof(TradfriError);
+				expect(err.code).to.equal(TradfriErrorCodes.ConnectionTimedOut);
+			});
+			fakeCoap.tryToConnect.resetBehavior();
+		});
+
+		it("should reject with a `TradfriError` with code AuthenticationFailed when the credentials are wrong", async () => {
+			fakeCoap.tryToConnect.returns(Promise.resolve("auth failed"));
+			await tradfri.connect(identity, psk).should.be.rejected.then(err => {
+				expect(err).to.be.an.instanceof(TradfriError);
+				expect(err.code).to.equal(TradfriErrorCodes.AuthenticationFailed);
+			});
+			fakeCoap.tryToConnect.resetBehavior();
+		});
+
+		it("should reject with a `TradfriError` with code ConnectionFailed when some other error happens", async () => {
+			fakeCoap.tryToConnect.returns(Promise.resolve("error"));
+			await tradfri.connect(identity, psk).should.be.rejected.then(err => {
+				expect(err).to.be.an.instanceof(TradfriError);
+				expect(err.code).to.equal(TradfriErrorCodes.ConnectionFailed);
+			});
 			fakeCoap.tryToConnect.resetBehavior();
 		});
 	});
@@ -88,11 +112,6 @@ describe("tradfri-client => infrastructure => ", () => {
 		afterEach(() => {
 			fakeCoap.tryToConnect.resetBehavior();
 			fakeCoap.request.resetBehavior();
-		});
-
-		it(`detects failure to connect with "Client_identity" as a wrong security code`, async () => {
-			fakeCoap.tryToConnect.returns(Promise.resolve(false));
-			await tradfri.authenticate(null).should.be.rejectedWith("security code");
 		});
 
 		it(`should call coap.request with the correct endpoint and payload and return the identity and psk`, async () => {
@@ -114,6 +133,33 @@ describe("tradfri-client => infrastructure => ", () => {
 			);
 		});
 
+		it("should reject with a `TradfriError` with code ConnectionTimedOut when the authentication times out", async () => {
+			fakeCoap.tryToConnect.returns(Promise.resolve("timeout"));
+			await tradfri.authenticate(dummyIdentity).should.be.rejected.then(err => {
+				expect(err).to.be.an.instanceof(TradfriError);
+				expect(err.code).to.equal(TradfriErrorCodes.ConnectionTimedOut);
+			});
+			fakeCoap.tryToConnect.resetBehavior();
+		});
+
+		it("should reject with a `TradfriError` with code AuthenticationFailed when the security code was wrong", async () => {
+			fakeCoap.tryToConnect.returns(Promise.resolve("auth failed"));
+			await tradfri.authenticate(dummyIdentity).should.be.rejected.then(err => {
+				expect(err).to.be.an.instanceof(TradfriError);
+				expect(err.code).to.equal(TradfriErrorCodes.AuthenticationFailed);
+			});
+			fakeCoap.tryToConnect.resetBehavior();
+		});
+
+		it("should reject with a `TradfriError` with code ConnectionFailed when some other error happens", async () => {
+			fakeCoap.tryToConnect.returns(Promise.resolve("error"));
+			await tradfri.authenticate(dummyIdentity).should.be.rejected.then(err => {
+				expect(err).to.be.an.instanceof(TradfriError);
+				expect(err.code).to.equal(TradfriErrorCodes.ConnectionFailed);
+			});
+			fakeCoap.tryToConnect.resetBehavior();
+		});
+
 		it(`if coap.request returns an error, throw AuthenticationFailed`, async () => {
 			fakeCoap.tryToConnect.returns(Promise.resolve(true));
 			fakeCoap.request.returns(Promise.resolve(failedAuthResponse));
@@ -122,7 +168,6 @@ describe("tradfri-client => infrastructure => ", () => {
 				expect((err as TradfriError).code).to.equal(TradfriErrorCodes.AuthenticationFailed);
 			});
 		});
-
 	});
 
 	describe("ping =>", () => {
@@ -152,6 +197,82 @@ describe("tradfri-client => infrastructure => ", () => {
 		});
 	});
 
+});
+
+describe("tradfri-client => retrying the connection => ", () => {
+	let clock: SinonFakeTimers;
+
+	beforeEach(() => clock = useFakeTimers());
+	afterEach(() => clock.restore());
+
+	// Setup the mock
+	const {
+		tradfri,
+		devicesUrl,
+		fakeCoap,
+		callbacks,
+		createStubs,
+		restoreStubs,
+		resetStubHistory,
+	} = createNetworkMock(undefined, {
+		watchConnection: {
+			connectionInterval: 1000,
+			maximumConnectionAttempts: 3,
+		},
+	});
+	before(createStubs);
+	after(restoreStubs);
+	afterEach(resetStubHistory);
+
+	let connectionFailedPromise: DeferredPromise<void>;
+	// async hacked version of clock.runAll that waits for the async method to complete aswell
+	async function runAllAsync() {
+		clock.runAll();
+		connectionFailedPromise = createDeferredPromise();
+		await connectionFailedPromise;
+		connectionFailedPromise = null;
+	}
+	tradfri.on("connection failed", () => connectionFailedPromise && connectionFailedPromise.resolve());
+
+	it("should retry the connection as many times as configured and then reject", async () => {
+		fakeCoap.tryToConnect.returns("timeout");
+
+		// set up spies
+		const failedSpy = spy();
+		tradfri.on("connection failed", failedSpy);
+		const connectionPromise = tradfri.connect("foo", "bar");
+		// we configured 3 tries, so advance the timer thrice
+		for (let i = 1; i <= 3; i++) {
+			await runAllAsync();
+			failedSpy.should.have.been.calledWith(i, 3);
+		}
+
+		await expect(connectionPromise).to.be.rejectedWith("did not respond");
+
+		// back to square one
+		tradfri.removeListener("connection failed", failedSpy);
+		fakeCoap.tryToConnect.resetBehavior();
+	});
+
+	it("should work when any of the connection attempts succeeds", async () => {
+		fakeCoap.tryToConnect
+			.onFirstCall().returns("timeout")
+			.onSecondCall().returns("timeout")
+			;
+		fakeCoap.tryToConnect.returns(true);
+
+		const connectionPromise = tradfri.connect("foo", "bar");
+		// the first 2 attempts will be retried, so advance the timer twice
+		for (let i = 1; i <= 2; i++) {
+			await runAllAsync();
+		}
+		// now synchronously run the suceeding timer
+		clock.runAll();
+		await expect(connectionPromise).to.become(true);
+
+		// back to square one
+		fakeCoap.tryToConnect.resetBehavior();
+	});
 });
 
 describe("tradfri-client => observing resources => ", () => {
@@ -271,6 +392,11 @@ describe("tradfri-client => observing devices => ", () => {
 			await devicesPromise;
 		});
 
+		it("should not call anything when already observing", async () => {
+			await tradfri.observeDevices();
+			fakeCoap.observe.should.not.have.been.called;
+		});
+
 		it("when a device is added, it should only call observe for that one", async () => {
 			const devices = [65536, 65537, 65538];
 			await callbacks.observeDevices(createResponse(devices));
@@ -324,7 +450,7 @@ describe("tradfri-client => observing devices => ", () => {
 				tradfri.removeAllListeners();
 			});
 
-			it(`when the server returns code "${code}" to observeDevice(instanceID), ${code === "4.04" ? "don't" : "only"} emit an error and don't emit "device removed"`, async () => {
+			it(`when the server returns code "${code}" to observeDevice(instanceID), ${code === "4.04" ? "don't" : "only"} emit an error and don't emit "device updated"`, async () => {
 				const updatedSpy = spy();
 				const errorSpy = spy();
 				tradfri
@@ -382,6 +508,134 @@ describe("tradfri-client => observing devices => ", () => {
 			// now the deferred promise should have been rejected
 			await devicesPromise.should.be.rejectedWith("could not be observed");
 		});
+	});
+
+});
+
+describe("tradfri-client => restoring observers => ", () => {
+
+	// Setup the mock
+	const {
+		tradfri,
+		devicesUrl,
+		fakeCoap,
+		callbacks,
+		createStubs,
+		restoreStubs,
+		resetStubHistory,
+	} = createNetworkMock();
+	before(createStubs);
+	after(restoreStubs);
+	afterEach(resetStubHistory);
+
+	it("device observers should be restored using observeDevices after a soft-reset and pick up changes while offline", async () => {
+		// SETUP: Create devices and observers
+		// remember the deferred promise as this only resolves after all responses have been received
+		const devicesPromise = tradfri.observeDevices();
+		let devices = [65536, 65537];
+
+		await callbacks.observeDevices(createResponse(devices));
+		for (const dev of devices) {
+			await callbacks.observeDevice[dev](createEmptyAccessoryResponse(dev));
+		}
+
+		// now the deferred promise should have resolved
+		await devicesPromise;
+
+		// actual test: Reset everything
+		tradfri.reset(true);
+
+		const updatedSpy = spy();
+		tradfri.on("device updated", updatedSpy);
+
+		fakeCoap.observe.resetHistory();
+
+		const restorePromise = tradfri.restoreObservers();
+
+		fakeCoap.observe.should.have.been.calledOnce;
+		fakeCoap.observe.should.have.been.calledWith(devicesUrl);
+		fakeCoap.observe.resetHistory();
+
+		// tell the observer that we now have 3 devices
+		devices = [65536, 65537, 65538];
+		await callbacks.observeDevices(createResponse(devices));
+
+		fakeCoap.observe.should.have.been.calledThrice;
+		for (const dev of devices) {
+			fakeCoap.observe.should.have.been.calledWith(`${devicesUrl}/${dev}`);
+		}
+		for (const dev of devices) {
+			await callbacks.observeDevice[dev](createEmptyAccessoryResponse(dev));
+		}
+
+		// now the promise should have resolved
+		await restorePromise;
+		for (const dev of devices) {
+			expect(updatedSpy.getCalls().some(call => (call.args[0] as Accessory).instanceId === dev)).to.be.true;
+		}
+	});
+});
+
+describe("tradfri-client => fixing properties => ", () => {
+
+	// Setup the mock
+	const {
+		tradfri,
+		devicesUrl,
+		fakeCoap,
+		callbacks,
+		createStubs,
+		restoreStubs,
+		resetStubHistory,
+	} = createNetworkMock();
+	before(createStubs);
+	after(restoreStubs);
+	afterEach(resetStubHistory);
+
+	it("when the gateway reports minimum brightness on a turned-off light, set it to zero instead", async () => {
+		// remember the deferred promise as this only resolves after all responses have been received
+		const devicesPromise = tradfri.observeDevices();
+		let theLight: Light;
+		tradfri.on("device updated", (acc) => theLight = acc.lightList[0]);
+
+		const devices = [65536];
+		await callbacks.observeDevices(createResponse(devices));
+
+		const respAccessory = createRGBBulb(65536);
+		respAccessory["3311"][0]["5850"] = 0;
+		respAccessory["3311"][0]["5851"] = 1;
+		await callbacks.observeDevice[65536](createResponse(respAccessory));
+
+		// now the deferred promise should have resolved
+		await devicesPromise;
+
+		theLight.onOff.should.equal(false);
+		theLight.dimmer.should.equal(0);
+
+		tradfri.removeAllListeners();
+	});
+
+	it("when the gateway reports some other brightness on a turned-off light, keep it as-is", async () => {
+		// remember the deferred promise as this only resolves after all responses have been received
+		let theLight: Light;
+		const lightUpdatedPromise = createDeferredPromise();
+		tradfri.on("device updated", (acc) => {
+			theLight = acc.lightList[0];
+			lightUpdatedPromise.resolve();
+		});
+
+		const respAccessory = createRGBBulb(65536);
+		respAccessory["3311"][0]["5850"] = 0;
+		respAccessory["3311"][0]["5851"] = 2;
+		await callbacks.observeDevice[65536](createResponse(respAccessory));
+
+		// now the deferred promise should have resolved
+		await lightUpdatedPromise;
+
+		theLight.onOff.should.equal(false);
+		theLight.dimmer.should.not.equal(0);
+
+		tradfri.removeAllListeners();
 	});
 
 });
@@ -562,5 +816,294 @@ describe("tradfri-client => custom requests => ", () => {
 				fakeCoap.request.resetBehavior();
 			}
 		});
+
+		it("when the coap client is reset during a pending request, the rejection should be turned into an error event", (done) => {
+			fakeCoap.request.returns(Promise.reject(new Error("CoapClient was reset")));
+
+			tradfri.on("error", err => {
+				err.should.be.an.instanceof(TradfriError);
+				(err as TradfriError).code.should.equal(TradfriErrorCodes.NetworkReset);
+
+				tradfri.removeAllListeners();
+				fakeCoap.request.resetBehavior();
+				done();
+			});
+
+			tradfri.request(null, null);
+		});
+
+		it("when the DTLS handshake times out during a pending request, the rejection should be turned into an error event", (done) => {
+			fakeCoap.request.returns(Promise.reject(new Error("The DTLS handshake timed out")));
+
+			tradfri.on("error", err => {
+				err.should.be.an.instanceof(TradfriError);
+				(err as TradfriError).code.should.equal(TradfriErrorCodes.ConnectionTimedOut);
+
+				tradfri.removeAllListeners();
+				fakeCoap.request.resetBehavior();
+				done();
+			});
+
+			tradfri.request(null, null);
+		});
 	});
+});
+
+describe("tradfri-client => observing groups => ", () => {
+
+	// Setup the mock
+	const {
+		tradfri,
+		groupsUrl,
+		scenesUrl,
+		fakeCoap,
+		callbacks,
+		createStubs,
+		restoreStubs,
+		resetStubHistory,
+	} = createNetworkMock();
+	before(createStubs);
+	after(restoreStubs);
+	afterEach(resetStubHistory);
+
+	describe("observeGroupsAndScenes => ", () => {
+
+		it("should call coap.observe for the groups endpoint, each observed group, its scenes endpoint and each scene", async () => {
+			// remember the deferred promise as this only resolves after all responses have been received
+			const groupsAndScenesPromise = tradfri.observeGroupsAndScenes();
+
+			fakeCoap.observe.should.have.been.calledOnce;
+			fakeCoap.observe.should.have.been.calledWith(groupsUrl);
+			fakeCoap.observe.resetHistory();
+
+			const groups = [123456, 123457];
+			await callbacks.observeGroups(createResponse(groups));
+
+			// The groups endpoint should be called for each group
+			fakeCoap.observe.should.have.been.calledTwice;
+			fakeCoap.observe.should.have.been.calledWith(`${groupsUrl}/123456`);
+			fakeCoap.observe.should.have.been.calledWith(`${groupsUrl}/123457`);
+			fakeCoap.observe.resetHistory();
+
+			// now provide the faked responses so the observe process can continue with scenes
+			await callbacks.observeGroup[123456](createEmptyGroupResponse(123456));
+			await callbacks.observeGroup[123457](createEmptyGroupResponse(123457));
+
+			// The scenes endpoint should be called for each group
+			fakeCoap.observe.should.have.been.calledTwice;
+			fakeCoap.observe.should.have.been.calledWith(`${scenesUrl}/123456`);
+			fakeCoap.observe.should.have.been.calledWith(`${scenesUrl}/123457`);
+			fakeCoap.observe.resetHistory();
+
+			// provide the fake scenes so those can be observed too
+			const scenes = {
+				123456: [654321, 654322],
+				123457: [654323, 654324],
+			};
+			await callbacks.observeScenes[123456](createResponse(scenes[123456]));
+			await callbacks.observeScenes[123457](createResponse(scenes[123457]));
+
+			// The scene endpoint should be called for each scene
+			fakeCoap.observe.callCount.should.equal(4);
+			fakeCoap.observe.should.have.been.calledWith(`${scenesUrl}/123456/654321`);
+			fakeCoap.observe.should.have.been.calledWith(`${scenesUrl}/123456/654322`);
+			fakeCoap.observe.should.have.been.calledWith(`${scenesUrl}/123457/654323`);
+			fakeCoap.observe.should.have.been.calledWith(`${scenesUrl}/123457/654324`);
+			fakeCoap.observe.resetHistory();
+
+			// the scenes have to be provided aswell
+			await callbacks.observeScene["123456/654321"](createEmptySceneResponse(654321));
+			await callbacks.observeScene["123456/654322"](createEmptySceneResponse(654322));
+			await callbacks.observeScene["123457/654323"](createEmptySceneResponse(654323));
+			await callbacks.observeScene["123457/654324"](createEmptySceneResponse(654324));
+
+			// now the deferred promise should have resolved
+			await groupsAndScenesPromise;
+		});
+
+		it("should not call anything when already observing", async () => {
+			await tradfri.observeGroupsAndScenes();
+			fakeCoap.observe.should.not.have.been.called;
+		});
+
+		it("when a group is added, it should only call observe for that one and its scenes", async () => {
+			const groups = [123456, 123457, 123458];
+			await callbacks.observeGroups(createResponse(groups));
+
+			// group endpoint
+			fakeCoap.observe.should.have.been.calledOnce;
+			fakeCoap.observe.should.have.been.calledWith(`${groupsUrl}/123458`);
+			fakeCoap.observe.resetHistory();
+
+			// now provide the faked responses so the observe process can continue with scenes
+			await callbacks.observeGroup[123458](createEmptyGroupResponse(123458));
+
+			// scenes endpoint for that group
+			fakeCoap.observe.should.have.been.calledOnce;
+			fakeCoap.observe.should.have.been.calledWith(`${scenesUrl}/123458`);
+			fakeCoap.observe.resetHistory();
+
+			// provide the faked response for that one, too
+			const scenes = [654987, 654988];
+			await callbacks.observeScenes[123458](createResponse(scenes));
+
+			// The scene endpoint should be called for each scene
+			fakeCoap.observe.callCount.should.equal(2);
+			fakeCoap.observe.should.have.been.calledWith(`${scenesUrl}/123458/654987`);
+			fakeCoap.observe.should.have.been.calledWith(`${scenesUrl}/123458/654988`);
+			fakeCoap.observe.resetHistory();
+
+			// the scenes have to be provided aswell
+			await callbacks.observeScene["123458/654987"](createEmptySceneResponse(654987));
+			await callbacks.observeScene["123458/654988"](createEmptySceneResponse(654988));
+		});
+
+		it(`when a group is removed, on("group removed") should be called with its id`, async () => {
+
+			const leSpy = spy();
+			tradfri.on("group removed", leSpy);
+
+			const groups = [123456, 123457];
+			await callbacks.observeGroups(createResponse(groups));
+
+			fakeCoap.observe.should.not.have.been.called;
+			leSpy.should.have.been.calledOnce;
+			leSpy.should.have.been.calledWithExactly(123458);
+
+			tradfri.removeAllListeners();
+		});
+
+		for (const error of [
+			MessageCodes.clientError.unauthorized,
+			MessageCodes.clientError.forbidden,
+			MessageCodes.clientError.notFound,
+		]) {
+			const code = error.toString();
+			it(`when the server returns code "${code}" to observeGroups, only emit an error, not "group removed"`, async () => {
+
+				const removedSpy = spy();
+				const errorSpy = spy();
+				tradfri
+					.on("group removed", removedSpy)
+					.on("error", errorSpy)
+					;
+
+				await callbacks.observeGroups(createErrorResponse(error));
+
+				fakeCoap.observe.should.not.have.been.called;
+				removedSpy.should.not.have.been.called;
+				errorSpy.should.have.been.calledOnce;
+				expect(errorSpy.getCall(0).args[0]).to.be.an.instanceOf(Error);
+				expect(errorSpy.getCall(0).args[0].message.startsWith("unexpected")).to.be.true;
+
+				tradfri.removeAllListeners();
+			});
+
+			it(`when the server returns code "${code}" to observeGroup(instanceID), ${code === "4.04" ? "don't" : "only"} emit an error and don't emit "group updated"`, async () => {
+				const updatedSpy = spy();
+				const errorSpy = spy();
+				tradfri
+					.on("error", errorSpy)
+					.on("group updated", updatedSpy)
+					;
+
+				// at this point we have groups 123456 and 123457. Fake an error to one of them
+				await callbacks.observeGroup[123457](createErrorResponse(error));
+
+				updatedSpy.should.not.have.been.called;
+				if (code !== "4.04") {
+					errorSpy.should.have.been.calledOnce;
+					expect(errorSpy.getCall(0).args[0]).to.be.an.instanceOf(Error);
+					expect(errorSpy.getCall(0).args[0].message.startsWith("unexpected")).to.be.true;
+				} else {
+					errorSpy.should.not.have.been.called;
+				}
+
+				tradfri.removeAllListeners();
+			});
+
+			it(`when the server returns code "${code}" to observeScenes(groupId), only emit an error, not "scene removed"`, async () => {
+
+				const removedSpy = spy();
+				const errorSpy = spy();
+				tradfri
+					.on("scene removed", removedSpy)
+					.on("error", errorSpy)
+					;
+
+				await callbacks.observeScenes[123457](createErrorResponse(error));
+
+				fakeCoap.observe.should.not.have.been.called;
+				removedSpy.should.not.have.been.called;
+				errorSpy.should.have.been.calledOnce;
+				expect(errorSpy.getCall(0).args[0]).to.be.an.instanceOf(Error);
+				expect(errorSpy.getCall(0).args[0].message.startsWith("unexpected")).to.be.true;
+
+				tradfri.removeAllListeners();
+			});
+
+			it(`when the server returns code "${code}" to observeScene(groupId, instanceId), ${code === "4.04" ? "don't" : "only"} emit an error and don't emit "scene updated"`, async () => {
+				const updatedSpy = spy();
+				const errorSpy = spy();
+				tradfri
+					.on("error", errorSpy)
+					.on("scene updated", updatedSpy)
+					;
+
+				await callbacks.observeScene["123457/654323"](createErrorResponse(error));
+
+				updatedSpy.should.not.have.been.called;
+				if (code !== "4.04") {
+					errorSpy.should.have.been.calledOnce;
+					expect(errorSpy.getCall(0).args[0]).to.be.an.instanceOf(Error);
+					expect(errorSpy.getCall(0).args[0].message.startsWith("unexpected")).to.be.true;
+				} else {
+					errorSpy.should.not.have.been.called;
+				}
+
+				tradfri.removeAllListeners();
+			});
+		}
+
+	});
+
+	describe("stopObservingGroups => ", () => {
+		it("should call coap.stopObserving for each observed group and scene and the endpoints for groups and <group>/scenes", () => {
+			tradfri.stopObservingGroups();
+
+			fakeCoap.stopObserving.callCount.should.equal(9);
+			fakeCoap.stopObserving.should.have.been.calledWith(`${groupsUrl}`);
+			fakeCoap.stopObserving.should.have.been.calledWith(`${groupsUrl}/123456`);
+			fakeCoap.stopObserving.should.have.been.calledWith(`${groupsUrl}/123457`);
+			fakeCoap.stopObserving.should.have.been.calledWith(`${scenesUrl}/123456`);
+			fakeCoap.stopObserving.should.have.been.calledWith(`${scenesUrl}/123456/654321`);
+			fakeCoap.stopObserving.should.have.been.calledWith(`${scenesUrl}/123456/654322`);
+			fakeCoap.stopObserving.should.have.been.calledWith(`${scenesUrl}/123457`);
+			fakeCoap.stopObserving.should.have.been.calledWith(`${scenesUrl}/123457/654323`);
+			fakeCoap.stopObserving.should.have.been.calledWith(`${scenesUrl}/123457/654324`);
+		});
+	});
+
+	describe("observeGroupsAndScenes (with errors) => ", () => {
+		it("should be rejected when one of the group or scene callbacks receives an invalid response", async () => {
+
+			// the error spy has to be used our chai fails our test
+			const errorSpy = spy();
+			tradfri.on("error", errorSpy);
+
+			const groupsPromise = tradfri.observeGroupsAndScenes();
+			const groups = [123456];
+			await callbacks.observeGroups(createResponse(groups));
+
+			// provide an error to the observer callback
+			await callbacks.observeGroup[123456](createErrorResponse(MessageCodes.clientError.forbidden));
+
+			errorSpy.should.have.been.called;
+			tradfri.removeAllListeners();
+
+			// now the deferred promise should have been rejected
+			await groupsPromise.should.be.rejectedWith("could not be observed");
+		});
+	});
+
 });

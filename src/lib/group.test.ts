@@ -47,6 +47,18 @@ describe("ipso/group => basic functionality => ", () => {
 		expect(group.serialize()).to.deep.equal(template);
 	});
 
+	it(`should serialize correctly when transitionTime has the value "null"`, () => {
+		// repro for issue#51
+		const brokenGroup = group.clone();
+		brokenGroup.transitionTime = null;
+		const reference = brokenGroup.clone();
+		brokenGroup.onOff = !brokenGroup.onOff;
+
+		expect(brokenGroup.serialize(reference)).to.deep.equal({
+			5850: brokenGroup.onOff ? 1 : 0,
+		});
+	});
+
 });
 
 describe("ipso/group => simplified API => ", () => {
@@ -82,79 +94,67 @@ describe("ipso/group => simplified API => ", () => {
 
 	const group = new Group().parse(template).link(tradfri);
 
-	describe("the methods should send the correct payload =>", () => {
+	describe("the methods should send the correct payload and not care about the previous state =>", () => {
 
-		it("turnOn() when the group is off", async () => {
-			group.onOff = false;
-			await group.turnOn().should.become(true);
-			assertPayload(fakeCoap.request.getCall(0).args[2], {
-				5850: 1,
-			});
+		it("turnOn()", async () => {
+			for (const prevState of [true, false]) {
+				group.onOff = prevState;
+				await group.turnOn().should.become(true);
+				assertPayload(fakeCoap.request.getCall(fakeCoap.request.callCount - 1).args[2], {
+					5850: 1,
+				});
+			}
 		});
 
-		it("turnOn() when the group is on", async () => {
-			group.onOff = true;
-			await group.turnOn().should.become(false);
-			fakeCoap.request.should.not.have.been.called;
+		it("turnOff()", async () => {
+			for (const prevState of [true, false]) {
+				group.onOff = prevState;
+				await group.turnOff().should.become(true);
+				assertPayload(fakeCoap.request.getCall(fakeCoap.request.callCount - 1).args[2], {
+					5850: 0,
+				});
+			}
 		});
 
-		it("turnOff() when the group is on", async () => {
-			group.onOff = true;
-			await group.turnOff().should.become(true);
-			assertPayload(fakeCoap.request.getCall(0).args[2], {
-				5850: 0,
-			});
+		it("toggle(true)", async () => {
+			for (const prevState of [true, false]) {
+				group.onOff = prevState;
+				await group.toggle(true).should.become(true);
+				assertPayload(fakeCoap.request.getCall(fakeCoap.request.callCount - 1).args[2], {
+					5850: 1,
+				});
+			}
 		});
 
-		it("turnOff() when the group is off", async () => {
-			group.onOff = false;
-			await group.turnOff().should.become(false);
-			fakeCoap.request.should.not.have.been.called;
-		});
-
-		it("toggle(true) when the group is off", async () => {
-			group.onOff = false;
-			await group.toggle(true).should.become(true);
-			assertPayload(fakeCoap.request.getCall(0).args[2], {
-				5850: 1,
-			});
-		});
-
-		it("toggle(true) when the group is on", async () => {
-			group.onOff = true;
-			await group.toggle(true).should.become(false);
-			fakeCoap.request.should.not.have.been.called;
-		});
-
-		it("toggle(false) when the group is on", async () => {
-			group.onOff = true;
-			await group.toggle(false).should.become(true);
-			assertPayload(fakeCoap.request.getCall(0).args[2], {
-				5850: 0,
-			});
-		});
-
-		it("toggle(false) when the group is off", async () => {
-			group.onOff = false;
-			await group.toggle(false).should.become(false);
-			fakeCoap.request.should.not.have.been.called;
+		it("toggle(false)", async () => {
+			for (const prevState of [true, false]) {
+				group.onOff = prevState;
+				await group.toggle(false).should.become(true);
+				assertPayload(fakeCoap.request.getCall(fakeCoap.request.callCount - 1).args[2], {
+					5850: 0,
+				});
+			}
 		});
 
 		it("setBrightness() without transition time", async () => {
-			group.dimmer = 0;
-			await group.setBrightness(100).should.become(true);
-			assertPayload(fakeCoap.request.getCall(0).args[2], {
-				5851: 254,
-			});
+			for (const prevState of [0, 50, 100]) {
+				group.dimmer = prevState;
+				await group.setBrightness(100).should.become(true);
+				assertPayload(fakeCoap.request.getCall(fakeCoap.request.callCount - 1).args[2], {
+					5851: 254,
+				});
+			}
 		});
 
 		it("setBrightness() with transition time", async () => {
-			group.dimmer = 0;
-			await group.setBrightness(100, 2).should.become(true);
-			assertPayload(fakeCoap.request.getCall(0).args[2], {
-				5851: 254,
-				5712: 20,
-			});
+			for (const prevState of [0, 50, 100]) {
+				group.dimmer = prevState;
+				await group.setBrightness(100, 2).should.become(true);
+				assertPayload(fakeCoap.request.getCall(fakeCoap.request.callCount - 1).args[2], {
+					5851: 254,
+					5712: 20,
+				});
+			}
 		});
 
 		it("activateScene() when the scene is NOT the active one", async () => {

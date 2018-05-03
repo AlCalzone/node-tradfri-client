@@ -81,4 +81,27 @@ export class Accessory extends IPSODevice {
 		return this;
 	}
 
+	/**
+	 * Fixes property values that are known to be bugged
+	 */
+	public fixBuggedProperties(): this {
+		super.fixBuggedProperties();
+		if (this.lightList != null) {
+			this.lightList = this.lightList.map(light => light.fixBuggedProperties());
+		}
+		/* istanbul ignore next */
+		if (this.plugList != null) {
+			this.plugList = this.plugList.map(plug => plug.fixBuggedProperties());
+		}
+		/* istanbul ignore next */
+		if (this.sensorList != null) {
+			this.sensorList = this.sensorList.map(sensor => sensor.fixBuggedProperties());
+		}
+		/* istanbul ignore next */
+		if (this.switchList != null) {
+			this.switchList = this.switchList.map(swtch => swtch.fixBuggedProperties());
+		}
+		return this;
+	}
+
 }

@@ -56,6 +56,7 @@ exports.ipsoKey = (key) => {
  * Returns a property name if the key was given, or the key if a property name was given.
  * @param keyOrProperty - ipso key or property name to lookup
  */
+// TODO: in TS 2.8 type keyOrProperty with conditional types
 function lookupKeyOrProperty(target, keyOrProperty) {
     // get the class constructor
     const constr = target.constructor;
@@ -231,6 +232,8 @@ class IPSOObject {
         this.isProxy = false;
         this.options = options;
     }
+    // // provide an index signature so TypeScript shuts up when using --noImplicitAny
+    // [propName: string]: any;
     /**
      * Reads this instance's properties from the given object
      */
@@ -256,7 +259,7 @@ class IPSOObject {
             // parse the value
             const requiresArraySplitting = deserializer ? deserializer.splitArrays : true;
             const parsedValue = this.parseValue(key, value, deserializer, requiresArraySplitting);
-            // and remember it
+            // and remember it - we are now sure propname is a keyof this
             this[propName] = parsedValue;
         }
         return this;
@@ -276,7 +279,7 @@ class IPSOObject {
                 logger_1.log(`could not find deserializer for key ${propKey}`, "warn");
             }
         }
-        else if (transform && (transform.neverSkip || !this.options.skipBasicSerializers)) {
+        else if (transform && (transform.neverSkip || !this.options.skipValueSerializers)) {
             return transform(value, this);
         }
         else {
@@ -290,6 +293,7 @@ class IPSOObject {
     merge(obj, allProperties = false) {
         for (const [key, value] of object_polyfill_1.entries(obj)) {
             if (allProperties || this.hasOwnProperty(key)) {
+                // we can't be sure that this has a property `key`
                 this[key] = value;
             }
         }
@@ -325,8 +329,11 @@ class IPSOObject {
                     // there is no default value, just remember the actual value
                 }
             }
-            if (transform && (transform.neverSkip || !this.options.skipBasicSerializers)) {
+            if (transform && (transform.neverSkip || !this.options.skipValueSerializers)) {
                 _ret = transform(_ret, this);
+            }
+            else if (typeof _ret === "number" && this.options.skipValueSerializers) {
+                _ret = Math.round(_ret);
             }
             return _ret;
         };
@@ -470,6 +477,13 @@ class IPSOObject {
      */
     link(client) {
         this.client = client;
+        return this;
+    }
+    /**
+     * Fixes property values that are known to be bugged
+     */
+    fixBuggedProperties() {
+        // IPSOObject has none
         return this;
     }
 }
