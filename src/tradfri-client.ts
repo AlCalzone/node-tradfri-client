@@ -7,11 +7,13 @@ import { Accessory, AccessoryTypes } from "./lib/accessory";
 import { except } from "./lib/array-extensions";
 import { createDeferredPromise, DeferredPromise } from "./lib/defer-promise";
 import { endpoints as coapEndpoints, GatewayEndpoints } from "./lib/endpoints";
-import { GatewayDetails } from "./lib/gatewayDetails";
+import { GatewayDetails, UpdatePriority } from "./lib/gatewayDetails";
 import { Group, GroupInfo, GroupOperation } from "./lib/group";
 import { IPSOObject, IPSOOptions } from "./lib/ipsoObject";
 import { LightOperation } from "./lib/light";
 import { log, LoggerFunction, setCustomLogger } from "./lib/logger";
+import { FirmwareUpdateNotification, GatewayRebootReason, NotificationTypes, RebootNotification } from "./lib/notification";
+import { Notification } from "./lib/notification";
 import { composeObject, entries } from "./lib/object-polyfill";
 import { OperationProvider } from "./lib/operation-provider";
 import { wait } from "./lib/promises";
@@ -32,6 +34,10 @@ export type ErrorCallback = (e: Error) => void;
 export type ConnectionFailedCallback = (attempt: number, maxAttempts: number) => void;
 export type GatewayUpdatedCallback = (gateway: GatewayDetails) => void;
 
+export type RebootNotificationCallback = (reason: keyof typeof GatewayRebootReason) => void;
+export type FirmwareUpdateNotificationCallback = (releaseNotes: string, priority: keyof typeof UpdatePriority) => void;
+export type InternetConnectivityChangedCallback = (connected: boolean) => void;
+
 export type ObservableEvents =
 	"device updated" |
 	"device removed" |
@@ -43,6 +49,12 @@ export type ObservableEvents =
 	"error" |
 	"connection failed"
 	;
+
+export type NotificationEvents =
+	"rebooting"
+	| "internet connectivity changed"
+	| "firmware update available"
+;
 
 // tslint:disable:unified-signatures
 export interface TradfriClient {
@@ -64,6 +76,10 @@ export interface TradfriClient {
 	on(event: "gateway offline", callback: () => void): this;
 	on(event: "reconnecting", callback: ReconnectingCallback): this;
 	on(event: "give up", callback: () => void): this;
+	// notification events
+	on(event: "rebooting", callback: RebootNotificationCallback): this;
+	on(event: "firmware update available", callback: FirmwareUpdateNotificationCallback): this;
+	on(event: "internet connectivity changed", callback: InternetConnectivityChangedCallback): this;
 
 	removeListener(event: "device updated", callback: DeviceUpdatedCallback): this;
 	removeListener(event: "device removed", callback: DeviceRemovedCallback): this;
@@ -82,8 +98,12 @@ export interface TradfriClient {
 	removeListener(event: "gateway offline", callback: () => void): this;
 	removeListener(event: "reconnecting", callback: ReconnectingCallback): this;
 	removeListener(event: "give up", callback: () => void): this;
+	// notification events
+	removeListener(event: "rebooting", callback: RebootNotificationCallback): this;
+	removeListener(event: "firmware update available", callback: FirmwareUpdateNotificationCallback): this;
+	removeListener(event: "internet connectivity changed", callback: InternetConnectivityChangedCallback): this;
 
-	removeAllListeners(event?: ObservableEvents | ConnectionEvents): this;
+	removeAllListeners(event?: ObservableEvents | ConnectionEvents | NotificationEvents): this;
 }
 // tslint:enable:unified-signatures
 
@@ -824,6 +844,81 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 
 	public stopObservingGateway() {
 		this.stopObservingResource(`${this.requestBase}${coapEndpoints.gateway(GatewayEndpoints.Details)}`);
+	}
+
+	// =================================================================================
+
+	private observeNotificationsPromise: DeferredPromise<void>;
+	/**
+	 * Sets up an observer for the notification
+	 * @returns A promise that resolves when a notification has been received for the first time
+	 */
+	public async observeNotifications(): Promise<void> {
+		if (this.isObserving(coapEndpoints.notifications)) return;
+
+		this.observeNotificationsPromise = createDeferredPromise<void>();
+		// We have a timing problem here, as the observeNotificationsPromise might be
+		// rejected in the callback and set to null. Therefore return it before
+		// starting the observation
+		this.observeResource(
+			coapEndpoints.notifications,
+			(resp) => this.observeNotifications_callback(resp),
+		).catch(e => {
+			// pass errors through
+			if (this.observeNotifications != null) this.observeNotificationsPromise.reject(e);
+		});
+		return this.observeNotificationsPromise;
+	}
+
+	private async observeNotifications_callback(response: CoapResponse) {
+
+		log(`received response to observeNotifications(): ${JSON.stringify(response, null, 4)}`);
+
+		// check response code
+		if (response.code.toString() !== "2.05") {
+			if (!this.handleNonSuccessfulResponse(
+				response, `observeNotifications()`, false,
+			)) {
+				log(`  => not successful`);
+				if (this.observeNotificationsPromise != null) {
+					this.observeNotificationsPromise.reject(`The notifications could not be observed`);
+					this.observeNotificationsPromise = null;
+				}
+				return;
+			}
+		}
+
+		const notifications = parsePayload(response) as Record<string, any>[];
+		// emit all received notifications
+		for (const not of notifications) {
+			const notification = new Notification().parse(not);
+			switch (notification.event) {
+				case NotificationTypes.Reboot:
+					this.emit("rebooting", GatewayRebootReason[(notification.details as RebootNotification).reason]);
+					break;
+				case NotificationTypes.LossOfInternetConnectivity:
+					// the notification stands for connection loss, but we report if it's available
+					this.emit("internet connectivity changed", !notification.isActive);
+					break;
+				case NotificationTypes.NewFirmwareAvailable: {
+					const details = notification.details as FirmwareUpdateNotification;
+					this.emit("firmware update available", details.releaseNotes, UpdatePriority[details.priority]);
+					break;
+				}
+				// ignore all other notifications, we have no idea what they do
+				// TODO: find out!
+			}
+		}
+
+		if (this.observeNotificationsPromise != null) {
+			this.observeNotificationsPromise.resolve();
+			this.observeNotificationsPromise = null;
+		}
+
+	}
+
+	public stopObservingNotifications() {
+		this.stopObservingResource(`${this.requestBase}${coapEndpoints.notifications}`);
 	}
 
 	// =================================================================================

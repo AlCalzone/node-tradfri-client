@@ -1,3 +1,4 @@
+import { UpdatePriority } from "./gatewayDetails";
 import { IPSODevice } from "./ipsoDevice";
 import { deserializeWith, ipsoKey, IPSOObject, PropertyTransform, required, serializeWith } from "./ipsoObject";
 
@@ -11,27 +12,73 @@ export class Notification extends IPSOObject {
 
 	@ipsoKey("9017")
 	@deserializeWith(arr => parseNotificationDetails(arr), { splitArrays: false })
-	public details: Record<string, string> = {};
+	private _details: NotificationDetails = {};
+	public get details(): NotificationDetails {
+		return this.event === NotificationTypes.Reboot ? (new RebootNotification().parse(this._details))
+			: this.event === NotificationTypes.NewFirmwareAvailable ? (new FirmwareUpdateNotification().parse(this._details))
+			: this._details;
+	}
 
 	@ipsoKey("9014")
-	public state: number = 0; // => ?
+	public isActive: boolean;
+
+	public toJSON() {
+		return {
+			timestamp: this.timestamp,
+			event: NotificationTypes[this.event],
+			details: this.details,
+			isActive: this.isActive,
+		};
+	}
 
 }
 
+export class RebootNotification extends IPSOObject {
+
+	@ipsoKey("9052")
+	public reason: GatewayRebootReason;
+
+	public toJSON() {
+		return {
+			reason: GatewayRebootReason[this.reason],
+		};
+	}
+
+}
+
+export class FirmwareUpdateNotification extends IPSOObject {
+
+	@ipsoKey("9056")
+	public releaseNotes: string;
+
+	@ipsoKey("9066")
+	public priority: UpdatePriority;
+
+	public toJSON() {
+		return {
+			releaseNotes: this.releaseNotes,
+			priority: UpdatePriority[this.priority],
+		};
+	}
+
+}
+
+export type NotificationDetails = RebootNotification | FirmwareUpdateNotification | Record<string, string>;
+
 export enum NotificationTypes {
-	NEW_FIRMWARE_AVAILABLE = 1001,
-	GATEWAY_REBOOT_NOTIFICATION = 1003,
-	UNKNOWN1 = 1004,
+	NewFirmwareAvailable = 1001,
+	Reboot = 1003,
+	UNKNOWN1 = 1004, // Might have something to do with devices
 	UNKNOWN2 = 1005,
-	LOSS_OF_INTERNET_CONNECTIVITY = 5001,
+	LossOfInternetConnectivity = 5001,
 }
 
 export enum GatewayRebootReason {
-	REBOOT_DEFAULT = -1,
-	REBOOT_FIRMWARE_UPGRADE = 0,
-	REBOOT_FROM_CLIENT = 1,
-	REBOOT_HOMEKIT_RESET = 3,
-	REBOOT_SOFT_RESET = 2,
+	"default" = -1,
+	"firmware upgrade" = 0,
+	"initiated by client" = 1,
+	"homekit reset" = 3,
+	"factory reset" = 2,
 }
 
 /**
