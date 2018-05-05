@@ -1,34 +1,41 @@
 import { IPSOObject } from "./ipsoObject";
 /** contains information about the gateway */
 export declare class GatewayDetails extends IPSOObject {
+    alexaPairStatus: boolean;
+    googleHomePairStatus: boolean;
+    certificateProvisioned: boolean;
+    commissioningMode: number;
+    utcNowUnixTimestamp: number;
+    utcNowISODate: string;
+    timeSource: number;
     ntpServerUrl: string;
     version: string;
-    updateState: number;
+    UNKNOWN_9062: number;
+    otaUpdateState: boolean;
     updateProgress: number;
-    updateDetailsURL: string;
-    currentTimestamp: number;
-    UNKNOWN1: string;
-    commissioningMode: number;
-    UNKNOWN2: number;
-    updatePriority: updatePriority;
+    updatePriority: UpdatePriority;
     updateAcceptedTimestamp: number;
-    timeSource: number;
-    UNKNOWN3: number;
-    UNKNOWN4: number;
-    UNKNOWN5: number;
-    UNKNOWN6: number;
-    UNKNOWN7: number;
-    UNKNOWN8: number;
-    UNKNOWN9: number;
-    UNKNOWN10: number;
-    UNKNOWN11: number;
-    UNKNOWN12: string;
-    FORCE_CHECK_OTA_UPDATE: string;
+    releaseNotes: string;
+    dstStartMonth: number;
+    dstStartDay: number;
+    dstStartHour: number;
+    dstStartMinute: number;
+    dstEndMonth: number;
+    dstEndDay: number;
+    dstEndHour: number;
+    dstEndMinute: number;
+    dstTimeOffset: number;
+    UNKNOWN_9081: string;
+    UNKNOWN_9082: boolean;
+    UNKNOWN_9083: string;
+    UNKNOWN_9092: number;
+    UNKNOWN_9106: number;
+    forceOtaUpdateCheck: string;
     name: string;
 }
-export declare enum updatePriority {
-    normal = 0,
-    critical = 1,
-    required = 2,
-    forced = 5,
+export declare enum UpdatePriority {
+    Normal = 0,
+    Critical = 1,
+    Required = 2,
+    Forced = 5,
 }

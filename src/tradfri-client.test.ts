@@ -3,18 +3,19 @@
 // tslint:disable:variable-name
 
 import { assert, expect, should, use } from "chai";
-import { CoapClient as coap, CoapResponse } from "node-coap-client";
 import { SinonFakeTimers, spy, stub, useFakeTimers } from "sinon";
 import * as sinonChai from "sinon-chai";
-import "./"; // dummy-import so index.ts is covered
-import { TradfriClient } from "./tradfri-client";
 
+import { CoapClient as coap, CoapResponse } from "node-coap-client";
 import { ContentFormats } from "node-coap-client/build/ContentFormats";
 import { MessageCode, MessageCodes } from "node-coap-client/build/Message";
-import { createEmptyAccessoryResponse, createEmptyGroupResponse, createEmptySceneResponse, createErrorResponse, createNetworkMock, createResponse, createRGBBulb } from "../test/mocks";
-import { Accessory, AccessoryTypes, Light, TradfriError, TradfriErrorCodes } from "./";
+import { createEmptyAccessoryResponse, createEmptyGatewayDetailsResponse, createEmptyGroupResponse, createEmptySceneResponse, createErrorResponse, createNetworkMock, createResponse, createRGBBulb } from "../test/mocks";
+import "./"; // dummy-import so index.ts is covered
+import { Accessory, AccessoryTypes, GatewayDetails, Light, TradfriError, TradfriErrorCodes } from "./";
 import { createDeferredPromise, DeferredPromise } from "./lib/defer-promise";
+import { GatewayEndpoints } from "./lib/endpoints";
 import { padStart } from "./lib/strings";
+import { TradfriClient } from "./tradfri-client";
 
 // enable the should interface with sinon
 should();
@@ -1103,6 +1104,226 @@ describe("tradfri-client => observing groups => ", () => {
 
 			// now the deferred promise should have been rejected
 			await groupsPromise.should.be.rejectedWith("could not be observed");
+		});
+	});
+
+});
+
+describe("tradfri-client => observing the gateway => ", () => {
+
+	// Setup the mock
+	const {
+		tradfri,
+		gatewayUrl,
+		fakeCoap,
+		callbacks,
+		createStubs,
+		restoreStubs,
+		resetStubHistory,
+	} = createNetworkMock();
+	before(createStubs);
+	after(restoreStubs);
+	afterEach(resetStubHistory);
+
+	describe("observeGateway => ", () => {
+
+		it("should call coap.observe for the gateway details endpoint", async () => {
+			// remember the deferred promise as this only resolves after all responses have been received
+			const gatewayPromise = tradfri.observeGateway();
+
+			fakeCoap.observe.should.have.been.calledOnce;
+			fakeCoap.observe.should.have.been.calledWith(gatewayUrl(GatewayEndpoints.Details));
+
+			fakeCoap.observe.resetHistory();
+
+			// we intercepted the gatewayDetails callback, so we need to manually call it
+			// now for the following tests to work
+			await callbacks.observeGatewayDetails(createEmptyGatewayDetailsResponse());
+
+			// now the deferred promise should have resolved
+			await gatewayPromise;
+		});
+
+		it("should not call anything when already observing", async () => {
+			await tradfri.observeGateway();
+			fakeCoap.observe.should.not.have.been.called;
+		});
+
+		it(`when a new response comes, on("gateway updated") should be called`, async () => {
+
+			const leSpy = spy();
+			tradfri.on("gateway updated", leSpy);
+
+			await callbacks.observeGatewayDetails(createEmptyGatewayDetailsResponse());
+
+			leSpy.should.have.been.calledOnce;
+			leSpy.firstCall.args[0].should.be.an.instanceof(GatewayDetails);
+
+			tradfri.removeAllListeners();
+		});
+
+		for (const error of [
+			MessageCodes.clientError.unauthorized,
+			MessageCodes.clientError.forbidden,
+		]) {
+			const code = error.toString();
+
+			it(`when the server returns code "${code}" to observeGateway, "only" emit an error and don't emit "gateway updated"`, async () => {
+				const updatedSpy = spy();
+				const errorSpy = spy();
+				tradfri
+					.on("error", errorSpy)
+					.on("gateway updated", updatedSpy)
+					;
+
+				await callbacks.observeGatewayDetails(createErrorResponse(error));
+
+				updatedSpy.should.not.have.been.called;
+				errorSpy.should.have.been.calledOnce;
+				expect(errorSpy.getCall(0).args[0]).to.be.an.instanceOf(Error);
+				expect(errorSpy.getCall(0).args[0].message.startsWith("unexpected")).to.be.true;
+
+				tradfri.removeAllListeners();
+			});
+		}
+
+	});
+
+	describe("stopObservingGateway => ", () => {
+		it("should call coap.stopObserving for the gateway details endpoint", () => {
+			tradfri.stopObservingGateway();
+
+			fakeCoap.stopObserving.should.have.been.calledOnce;
+			fakeCoap.stopObserving.should.have.been.calledWith(gatewayUrl(GatewayEndpoints.Details));
+		});
+	});
+});
+
+describe("tradfri-client => observing the gateway (with errors) => ", () => {
+
+	// Setup the mock
+	const {
+		tradfri,
+		gatewayUrl,
+		fakeCoap,
+		callbacks,
+		createStubs,
+		restoreStubs,
+		resetStubHistory,
+	} = createNetworkMock();
+	before(createStubs);
+	after(restoreStubs);
+	afterEach(resetStubHistory);
+
+	it("The promise should be rejected when an invalid response is received for the initial request", async () => {
+
+		// the error spy has to be used our chai fails our test
+		const errorSpy = spy();
+		tradfri.on("error", errorSpy);
+
+		const gatewayPromise = tradfri.observeGateway();
+		await callbacks.observeGatewayDetails(createErrorResponse(MessageCodes.clientError.forbidden));
+
+		errorSpy.should.have.been.called;
+		tradfri.removeAllListeners();
+
+		// now the deferred promise should have been rejected
+		await gatewayPromise.should.be.rejectedWith("could not be observed");
+	});
+});
+
+describe("tradfri-client => gateway actions => ", () => {
+
+	// Setup the mock
+	const {
+		tradfri,
+		gatewayUrl,
+		fakeCoap,
+		callbacks,
+		requestPromises,
+		createStubs,
+		restoreStubs,
+		resetStubHistory,
+	} = createNetworkMock(undefined, undefined, {interceptRequestResponse: true});
+	before(createStubs);
+	after(restoreStubs);
+	afterEach(resetStubHistory);
+
+	describe("rebootGateway() => ", () => {
+
+		const rebootUrl = gatewayUrl(GatewayEndpoints.Reboot);
+
+		it("should send the correct command", () => {
+			tradfri.rebootGateway();
+			coap.request.should.have.been.calledOnce;
+			coap.request.should.have.been.calledWithExactly(rebootUrl, "post", undefined);
+		});
+
+		it("should resolve with true when 2.01 is returned as the code", async () => {
+			const rebootPromise = tradfri.rebootGateway();
+
+			// pass a successful response
+			const successResponse: CoapResponse = {
+				code: MessageCodes.success.created,
+				payload: Buffer.from([]),
+				format: ContentFormats.application_json,
+			};
+			requestPromises[rebootUrl].resolve(successResponse);
+
+			await rebootPromise.should.become(true);
+		});
+
+		it("should resolve with false when anything else is returned as the code", async () => {
+			const rebootPromise = tradfri.rebootGateway();
+
+			// pass a successful response
+			const errorResponse: CoapResponse = {
+				code: MessageCodes.clientError.forbidden,
+				payload: Buffer.from([]),
+				format: ContentFormats.application_json,
+			};
+			requestPromises[rebootUrl].resolve(errorResponse);
+
+			await rebootPromise.should.become(false);
+		});
+	});
+
+	describe("resetGateway() => ", () => {
+
+		const resetUrl = gatewayUrl(GatewayEndpoints.Reset);
+
+		it("should send the correct command", () => {
+			tradfri.resetGateway();
+			coap.request.should.have.been.calledOnce;
+			coap.request.should.have.been.calledWithExactly(resetUrl, "post", undefined);
+		});
+
+		it("should resolve with true when 2.01 is returned as the code", async () => {
+			const resetPromise = tradfri.resetGateway();
+
+			// pass a successful response
+			const successResponse: CoapResponse = {
+				code: MessageCodes.success.created,
+				payload: Buffer.from([]),
+				format: ContentFormats.application_json,
+			};
+			requestPromises[resetUrl].resolve(successResponse);
+
+			await resetPromise.should.become(true);
+		});
+
+		it("should resolve with false when anything else is returned as the code", async () => {
+			const resetPromise = tradfri.resetGateway();
+
+			// pass a successful response
+			const errorResponse: CoapResponse = {
+				code: MessageCodes.clientError.forbidden,
+				payload: Buffer.from([]),
+				format: ContentFormats.application_json,
+			};
+			requestPromises[resetUrl].resolve(errorResponse);
+
+			await resetPromise.should.become(false);
 		});
 	});
 

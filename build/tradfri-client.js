@@ -16,6 +16,7 @@ const accessory_1 = require("./lib/accessory");
 const array_extensions_1 = require("./lib/array-extensions");
 const defer_promise_1 = require("./lib/defer-promise");
 const endpoints_1 = require("./lib/endpoints");
+const gatewayDetails_1 = require("./lib/gatewayDetails");
 const group_1 = require("./lib/group");
 const logger_1 = require("./lib/logger");
 const object_polyfill_1 = require("./lib/object-polyfill");
@@ -149,7 +150,7 @@ class TradfriClient extends events_1.EventEmitter {
             // request creation of new PSK
             let payload = JSON.stringify({ 9090: identity });
             payload = Buffer.from(payload);
-            const response = yield this.swallowInternalCoapRejections(node_coap_client_1.CoapClient.request(`${this.requestBase}${endpoints_1.endpoints.authentication}`, "post", payload));
+            const response = yield this.swallowInternalCoapRejections(node_coap_client_1.CoapClient.request(`${this.requestBase}${endpoints_1.endpoints.gateway(endpoints_1.GatewayEndpoints.Authenticate)}`, "post", payload));
             // check the response
             if (response.code.toString() !== "2.01") {
                 // that didn't work, so the code is wrong
@@ -567,6 +568,61 @@ class TradfriClient extends events_1.EventEmitter {
         return true;
     }
     /**
+     * Sets up an observer for the gateway
+     * @returns A promise that resolves when the gateway information has been received for the first time
+     */
+    observeGateway() {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.isObserving(endpoints_1.endpoints.gateway(endpoints_1.GatewayEndpoints.Details)))
+                return;
+            this.observeGatewayPromise = defer_promise_1.createDeferredPromise();
+            // We have a timing problem here, as the observeGatewayPromise might be
+            // rejected in the callback and set to null. Therefore return it before
+            // starting the observation
+            this.observeResource(endpoints_1.endpoints.gateway(endpoints_1.GatewayEndpoints.Details), (resp) => this.observeGateway_callback(resp)).catch(e => {
+                // pass errors through
+                if (this.observeGateway != null)
+                    this.observeGatewayPromise.reject(e);
+            });
+            return this.observeGatewayPromise;
+        });
+    }
+    observeGateway_callback(response) {
+        return __awaiter(this, void 0, void 0, function* () {
+            logger_1.log(`received response to observeGateway(): ${JSON.stringify(response, null, 4)}`);
+            // check response code
+            if (response.code.toString() !== "2.05") {
+                if (!this.handleNonSuccessfulResponse(response, `observeGateway()`, false)) {
+                    logger_1.log(`  => not successful`);
+                    if (this.observeGatewayPromise != null) {
+                        this.observeGatewayPromise.reject(`The gateway could not be observed`);
+                        this.observeGatewayPromise = null;
+                    }
+                    return;
+                }
+            }
+            logger_1.log(`got gateway information`);
+            const result = parsePayload(response);
+            // parse gw info
+            const gateway = new gatewayDetails_1.GatewayDetails(this.ipsoOptions)
+                .parse(result)
+                .fixBuggedProperties()
+                .createProxy();
+            // and notify all listeners about the update
+            this.emit("gateway updated", gateway.link(this));
+            if (this.observeGatewayPromise != null) {
+                this.observeGatewayPromise.resolve();
+                this.observeGatewayPromise = null;
+            }
+        });
+    }
+    stopObservingGateway() {
+        this.stopObservingResource(`${this.requestBase}${endpoints_1.endpoints.gateway(endpoints_1.GatewayEndpoints.Details)}`);
+    }
+    // =================================================================================
+    // =================================================================================
+    // =================================================================================
+    /**
      * Handles a non-successful response, e.g. by error logging
      * @param resp The response with a code that indicates an unsuccessful request
      * @param context Some logging context to identify where the error comes from
@@ -734,6 +790,21 @@ class TradfriClient extends events_1.EventEmitter {
             }
         }));
     }
+    /** Reboots the gateway. This operation is additionally acknowledged with a reboot notification. */
+    rebootGateway() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { code } = yield this.request(endpoints_1.endpoints.gateway(endpoints_1.GatewayEndpoints.Reboot), "post");
+            return code === "2.01";
+        });
+    }
+    /** Factory resets the gateway. WARNING: All configuration will be wiped! */
+    resetGateway() {
+        return __awaiter(this, void 0, void 0, function* () {
+            // TODO: this is untested, need to verify against a real gateway
+            const { code } = yield this.request(endpoints_1.endpoints.gateway(endpoints_1.GatewayEndpoints.Reset), "post");
+            return code === "2.01";
+        });
+    }
 }
 exports.TradfriClient = TradfriClient;
 /** Normalizes the path to a resource, so it can be used for storing the observer */
@@ -748,13 +819,20 @@ function normalizeResourcePath(path) {
 function parsePayload(response) {
     if (response.payload == null)
         return null;
+    logger_1.log(`parsing payload: ${response.payload}`);
     switch (response.format) {
         case 0: // text/plain
-        case null: // assume text/plain
+        case null:// assume text/plain
             return response.payload.toString("utf-8");
-        case 50: // application/json
+        case 50:// application/json
             const json = response.payload.toString("utf-8");
-            return JSON.parse(json);
+            try {
+                // This might fail!
+                return JSON.parse(json);
+            }
+            catch (e) {
+                return null;
+            }
         default:
             // dunno how to parse this
             logger_1.log(`unknown CoAP response format ${response.format}`, "warn");

@@ -9,7 +9,9 @@ import { CoapClient as coap, CoapResponse } from "node-coap-client";
 import { ContentFormats } from "node-coap-client/build/ContentFormats";
 import { MessageCode, MessageCodes } from "node-coap-client/build/Message";
 import { ConnectionWatcherOptions } from "../build/lib/watcher";
-import { Accessory, Group, Light, Scene, TradfriClient } from "../src";
+import { Accessory, GatewayDetails, Group, Light, Scene, TradfriClient } from "../src";
+import { createDeferredPromise, DeferredPromise } from "../src/lib/defer-promise";
+import { GatewayEndpoints } from "../src/lib/endpoints";
 import { TradfriOptions } from "../src/tradfri-client";
 
 export function createResponse(
@@ -38,20 +40,27 @@ export function createErrorResponse(code: MessageCode = MessageCodes.clientError
 	};
 }
 
+export interface MockOptions {
+	/** Whether the response to coap.request should be intercepted */
+	interceptRequestResponse: boolean;
+}
+
 /**
  * Creates a mock for the entire network and callback framework
  * @param hostname The (optional) hostname to use for the mock
  */
 export function createNetworkMock(
 	hostname: string = "localhost",
-	options?: Partial<TradfriOptions>,
+	tradfriOptions?: Partial<TradfriOptions>,
+	mockOptions?: Partial<MockOptions>,
 ) {
 
-	const tradfri = new TradfriClient(hostname, options);
+	const tradfri = new TradfriClient(hostname, tradfriOptions);
 
 	const devicesUrl = `coaps://${hostname}:5684/15001`;
 	const groupsUrl = `coaps://${hostname}:5684/15004`;
 	const scenesUrl = `coaps://${hostname}:5684/15005`;
+	const gatewayUrl = (endpoint: GatewayEndpoints) => `coaps://${hostname}:5684/15011/${endpoint}`;
 
 	const fakeCoap = {
 		observe: null as sinon.SinonStub,
@@ -69,10 +78,9 @@ export function createNetworkMock(
 		observeGroup: {} as Record<string, (response: CoapResponse) => Promise<void>>,
 		observeScenes: {} as Record<string, (response: CoapResponse) => Promise<void>>,
 		observeScene: {} as Record<string, (response: CoapResponse) => Promise<void>>,
+		observeGatewayDetails: null as (response: CoapResponse) => Promise<void>,
 	};
-	const devices = new Map<number, Accessory>();
-	const groups = new Map<number, Group>();
-	const scenes = new Map<number, Scene>();
+	const requestPromises = {} as Record<string, DeferredPromise<CoapResponse>>;
 
 	/**
 	 * Remembers a callback for later tests
@@ -96,17 +104,32 @@ export function createNetworkMock(
 			} else {
 				callbacks.observeScene[`${groupId}/${sceneId}`] = cb;
 			}
+		} else if (path === gatewayUrl(GatewayEndpoints.Details)) {
+			callbacks.observeGatewayDetails = cb;
 		}
 	}
 
 	function createStubs() {
-		// coap.observe should resolve
 		fakeCoap.observe = stub(coap, "observe")
 			.callsFake((path: string, method, cb) => {
 				rememberCallback(path, cb);
 				return Promise.resolve();
 			});
-		fakeCoap.request = stub(coap, "request");
+		if (mockOptions && mockOptions.interceptRequestResponse) {
+			fakeCoap.request = stub(coap, "request")
+				.callsFake((path: string, method, payload) => {
+					// For requests we need to store one-time promises
+					requestPromises[path] = createDeferredPromise();
+					// in any case, remove the reference after the promise has served its purpose
+					requestPromises[path]
+						.then(() => delete requestPromises[path])
+						.catch(() => delete requestPromises[path])
+						;
+					return requestPromises[path];
+				});
+		} else {
+			fakeCoap.request = stub(coap, "request");
+		}
 		fakeCoap.stopObserving = stub(coap, "stopObserving");
 		fakeCoap.reset = stub(coap, "reset");
 		fakeCoap.setSecurityParams = stub(coap, "setSecurityParams");
@@ -131,8 +154,10 @@ export function createNetworkMock(
 		devicesUrl,
 		groupsUrl,
 		scenesUrl,
+		gatewayUrl,
 		fakeCoap,
 		callbacks,
+		requestPromises,
 		createStubs,
 		restoreStubs,
 		resetStubHistory,
@@ -175,6 +200,14 @@ export function createEmptyLight(instanceId: number = 65536) {
 }
 export function createEmptyLightResponse(instanceId?: number) {
 	return createResponse(createEmptyLight(instanceId));
+}
+
+export function createEmptyGatewayDetails() {
+	const ret = new GatewayDetails();
+	return ret.serialize();
+}
+export function createEmptyGatewayDetailsResponse() {
+	return createResponse(createEmptyGatewayDetails());
 }
 
 export function createRGBBulb(instanceId: number = 65536) {

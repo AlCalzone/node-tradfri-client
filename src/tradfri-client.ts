@@ -6,7 +6,8 @@ import { CoapClient as coap, CoapResponse, ConnectionResult, RequestMethod } fro
 import { Accessory, AccessoryTypes } from "./lib/accessory";
 import { except } from "./lib/array-extensions";
 import { createDeferredPromise, DeferredPromise } from "./lib/defer-promise";
-import { endpoints as coapEndpoints } from "./lib/endpoints";
+import { endpoints as coapEndpoints, GatewayEndpoints } from "./lib/endpoints";
+import { GatewayDetails } from "./lib/gatewayDetails";
 import { Group, GroupInfo, GroupOperation } from "./lib/group";
 import { IPSOObject, IPSOOptions } from "./lib/ipsoObject";
 import { LightOperation } from "./lib/light";
@@ -29,6 +30,7 @@ export type SceneUpdatedCallback = (groupId: number, scene: Scene) => void;
 export type SceneRemovedCallback = (groupId: number, instanceId: number) => void;
 export type ErrorCallback = (e: Error) => void;
 export type ConnectionFailedCallback = (attempt: number, maxAttempts: number) => void;
+export type GatewayUpdatedCallback = (gateway: GatewayDetails) => void;
 
 export type ObservableEvents =
 	"device updated" |
@@ -37,6 +39,7 @@ export type ObservableEvents =
 	"group removed" |
 	"scene updated" |
 	"scene removed" |
+	"gateway updated" |
 	"error" |
 	"connection failed"
 	;
@@ -50,6 +53,7 @@ export interface TradfriClient {
 	on(event: "group removed", callback: GroupRemovedCallback): this;
 	on(event: "scene updated", callback: SceneUpdatedCallback): this;
 	on(event: "scene removed", callback: SceneRemovedCallback): this;
+	on(event: "gateway updated", callback: GatewayUpdatedCallback): this;
 	on(event: "error", callback: ErrorCallback): this;
 	// connection events => is there a nicer way than copy & paste?
 	on(event: "ping succeeded", callback: () => void): this;
@@ -67,6 +71,7 @@ export interface TradfriClient {
 	removeListener(event: "group removed", callback: GroupRemovedCallback): this;
 	removeListener(event: "scene updated", callback: SceneUpdatedCallback): this;
 	removeListener(event: "scene removed", callback: SceneRemovedCallback): this;
+	removeListener(event: "gateway updated", callback: GatewayUpdatedCallback): this;
 	removeListener(event: "error", callback: ErrorCallback): this;
 	// connection events => is there a nicer way than copy & paste?
 	removeListener(event: "ping succeeded", callback: () => void): this;
@@ -257,7 +262,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		let payload: string | Buffer = JSON.stringify({ 9090: identity });
 		payload = Buffer.from(payload);
 		const response = await this.swallowInternalCoapRejections(coap.request(
-			`${this.requestBase}${coapEndpoints.authentication}`,
+			`${this.requestBase}${coapEndpoints.gateway(GatewayEndpoints.Authenticate)}`,
 			"post",
 			payload,
 		));
@@ -391,6 +396,10 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		}
 	}
 
+	// =================================================================================
+	// =================================================================================
+	// =================================================================================
+
 	private observeDevicesPromise: DeferredPromise<void>;
 	/**
 	 * Sets up an observer for all devices
@@ -502,6 +511,10 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		this.emit("device updated", accessory.link(this));
 		return true;
 	}
+
+	// =================================================================================
+	// =================================================================================
+	// =================================================================================
 
 	private observeGroupsPromise: DeferredPromise<void>;
 	private observeScenesPromises: Map<number, DeferredPromise<void>>;
@@ -746,6 +759,77 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		return true;
 	}
 
+	// =================================================================================
+	// =================================================================================
+	// =================================================================================
+
+	private observeGatewayPromise: DeferredPromise<void>;
+	/**
+	 * Sets up an observer for the gateway
+	 * @returns A promise that resolves when the gateway information has been received for the first time
+	 */
+	public async observeGateway(): Promise<void> {
+		if (this.isObserving(coapEndpoints.gateway(GatewayEndpoints.Details))) return;
+
+		this.observeGatewayPromise = createDeferredPromise<void>();
+		// We have a timing problem here, as the observeGatewayPromise might be
+		// rejected in the callback and set to null. Therefore return it before
+		// starting the observation
+		this.observeResource(
+			coapEndpoints.gateway(GatewayEndpoints.Details),
+			(resp) => this.observeGateway_callback(resp),
+		).catch(e => {
+			// pass errors through
+			if (this.observeGateway != null) this.observeGatewayPromise.reject(e);
+		});
+		return this.observeGatewayPromise;
+	}
+
+	private async observeGateway_callback(response: CoapResponse) {
+
+		log(`received response to observeGateway(): ${JSON.stringify(response, null, 4)}`);
+
+		// check response code
+		if (response.code.toString() !== "2.05") {
+			if (!this.handleNonSuccessfulResponse(
+				response, `observeGateway()`, false,
+			)) {
+				log(`  => not successful`);
+				if (this.observeGatewayPromise != null) {
+					this.observeGatewayPromise.reject(`The gateway could not be observed`);
+					this.observeGatewayPromise = null;
+				}
+				return;
+			}
+		}
+
+		log(`got gateway information`);
+
+		const result = parsePayload(response);
+		// parse gw info
+		const gateway = new GatewayDetails(this.ipsoOptions)
+			.parse(result)
+			.fixBuggedProperties()
+			.createProxy()
+			;
+		// and notify all listeners about the update
+		this.emit("gateway updated", gateway.link(this));
+
+		if (this.observeGatewayPromise != null) {
+			this.observeGatewayPromise.resolve();
+			this.observeGatewayPromise = null;
+		}
+
+	}
+
+	public stopObservingGateway() {
+		this.stopObservingResource(`${this.requestBase}${coapEndpoints.gateway(GatewayEndpoints.Details)}`);
+	}
+
+	// =================================================================================
+	// =================================================================================
+	// =================================================================================
+
 	/**
 	 * Handles a non-successful response, e.g. by error logging
 	 * @param resp The response with a code that indicates an unsuccessful request
@@ -961,6 +1045,19 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 			}
 		});
 	}
+
+	/** Reboots the gateway. This operation is additionally acknowledged with a reboot notification. */
+	public async rebootGateway(): Promise<boolean> {
+		const { code } = await this.request(coapEndpoints.gateway(GatewayEndpoints.Reboot), "post");
+		return code === "2.01";
+	}
+
+	/** Factory resets the gateway. WARNING: All configuration will be wiped! */
+	public async resetGateway(): Promise<boolean> {
+		// TODO: this is untested, need to verify against a real gateway
+		const { code } = await this.request(coapEndpoints.gateway(GatewayEndpoints.Reset), "post");
+		return code === "2.01";
+	}
 }
 
 /** Normalizes the path to a resource, so it can be used for storing the observer */
@@ -973,13 +1070,19 @@ function normalizeResourcePath(path: string): string {
 
 function parsePayload(response: CoapResponse): any {
 	if (response.payload == null) return null;
+	log(`parsing payload: ${response.payload}`);
 	switch (response.format) {
 		case 0: // text/plain
 		case null: // assume text/plain
 			return response.payload.toString("utf-8");
 		case 50: // application/json
 			const json = response.payload.toString("utf-8");
-			return JSON.parse(json);
+			try {
+				// This might fail!
+				return JSON.parse(json);
+			} catch (e) {
+				return null;
+			}
 		default:
 			// dunno how to parse this
 			log(`unknown CoAP response format ${response.format}`, "warn");
