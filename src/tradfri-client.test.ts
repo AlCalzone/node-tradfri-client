@@ -203,7 +203,7 @@ describe("tradfri-client => infrastructure => ", () => {
 describe("tradfri-client => retrying the connection => ", () => {
 	let clock: SinonFakeTimers;
 
-	beforeEach(() => clock = useFakeTimers());
+	beforeEach(() => { clock = useFakeTimers(); });
 	afterEach(() => clock.restore());
 
 	// Setup the mock
@@ -752,7 +752,7 @@ describe("tradfri-client => custom requests => ", () => {
 			payload: any,
 		};
 
-		before(() => fakeCoap.request.returns(Promise.resolve(response)));
+		before(() => { fakeCoap.request.returns(Promise.resolve(response)); });
 		after(() => fakeCoap.request.resetBehavior());
 
 		it("should call coap.request with the payload converted to a JSON Buffer", async () => {

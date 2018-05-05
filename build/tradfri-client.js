@@ -19,6 +19,8 @@ const endpoints_1 = require("./lib/endpoints");
 const gatewayDetails_1 = require("./lib/gatewayDetails");
 const group_1 = require("./lib/group");
 const logger_1 = require("./lib/logger");
+const notification_1 = require("./lib/notification");
+const notification_2 = require("./lib/notification");
 const object_polyfill_1 = require("./lib/object-polyfill");
 const promises_1 = require("./lib/promises");
 const scene_1 = require("./lib/scene");
@@ -619,6 +621,70 @@ class TradfriClient extends events_1.EventEmitter {
     stopObservingGateway() {
         this.stopObservingResource(`${this.requestBase}${endpoints_1.endpoints.gateway(endpoints_1.GatewayEndpoints.Details)}`);
     }
+    /**
+     * Sets up an observer for the notification
+     * @returns A promise that resolves when a notification has been received for the first time
+     */
+    observeNotifications() {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.isObserving(endpoints_1.endpoints.notifications))
+                return;
+            this.observeNotificationsPromise = defer_promise_1.createDeferredPromise();
+            // We have a timing problem here, as the observeNotificationsPromise might be
+            // rejected in the callback and set to null. Therefore return it before
+            // starting the observation
+            this.observeResource(endpoints_1.endpoints.notifications, (resp) => this.observeNotifications_callback(resp)).catch(e => {
+                // pass errors through
+                if (this.observeNotifications != null)
+                    this.observeNotificationsPromise.reject(e);
+            });
+            return this.observeNotificationsPromise;
+        });
+    }
+    observeNotifications_callback(response) {
+        return __awaiter(this, void 0, void 0, function* () {
+            logger_1.log(`received response to observeNotifications(): ${JSON.stringify(response, null, 4)}`);
+            // check response code
+            if (response.code.toString() !== "2.05") {
+                if (!this.handleNonSuccessfulResponse(response, `observeNotifications()`, false)) {
+                    logger_1.log(`  => not successful`);
+                    if (this.observeNotificationsPromise != null) {
+                        this.observeNotificationsPromise.reject(`The notifications could not be observed`);
+                        this.observeNotificationsPromise = null;
+                    }
+                    return;
+                }
+            }
+            const notifications = parsePayload(response);
+            // emit all received notifications
+            for (const not of notifications) {
+                const notification = new notification_2.Notification().parse(not);
+                switch (notification.event) {
+                    case notification_1.NotificationTypes.Reboot:
+                        this.emit("rebooting", notification_1.GatewayRebootReason[notification.details.reason]);
+                        break;
+                    case notification_1.NotificationTypes.LossOfInternetConnectivity:
+                        // the notification stands for connection loss, but we report if it's available
+                        this.emit("internet connectivity changed", !notification.isActive);
+                        break;
+                    case notification_1.NotificationTypes.NewFirmwareAvailable: {
+                        const details = notification.details;
+                        this.emit("firmware update available", details.releaseNotes, gatewayDetails_1.UpdatePriority[details.priority]);
+                        break;
+                    }
+                    // ignore all other notifications, we have no idea what they do
+                    // TODO: find out!
+                }
+            }
+            if (this.observeNotificationsPromise != null) {
+                this.observeNotificationsPromise.resolve();
+                this.observeNotificationsPromise = null;
+            }
+        });
+    }
+    stopObservingNotifications() {
+        this.stopObservingResource(`${this.requestBase}${endpoints_1.endpoints.notifications}`);
+    }
     // =================================================================================
     // =================================================================================
     // =================================================================================
@@ -822,9 +888,9 @@ function parsePayload(response) {
     logger_1.log(`parsing payload: ${response.payload}`);
     switch (response.format) {
         case 0: // text/plain
-        case null:// assume text/plain
+        case null: // assume text/plain
             return response.payload.toString("utf-8");
-        case 50:// application/json
+        case 50: // application/json
             const json = response.payload.toString("utf-8");
             try {
                 // This might fail!

@@ -2,10 +2,11 @@
 import { EventEmitter } from "events";
 import { CoapResponse, RequestMethod } from "node-coap-client";
 import { Accessory } from "./lib/accessory";
-import { GatewayDetails } from "./lib/gatewayDetails";
+import { GatewayDetails, UpdatePriority } from "./lib/gatewayDetails";
 import { Group, GroupInfo, GroupOperation } from "./lib/group";
 import { LightOperation } from "./lib/light";
 import { LoggerFunction } from "./lib/logger";
+import { GatewayRebootReason } from "./lib/notification";
 import { OperationProvider } from "./lib/operation-provider";
 import { Scene } from "./lib/scene";
 import { ConnectionEvents, ConnectionWatcherOptions, PingFailedCallback, ReconnectingCallback } from "./lib/watcher";
@@ -20,7 +21,11 @@ export declare type SceneRemovedCallback = (groupId: number, instanceId: number)
 export declare type ErrorCallback = (e: Error) => void;
 export declare type ConnectionFailedCallback = (attempt: number, maxAttempts: number) => void;
 export declare type GatewayUpdatedCallback = (gateway: GatewayDetails) => void;
+export declare type RebootNotificationCallback = (reason: keyof typeof GatewayRebootReason) => void;
+export declare type FirmwareUpdateNotificationCallback = (releaseNotes: string, priority: keyof typeof UpdatePriority) => void;
+export declare type InternetConnectivityChangedCallback = (connected: boolean) => void;
 export declare type ObservableEvents = "device updated" | "device removed" | "group updated" | "group removed" | "scene updated" | "scene removed" | "gateway updated" | "error" | "connection failed";
+export declare type NotificationEvents = "rebooting" | "internet connectivity changed" | "firmware update available";
 export interface TradfriClient {
     on(event: "device updated", callback: DeviceUpdatedCallback): this;
     on(event: "device removed", callback: DeviceRemovedCallback): this;
@@ -38,6 +43,9 @@ export interface TradfriClient {
     on(event: "gateway offline", callback: () => void): this;
     on(event: "reconnecting", callback: ReconnectingCallback): this;
     on(event: "give up", callback: () => void): this;
+    on(event: "rebooting", callback: RebootNotificationCallback): this;
+    on(event: "firmware update available", callback: FirmwareUpdateNotificationCallback): this;
+    on(event: "internet connectivity changed", callback: InternetConnectivityChangedCallback): this;
     removeListener(event: "device updated", callback: DeviceUpdatedCallback): this;
     removeListener(event: "device removed", callback: DeviceRemovedCallback): this;
     removeListener(event: "group updated", callback: GroupUpdatedCallback): this;
@@ -54,7 +62,10 @@ export interface TradfriClient {
     removeListener(event: "gateway offline", callback: () => void): this;
     removeListener(event: "reconnecting", callback: ReconnectingCallback): this;
     removeListener(event: "give up", callback: () => void): this;
-    removeAllListeners(event?: ObservableEvents | ConnectionEvents): this;
+    removeListener(event: "rebooting", callback: RebootNotificationCallback): this;
+    removeListener(event: "firmware update available", callback: FirmwareUpdateNotificationCallback): this;
+    removeListener(event: "internet connectivity changed", callback: InternetConnectivityChangedCallback): this;
+    removeAllListeners(event?: ObservableEvents | ConnectionEvents | NotificationEvents): this;
 }
 export interface TradfriOptions {
     /** Callback for a custom logger function. */
@@ -175,6 +186,14 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
     observeGateway(): Promise<void>;
     private observeGateway_callback(response);
     stopObservingGateway(): void;
+    private observeNotificationsPromise;
+    /**
+     * Sets up an observer for the notification
+     * @returns A promise that resolves when a notification has been received for the first time
+     */
+    observeNotifications(): Promise<void>;
+    private observeNotifications_callback(response);
+    stopObservingNotifications(): void;
     /**
      * Handles a non-successful response, e.g. by error logging
      * @param resp The response with a code that indicates an unsuccessful request

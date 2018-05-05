@@ -3,7 +3,8 @@
 require("reflect-metadata");
 
 import { expect } from "chai";
-import { Notification, NotificationTypes } from "./notification";
+import { UpdatePriority } from "./gatewayDetails";
+import { FirmwareUpdateNotification, Notification, NotificationTypes } from "./notification";
 // tslint:disable:no-unused-expression
 
 const template = {
@@ -20,10 +21,10 @@ const not = new Notification().parse(template);
 describe("ipso/notification => parse() =>", () => {
 
 	it("should parse correctly", () => {
-		expect(not.state).to.equal(template["9014"]);
+		expect(not.isActive).to.equal(template["9014"] === 1);
 		expect(not.event).to.equal(template["9015"]);
-		expect(Object.keys(not.details)).to.have.length(1);
-		expect(not.details["9066"]).to.equal("5");
+		expect(not.details).to.be.an.instanceof(FirmwareUpdateNotification);
+		expect((not.details as FirmwareUpdateNotification).priority).to.equal(UpdatePriority.Forced);
 	});
 
 });
