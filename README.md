@@ -661,6 +661,7 @@ The automatic reconnection tries to restore all previously defined observers as 
 
 #### __WORK IN PROGRESS__
 * (neophob) Include the hostname in the discovery response if present.
+* (AlCalzone) Support programmatically rebooting and resetting the gateway.
 
 #### 1.1.2 (2018-05-01)
 * (AlCalzone) Update CoaP and DTLS libraries so `node-aead-crypto` is no longer necessary on NodeJS 10+
