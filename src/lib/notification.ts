@@ -52,6 +52,7 @@ export class FirmwareUpdateNotification extends IPSOObject {
 	public releaseNotes: string;
 
 	@ipsoKey("9066")
+	@deserializeWith(str => parseInt(str, 10))
 	public priority: UpdatePriority;
 
 	public toJSON() {
