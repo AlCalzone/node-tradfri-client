@@ -11,8 +11,8 @@
 	or
 	npm run release -- <version> [--dry]
 
-	PLACEHOLDER for next version in readme:
-	#### __WORK IN PROGRESS__
+	PLACEHOLDER for next version in changelog:
+	## __WORK IN PROGRESS__
 
 */
 
@@ -36,17 +36,17 @@ function fail(reason: string) {
 
 const packPath = path.join(rootDir, "package.json");
 const pack = require(packPath);
-const readmePath = path.join(rootDir, "README.md");
-let readme = fs.readFileSync(readmePath, "utf8");
-const README_PLACEHOLDER = "#### __WORK IN PROGRESS__";
+const changelogPath = path.join(rootDir, "CHANGELOG.md");
+let changelog = fs.readFileSync(changelogPath, "utf8");
+const CHANGELOG_PLACEHOLDER = "## __WORK IN PROGRESS__";
 
-// check if the readme contains exactly 1 occurence of the changelog placeholder
-switch ((readme.match(new RegExp("^" + README_PLACEHOLDER + "$", "gm")) || []).length) {
+// check if the changelog contains exactly 1 occurence of the changelog placeholder
+switch ((changelog.match(new RegExp("^" + CHANGELOG_PLACEHOLDER + "$", "gm")) || []).length) {
 	case 0:
-		fail(colors.red("Cannot continue, the changelog placeholder is missing from the readme!"));
+		fail(colors.red("Cannot continue, the changelog placeholder is missing from CHANGELOG.md!"));
 	case 1: break; // all good
 	default:
-		fail(colors.red("Cannot continue, there is more than one changelog placeholder in the readme!"));
+		fail(colors.red("Cannot continue, there is more than one changelog placeholder in CHANGELOG.md!"));
 }
 
 // check if there are untracked changes
@@ -102,13 +102,13 @@ if (argv.dry) {
 	pack.version = newVersion;
 	fs.writeFileSync(packPath, JSON.stringify(pack, null, 2));
 
-	console.log(`updating changelog in README.md`);
+	console.log(`updating CHANGELOG.md`);
 	const d = new Date();
-	readme = readme.replace(
-		README_PLACEHOLDER,
-		`#### ${newVersion} (${d.getFullYear()}-${padStart("" + (d.getMonth() + 1), 2, "0")}-${padStart("" + d.getDate(), 2, "0")})`,
+	changelog = changelog.replace(
+		CHANGELOG_PLACEHOLDER,
+		`## ${newVersion} (${d.getFullYear()}-${padStart("" + (d.getMonth() + 1), 2, "0")}-${padStart("" + d.getDate(), 2, "0")})`,
 	);
-	fs.writeFileSync(readmePath, readme, "utf8");
+	fs.writeFileSync(changelogPath, changelog, "utf8");
 
 	// console.log(`updating io-package.json from ${colors.blue(ioPack.common.version)} to ${colors.green(newVersion)}`);
 	// ioPack.common.version = newVersion;
