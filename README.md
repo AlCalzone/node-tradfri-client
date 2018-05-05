@@ -401,6 +401,42 @@ The object passed to the callback is of type `GatewayDetails` with the following
 
 **Note:** Many properties are not completely understood at the moment. If you can provide more information, feel free to open an issue.
 
+### Listening to notifications
+Using
+```TS
+tradfri.observeNotifications(): Promise<void>
+```
+you can start listening to notifications events from the gateway. The observation can be stopped by calling `tradfri.stopObservingNotifications()`.
+
+You can add listeners with `on("event", handler)` and remove them with `removeListener` and `removeAllListeners`. The currently supported events and their handler signatures are:
+
+#### `"rebooting"` - The gateway is rebooting
+```TS
+type RebootNotificationCallback = (reason: string) => void;
+```
+where `reason` is one of:
+* `"default"` - (unknown)
+* `"firmware upgrade"`
+* `"initiated by client"`
+* `"homekit reset"`
+* `"factory reset"`
+
+#### `"internet connectivity changed"` - The status of the internet connection has changed
+```TS
+type InternetConnectivityChangedCallback = (connected: boolean) => void;
+```
+This also gets called at every start start with the current status of the internet connection.
+
+#### `"firmware update available"` - A new firmware is available
+```TS
+type FirmwareUpdateNotificationCallback = (releaseNotes: string, priority: string) => void;
+```
+The argument `releaseNotes` contains an URL with the official release notes, `priority` is one of the following
+* `"Normal"`
+* `"Critical"`
+* `"Required"`
+* `"Forced"`
+
 ### Updating a device on the gateway
 You can change properties of a device on the gateway (e.g. rename it) by calling
 ```TS

@@ -3,6 +3,7 @@
 ## __WORK IN PROGRESS__
 * (neophob) Include the hostname in the discovery response if present.
 * (AlCalzone) Support programmatically rebooting and resetting the gateway.
+* (AlCalzone) Add support for notifications.
 
 ## 1.1.2 (2018-05-01)
 * (AlCalzone) Update CoAP and DTLS libraries so `node-aead-crypto` is no longer necessary on NodeJS 10+
