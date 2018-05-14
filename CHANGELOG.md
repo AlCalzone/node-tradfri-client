@@ -1,5 +1,8 @@
 # Changelog
 
+## __WORK IN PROGRESS__
+* (AlCalzone) Stop logging `parsing payload...`
+
 ## 1.2.0 (2018-05-05)
 * (neophob) Include the hostname in the discovery response if present.
 * (AlCalzone) Support programmatically rebooting and resetting the gateway.
