@@ -1,6 +1,6 @@
 # Changelog
 
-## __WORK IN PROGRESS__
+## 1.2.1 (2018-05-14)
 * (AlCalzone) Stop logging `parsing payload...`
 
 ## 1.2.0 (2018-05-05)
