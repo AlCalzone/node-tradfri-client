@@ -1165,7 +1165,6 @@ function normalizeResourcePath(path: string): string {
 
 function parsePayload(response: CoapResponse): any {
 	if (response.payload == null) return null;
-	log(`parsing payload: ${response.payload}`);
 	switch (response.format) {
 		case 0: // text/plain
 		case null: // assume text/plain

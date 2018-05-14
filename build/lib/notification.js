@@ -76,6 +76,7 @@ __decorate([
 ], FirmwareUpdateNotification.prototype, "releaseNotes", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("9066"),
+    ipsoObject_1.deserializeWith(str => parseInt(str, 10)),
     __metadata("design:type", Number)
 ], FirmwareUpdateNotification.prototype, "priority", void 0);
 exports.FirmwareUpdateNotification = FirmwareUpdateNotification;

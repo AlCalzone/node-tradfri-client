@@ -885,7 +885,6 @@ function normalizeResourcePath(path) {
 function parsePayload(response) {
     if (response.payload == null)
         return null;
-    logger_1.log(`parsing payload: ${response.payload}`);
     switch (response.format) {
         case 0: // text/plain
         case null: // assume text/plain
