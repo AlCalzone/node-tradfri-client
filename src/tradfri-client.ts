@@ -360,7 +360,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 */
 	public reset(preserveObservers: boolean = false): void {
 		coap.reset();
-		this.clearObservers();
+		this.observedPaths = [];
 		if (!preserveObservers) this.rememberedObserveCallbacks.clear();
 	}
 
@@ -370,14 +370,6 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	public destroy(): void {
 		if (this.watcher != null) this.watcher.stop();
 		this.reset();
-	}
-
-	/**
-	 * Clears the list of observers after a network reset
-	 * This does not stop observing the resources if the observers are still active
-	 */
-	private clearObservers(): void {
-		this.observedPaths = [];
 	}
 
 	/**

@@ -218,7 +218,7 @@ class TradfriClient extends events_1.EventEmitter {
      */
     reset(preserveObservers = false) {
         node_coap_client_1.CoapClient.reset();
-        this.clearObservers();
+        this.observedPaths = [];
         if (!preserveObservers)
             this.rememberedObserveCallbacks.clear();
     }
@@ -229,13 +229,6 @@ class TradfriClient extends events_1.EventEmitter {
         if (this.watcher != null)
             this.watcher.stop();
         this.reset();
-    }
-    /**
-     * Clears the list of observers after a network reset
-     * This does not stop observing the resources if the observers are still active
-     */
-    clearObservers() {
-        this.observedPaths = [];
     }
     /**
      * Restores all previously remembered observers with their original callbacks

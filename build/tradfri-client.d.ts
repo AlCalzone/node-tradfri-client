@@ -147,11 +147,6 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
      */
     destroy(): void;
     /**
-     * Clears the list of observers after a network reset
-     * This does not stop observing the resources if the observers are still active
-     */
-    private clearObservers();
-    /**
      * Restores all previously remembered observers with their original callbacks
      * Call this AFTER a dead connection was restored
      */
