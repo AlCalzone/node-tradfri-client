@@ -149,10 +149,12 @@ The return value is of the type `DiscoveredGateway` which looks as follows:
 ### Create a client instance
 ```TS
 // one of the following
-const tradfri = new TradfriClient(hostname: string);
-const tradfri = new TradfriClient(hostname: string, customLogger: LoggerFunction);
-const tradfri = new TradfriClient(hostname: string, options: TradfriOptions);
+const tradfri = new TradfriClient(hostnameOrAddress: string);
+const tradfri = new TradfriClient(hostnameOrAddress: string, customLogger: LoggerFunction);
+const tradfri = new TradfriClient(hostnameOrAddress: string, options: TradfriOptions);
 ```
+**Note:** It seems that in some networks you need to connect to the gateway using its hostname, while in other networks only the IP address works. As a result you have to try out which one works best for you.
+
 As the 2nd parameter, you can provide a custom logger function or an object with some or all of the options shown below. By providing a custom logger function to the constructor, all diagnostic output will be sent to that function. By default, the `debug` module is used instead. The logger function has the following signature:
 ```TS
 type LoggerFunction = (
