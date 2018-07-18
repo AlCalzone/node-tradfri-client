@@ -1,8 +1,8 @@
+import { clamp } from "alcalzone-shared/math";
 import { Accessory } from "./accessory";
 import { conversions, deserializers, serializers } from "./conversions";
 import { IPSODevice } from "./ipsoDevice";
 import { deserializeWith, doNotSerialize, ipsoKey, IPSOOptions, PropertyTransform, required, serializeWith } from "./ipsoObject";
-import { clamp } from "./math";
 import { MAX_COLOR, predefinedColors, whiteSpectrumHex } from "./predefined-colors";
 
 // see https://github.com/hreichert/smarthome/blob/master/extensions/binding/org.eclipse.smarthome.binding.tradfri/src/main/java/org/eclipse/smarthome/binding/modules/internal/TradfriColor.java

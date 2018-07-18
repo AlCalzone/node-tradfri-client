@@ -2,11 +2,11 @@
 // tslint:disable-next-line:no-var-requires
 require("reflect-metadata");
 
+import { roundTo } from "alcalzone-shared/math";
 import { expect } from "chai";
 import { Scene } from "..";
 import { createNetworkMock } from "../../test/mocks";
 import { Group } from "./group";
-import { roundTo } from "./math";
 // tslint:disable:no-unused-expression
 
 const template = {

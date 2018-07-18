@@ -62,6 +62,7 @@
     "yargs": "^11.0.0"
   },
   "dependencies": {
+    "alcalzone-shared": "^1.0.1",
     "bonjour": "^3.5.0",
     "debug": "^3.1.0",
     "node-coap-client": "^0.7.2",

@@ -28,9 +28,9 @@ const fakeBonjour = {
 const fakeBonjourPackage = stub().returns(fakeBonjour);
 
 // stub out the bonjour package for discovery
+import { wait } from "alcalzone-shared/async";
+import { createDeferredPromise, DeferredPromise } from "alcalzone-shared/deferred-promise";
 import * as proxyquire from "proxyquire";
-import { createDeferredPromise, DeferredPromise } from "./defer-promise";
-import { wait } from "./promises";
 const { discoverGateway, DiscoveredGateway } = proxyquire("./discovery", {
 	bonjour: fakeBonjourPackage,
 });

@@ -1,10 +1,10 @@
 // tslint:disable:variable-name
 
+import { clamp, roundTo } from "alcalzone-shared/math";
+import { padStart } from "alcalzone-shared/strings";
 import { PropertyTransformKernel } from "./ipsoObject";
 import { Light } from "./light";
-import { clamp, roundTo } from "./math";
 import { colorTemperatureRange, MAX_COLOR } from "./predefined-colors";
-import { padStart } from "./strings";
 
 // ==========================
 // WHITE SPECTRUM conversions

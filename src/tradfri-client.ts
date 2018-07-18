@@ -3,20 +3,20 @@ import { EventEmitter } from "events";
 import { CoapClient as coap, CoapResponse, ConnectionResult, RequestMethod } from "node-coap-client";
 
 // load internal modules
+import { wait } from "alcalzone-shared/async";
+import { createDeferredPromise, DeferredPromise } from "alcalzone-shared/deferred-promise";
 import { Accessory, AccessoryTypes } from "./lib/accessory";
 import { except } from "./lib/array-extensions";
-import { createDeferredPromise, DeferredPromise } from "./lib/defer-promise";
 import { endpoints as coapEndpoints, GatewayEndpoints } from "./lib/endpoints";
 import { GatewayDetails, UpdatePriority } from "./lib/gatewayDetails";
 import { Group, GroupInfo, GroupOperation } from "./lib/group";
 import { IPSOObject, IPSOOptions } from "./lib/ipsoObject";
 import { LightOperation } from "./lib/light";
 import { log, LoggerFunction, setCustomLogger } from "./lib/logger";
-import { FirmwareUpdateNotification, GatewayRebootReason, NotificationTypes, RebootNotification } from "./lib/notification";
 import { Notification } from "./lib/notification";
+import { FirmwareUpdateNotification, GatewayRebootReason, NotificationTypes, RebootNotification } from "./lib/notification";
 import { composeObject, entries } from "./lib/object-polyfill";
 import { OperationProvider } from "./lib/operation-provider";
-import { wait } from "./lib/promises";
 import { Scene } from "./lib/scene";
 import { TradfriError, TradfriErrorCodes } from "./lib/tradfri-error";
 import { ConnectionEvents, ConnectionWatcher, ConnectionWatcherOptions, PingFailedCallback, ReconnectingCallback } from "./lib/watcher";

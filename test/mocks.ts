@@ -5,12 +5,12 @@
 import { assert, expect, should, use } from "chai";
 import { spy, stub } from "sinon";
 
+import { createDeferredPromise, DeferredPromise } from "alcalzone-shared/deferred-promise";
 import { CoapClient as coap, CoapResponse } from "node-coap-client";
 import { ContentFormats } from "node-coap-client/build/ContentFormats";
 import { MessageCode, MessageCodes } from "node-coap-client/build/Message";
 import { ConnectionWatcherOptions } from "../build/lib/watcher";
 import { Accessory, GatewayDetails, Group, Light, Scene, TradfriClient } from "../src";
-import { createDeferredPromise, DeferredPromise } from "../src/lib/defer-promise";
 import { GatewayEndpoints } from "../src/lib/endpoints";
 import { TradfriOptions } from "../src/tradfri-client";
 
