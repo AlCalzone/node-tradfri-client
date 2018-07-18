@@ -1,9 +1,9 @@
 "use strict";
 // tslint:disable:variable-name
 Object.defineProperty(exports, "__esModule", { value: true });
-const math_1 = require("./math");
+const math_1 = require("alcalzone-shared/math");
+const strings_1 = require("alcalzone-shared/strings");
 const predefined_colors_1 = require("./predefined-colors");
-const strings_1 = require("./strings");
 // ==========================
 // WHITE SPECTRUM conversions
 // interpolate from [0..100%] to [250..454]

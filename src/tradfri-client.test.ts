@@ -3,24 +3,26 @@
 // tslint:disable:variable-name
 
 import { assert, expect, should, use } from "chai";
+import * as chaiAsPromised from "chai-as-promised";
 import { SinonFakeTimers, spy, stub, useFakeTimers } from "sinon";
 import * as sinonChai from "sinon-chai";
 
+import { createDeferredPromise, DeferredPromise } from "alcalzone-shared/deferred-promise";
+import { padStart } from "alcalzone-shared/strings";
 import { CoapClient as coap, CoapResponse } from "node-coap-client";
 import { ContentFormats } from "node-coap-client/build/ContentFormats";
 import { MessageCode, MessageCodes } from "node-coap-client/build/Message";
 import { createEmptyAccessoryResponse, createEmptyGatewayDetailsResponse, createEmptyGroupResponse, createEmptySceneResponse, createErrorResponse, createNetworkMock, createResponse, createRGBBulb } from "../test/mocks";
 import "./"; // dummy-import so index.ts is covered
 import { Accessory, AccessoryTypes, GatewayDetails, Light, TradfriError, TradfriErrorCodes } from "./";
-import { createDeferredPromise, DeferredPromise } from "./lib/defer-promise";
 import { GatewayEndpoints } from "./lib/endpoints";
-import { padStart } from "./lib/strings";
 import { TradfriClient } from "./tradfri-client";
 
 // enable the should interface with sinon
 should();
 // improve stubs for testing
 use(sinonChai);
+use(chaiAsPromised);
 
 function assertPayload(actual: any, expected: {}) {
 	expect(actual).to.be.an.instanceof(Buffer);

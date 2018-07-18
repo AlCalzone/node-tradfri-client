@@ -1,7 +1,7 @@
+import { clamp } from "alcalzone-shared/math";
 import { deserializers, serializers } from "./conversions";
 import { IPSODevice } from "./ipsoDevice";
 import { deserializeWith, ipsoKey, IPSOObject, PropertyTransform, required, serializeWith } from "./ipsoObject";
-import { clamp } from "./math";
 import { Scene } from "./scene";
 
 export interface GroupInfo {

@@ -12,9 +12,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const events_1 = require("events");
 const node_coap_client_1 = require("node-coap-client");
 // load internal modules
+const async_1 = require("alcalzone-shared/async");
+const deferred_promise_1 = require("alcalzone-shared/deferred-promise");
 const accessory_1 = require("./lib/accessory");
 const array_extensions_1 = require("./lib/array-extensions");
-const defer_promise_1 = require("./lib/defer-promise");
 const endpoints_1 = require("./lib/endpoints");
 const gatewayDetails_1 = require("./lib/gatewayDetails");
 const group_1 = require("./lib/group");
@@ -22,7 +23,6 @@ const logger_1 = require("./lib/logger");
 const notification_1 = require("./lib/notification");
 const notification_2 = require("./lib/notification");
 const object_polyfill_1 = require("./lib/object-polyfill");
-const promises_1 = require("./lib/promises");
 const scene_1 = require("./lib/scene");
 const tradfri_error_1 = require("./lib/tradfri-error");
 const watcher_1 = require("./lib/watcher");
@@ -85,7 +85,7 @@ class TradfriClient extends events_1.EventEmitter {
                 if (attempt > 0) {
                     const nextTimeout = Math.round(interval * Math.pow(backoffFactor, Math.min(5, attempt - 1)));
                     logger_1.log(`retrying connection in ${nextTimeout} ms`, "debug");
-                    yield promises_1.wait(nextTimeout);
+                    yield async_1.wait(nextTimeout);
                 }
                 switch (yield this.tryToConnect(identity, psk)) {
                     case true: {
@@ -275,7 +275,7 @@ class TradfriClient extends events_1.EventEmitter {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.isObserving(endpoints_1.endpoints.devices))
                 return;
-            this.observeDevicesPromise = defer_promise_1.createDeferredPromise();
+            this.observeDevicesPromise = deferred_promise_1.createDeferredPromise();
             // although we return another promise, await the observeResource promise
             // so errors don't fall through the gaps
             yield this.observeResource(endpoints_1.endpoints.devices, (resp) => this.observeDevices_callback(resp));
@@ -369,7 +369,7 @@ class TradfriClient extends events_1.EventEmitter {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.isObserving(endpoints_1.endpoints.groups))
                 return;
-            this.observeGroupsPromise = defer_promise_1.createDeferredPromise();
+            this.observeGroupsPromise = deferred_promise_1.createDeferredPromise();
             // although we return another promise, await the observeResource promise
             // so errors don't fall through the gaps
             yield this.observeResource(endpoints_1.endpoints.groups, (resp) => this.observeGroups_callback(resp));
@@ -395,7 +395,7 @@ class TradfriClient extends events_1.EventEmitter {
             logger_1.log(`adding groups with keys ${JSON.stringify(addedKeys)}`, "debug");
             // create a deferred promise for each group, so we can wait for them to be fulfilled
             if (this.observeGroupsPromise != null && this.observeScenesPromises == null) {
-                this.observeScenesPromises = new Map(newKeys.map(id => [id, defer_promise_1.createDeferredPromise()]));
+                this.observeScenesPromises = new Map(newKeys.map(id => [id, deferred_promise_1.createDeferredPromise()]));
             }
             const observeGroupPromises = newKeys.map(id => {
                 const handleResponse = (resp) => {
@@ -570,7 +570,7 @@ class TradfriClient extends events_1.EventEmitter {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.isObserving(endpoints_1.endpoints.gateway(endpoints_1.GatewayEndpoints.Details)))
                 return;
-            this.observeGatewayPromise = defer_promise_1.createDeferredPromise();
+            this.observeGatewayPromise = deferred_promise_1.createDeferredPromise();
             // We have a timing problem here, as the observeGatewayPromise might be
             // rejected in the callback and set to null. Therefore return it before
             // starting the observation
@@ -622,7 +622,7 @@ class TradfriClient extends events_1.EventEmitter {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.isObserving(endpoints_1.endpoints.notifications))
                 return;
-            this.observeNotificationsPromise = defer_promise_1.createDeferredPromise();
+            this.observeNotificationsPromise = deferred_promise_1.createDeferredPromise();
             // We have a timing problem here, as the observeNotificationsPromise might be
             // rejected in the callback and set to null. Therefore return it before
             // starting the observation
@@ -651,16 +651,16 @@ class TradfriClient extends events_1.EventEmitter {
             const notifications = parsePayload(response);
             // emit all received notifications
             for (const not of notifications) {
-                const notification = new notification_2.Notification().parse(not);
+                const notification = new notification_1.Notification().parse(not);
                 switch (notification.event) {
-                    case notification_1.NotificationTypes.Reboot:
-                        this.emit("rebooting", notification_1.GatewayRebootReason[notification.details.reason]);
+                    case notification_2.NotificationTypes.Reboot:
+                        this.emit("rebooting", notification_2.GatewayRebootReason[notification.details.reason]);
                         break;
-                    case notification_1.NotificationTypes.LossOfInternetConnectivity:
+                    case notification_2.NotificationTypes.LossOfInternetConnectivity:
                         // the notification stands for connection loss, but we report if it's available
                         this.emit("internet connectivity changed", !notification.isActive);
                         break;
-                    case notification_1.NotificationTypes.NewFirmwareAvailable: {
+                    case notification_2.NotificationTypes.NewFirmwareAvailable: {
                         const details = notification.details;
                         this.emit("firmware update available", details.releaseNotes, gatewayDetails_1.UpdatePriority[details.priority]);
                         break;

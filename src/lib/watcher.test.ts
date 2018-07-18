@@ -6,10 +6,10 @@ import { assert, expect, should, use } from "chai";
 import { SinonFakeTimers, spy, stub, useFakeTimers } from "sinon";
 import * as sinonChai from "sinon-chai";
 
+import { createDeferredPromise, DeferredPromise } from "alcalzone-shared/deferred-promise";
 import { CoapClient as coap, CoapResponse } from "node-coap-client";
 import { createNetworkMock } from "../../test/mocks";
 import { TradfriClient } from "../tradfri-client";
-import { createDeferredPromise, DeferredPromise } from "./defer-promise";
 import { ConnectionWatcher, ConnectionWatcherOptions } from "./watcher";
 
 // enable the should interface with sinon
