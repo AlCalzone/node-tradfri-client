@@ -73,7 +73,7 @@
     "watch": "tsc --watch",
     "test:ts": "node_modules/.bin/mocha",
     "test": "node_modules/.bin/mocha --watch",
-    "coverage": "node_modules/.bin/nyc npm test:ts",
+    "coverage": "node_modules/.bin/nyc npm run test:ts",
     "coveralls": "node_modules/.bin/nyc report --reporter=text-lcov | coveralls -v",
     "show-coverage": "npm run coverage && start ./coverage/index.html",
     "lint:ts": "tslint",
@@ -87,14 +87,11 @@
     ],
     "exclude": [
       "build/**",
-      "src/**/*.test.ts"
+      "src/**/*.test.ts",
+      "**/*.d.ts"
     ],
     "extension": [
       ".ts"
-    ],
-    "require": [
-      "ts-node/register",
-      "source-map-support/register"
     ],
     "reporter": [
       "text-summary",

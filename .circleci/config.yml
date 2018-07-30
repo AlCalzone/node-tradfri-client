@@ -75,7 +75,7 @@ jobs:
 
       - run:
           name: Run component tests
-          command: npm run test
+          command: npm run test:ts
 
 # ----------------------------------------------------
   test_node8:
@@ -103,7 +103,7 @@ jobs:
 
       - run:
           name: Run component tests
-          command: npm run test
+          command: npm run test:ts
 
 # ----------------------------------------------------
   test_latest:
@@ -136,7 +136,7 @@ jobs:
 
       - run:
           name: Run component tests
-          command: npm run test
+          command: npm run test:ts
 
       # persist the build files, so we can pick them up in the deploy job
       - persist_to_workspace:
