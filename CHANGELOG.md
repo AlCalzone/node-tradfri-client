@@ -1,6 +1,6 @@
 # Changelog
 
-## __WORK IN PROGRESS__
+## 1.3.1 (2018-07-30)
 * (AlCalzone) Improve gateway discovery in networks with IPv4 and IPv6
 
 ## 1.3.0 (2018-07-30)
