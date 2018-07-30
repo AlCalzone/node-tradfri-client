@@ -7,9 +7,7 @@ declare module "mdns-server" {
 		additionals: any[];
 	}
 
-	interface MDnsPackage {
-		(options: any): MDnsInstance;
-	}
+	type MDnsPackage = (options: any) => MDnsInstance;
 
 	interface MDnsInstance extends EventEmitter {
 		on(event: "response", handler: (resp: Response) => void): this;
