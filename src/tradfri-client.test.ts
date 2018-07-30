@@ -103,6 +103,16 @@ describe("tradfri-client => infrastructure => ", () => {
 			});
 			fakeCoap.tryToConnect.resetBehavior();
 		});
+
+		it("should reject with a `TradfriError` with code ConnectionFailed when an unexpected response is received", async () => {
+			fakeCoap.tryToConnect.returns("unexpected");
+			await tradfri.connect(identity, psk).should.be.rejected.then(err => {
+				expect(err).to.be.an.instanceof(TradfriError);
+				expect(err.message).to.match(/unexpected/);
+				expect(err.code).to.equal(TradfriErrorCodes.ConnectionFailed);
+			});
+			fakeCoap.tryToConnect.resetBehavior();
+		});
 	});
 
 	describe("authenticate => ", () => {

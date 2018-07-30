@@ -1,5 +1,8 @@
 # Changelog
 
+## __WORK IN PROGRESS__
+* (AlCalzone) `TradfriErrors` with code `ConnectionFailed` now contain more information about the original error.
+
 ## 1.2.1 (2018-05-14)
 * (AlCalzone) Stop logging `parsing payload...`
 

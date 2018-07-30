@@ -195,7 +195,8 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 				await wait(nextTimeout);
 			}
 
-			switch (await this.tryToConnect(identity, psk)) {
+			const connectionResult = await this.tryToConnect(identity, psk);
+			switch (connectionResult) {
 				case true: {
 					// start connection watching
 					if (this.watcher != null) this.watcher.start();
@@ -210,10 +211,22 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 					this.emit("connection failed", attempt + 1, maxAttempts);
 					continue;
 				}
-				case "error": throw new TradfriError(
-					"An unknown error occured while connecting to the gateway",
-					TradfriErrorCodes.ConnectionFailed,
-				);
+				default: {
+					if (connectionResult instanceof Error) {
+						const err = new TradfriError(
+							`An unexpected error occured while connecting to the gateway: ${connectionResult.message}`,
+							TradfriErrorCodes.ConnectionFailed,
+						);
+						// Use the original stack, we only re-throw as another error type
+						err.stack = connectionResult.stack;
+						throw err;
+					} else {
+						throw new TradfriError(
+							`An unexpected response was received while trying to connect to the gateway: ${connectionResult}`,
+							TradfriErrorCodes.ConnectionFailed,
+						);
+					}
+				}
 			}
 		}
 

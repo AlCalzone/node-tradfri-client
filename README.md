@@ -250,7 +250,7 @@ try {
 ```
 If you have [automatic reconnection](#automatically-watching-the-connection-and-reconnecting) enabled, this method can retry for a long time before resolving or rejecting, depending on the configuration.
 
-**NOTE:** As of v0.6.0, this no longer resolves with `false` if the connection was unsuccessful. Instead, it throws (or rejects with) a `TradfriError` which contains details about why the connection failed.
+**NOTE:** As of v0.6.0, this no longer resolves with `false` if the connection was unsuccessful. Instead, it throws (or rejects with) a `TradfriError` which contains details about why the connection failed.  
 
 ### Pinging the gateway
 ```TS

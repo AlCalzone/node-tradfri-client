@@ -87,7 +87,8 @@ class TradfriClient extends events_1.EventEmitter {
                     logger_1.log(`retrying connection in ${nextTimeout} ms`, "debug");
                     yield async_1.wait(nextTimeout);
                 }
-                switch (yield this.tryToConnect(identity, psk)) {
+                const connectionResult = yield this.tryToConnect(identity, psk);
+                switch (connectionResult) {
                     case true: {
                         // start connection watching
                         if (this.watcher != null)
@@ -100,7 +101,17 @@ class TradfriClient extends events_1.EventEmitter {
                         this.emit("connection failed", attempt + 1, maxAttempts);
                         continue;
                     }
-                    case "error": throw new tradfri_error_1.TradfriError("An unknown error occured while connecting to the gateway", tradfri_error_1.TradfriErrorCodes.ConnectionFailed);
+                    default: {
+                        if (connectionResult instanceof Error) {
+                            const err = new tradfri_error_1.TradfriError(`An unexpected error occured while connecting to the gateway: ${connectionResult.message}`, tradfri_error_1.TradfriErrorCodes.ConnectionFailed);
+                            // Use the original stack, we only re-throw as another error type
+                            err.stack = connectionResult.stack;
+                            throw err;
+                        }
+                        else {
+                            throw new tradfri_error_1.TradfriError(`An unexpected response was received while trying to connect to the gateway: ${connectionResult}`, tradfri_error_1.TradfriErrorCodes.ConnectionFailed);
+                        }
+                    }
                 }
             }
             throw new tradfri_error_1.TradfriError(`The gateway did not respond ${maxAttempts === 1 ? "in time" : `after ${maxAttempts} tries`}.`, tradfri_error_1.TradfriErrorCodes.ConnectionTimedOut);
