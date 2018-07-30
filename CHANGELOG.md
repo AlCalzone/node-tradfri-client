@@ -1,6 +1,6 @@
 # Changelog
 
-## __WORK IN PROGRESS__
+## 1.3.0 (2018-07-30)
 * (AlCalzone) `TradfriErrors` with code `ConnectionFailed` now contain more information about the original error.
 
 ## 1.2.1 (2018-05-14)
