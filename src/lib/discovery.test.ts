@@ -2,40 +2,38 @@
 // tslint:disable:no-unused-expression
 // tslint:disable:variable-name
 
-import { assert, expect, should, use } from "chai";
+import { assert, expect } from "chai";
 import { SinonFakeTimers, spy, stub, useFakeTimers } from "sinon";
-import * as sinonChai from "sinon-chai";
 
-// enable the should interface with sinon
-should();
-use(sinonChai);
-
-let findOneCalled: DeferredPromise<void>;
-let findOneCallback: (service: any) => void;
-const fakeBrowser = {
-	start: stub(),
-	stop: stub(),
-};
-const fakeBonjour = {
-	findOne: stub()
-		// remember the given callback
-		.callsFake((opts, cb) => {
-			findOneCallback = cb;
-			if (findOneCalled != null) findOneCalled.resolve();
-			return fakeBrowser;
-		}),
-};
-const fakeBonjourPackage = stub().returns(fakeBonjour);
-
-// stub out the bonjour package for discovery
 import { wait } from "alcalzone-shared/async";
-import { createDeferredPromise, DeferredPromise } from "alcalzone-shared/deferred-promise";
-import * as proxyquire from "proxyquire";
-const { discoverGateway, DiscoveredGateway } = proxyquire("./discovery", {
-	bonjour: fakeBonjourPackage,
-});
 
-describe("lib/discovery => ", () => {
+// create stubs
+let fakeResponseHandler: (response: any) => void;
+const fakeMDNSServer = {
+	on: stub().callsFake((event, handler) => {
+		if (event === "response") fakeResponseHandler = handler;
+	}),
+	query: stub(),
+	destroy: stub(),
+};
+const fakeMDNSPackage = stub().returns(fakeMDNSServer);
+
+import * as proxyquireModule from "proxyquire";
+const proxyquire = proxyquireModule.noPreserveCache();
+const {
+	discoverGateway,
+	// tslint:disable-next-line:whitespace
+} = proxyquire<typeof import("./discovery")>("./discovery", {
+	"mdns-server": fakeMDNSPackage,
+});
+// const {
+// 	discoverGateway,
+// 	// tslint:disable-next-line:whitespace
+// } = proxyquire<typeof import("./discovery2")>("./discovery2", {
+// 	"mdns-server": fakeMDNSPackage,
+// });
+
+describe("lib/discovery2 => ", () => {
 
 	let clock: SinonFakeTimers;
 	beforeEach(() => {
@@ -43,116 +41,227 @@ describe("lib/discovery => ", () => {
 	});
 
 	afterEach(() => {
-		fakeBonjourPackage.resetHistory();
-		fakeBonjour.findOne.resetHistory();
-		fakeBrowser.start.resetHistory();
-		fakeBrowser.stop.resetHistory();
+		fakeMDNSPackage.resetHistory();
+		fakeMDNSServer.query.resetHistory();
+		fakeMDNSServer.destroy.resetHistory();
 
 		clock.restore();
 	});
 
-	it("discoverGateway lazily creates a bonjour instance", () => {
-		discoverGateway(false);
-		fakeBonjourPackage.should.have.been.calledOnce;
-		discoverGateway(false);
-		fakeBonjourPackage.should.have.been.calledOnce;
-	});
+	describe("discoverGateway() => ", () => {
 
-	it("discoverGateway creates an mDNS browser and starts the discovery", () => {
-		discoverGateway(false);
-		fakeBonjour.findOne.should.have.been.calledOnce;
-		fakeBrowser.start.should.have.been.calledOnce;
-	});
+		const coapDomain = "_coap._udp.local";
+		const gatewayID = "123456abcdef";
+		const completeDomain = `gw-${gatewayID}.${coapDomain}`;
+		const hostname = `TRADFRI-Gateway-${gatewayID}.local`;
 
-	it("without a service response, discoverGateway() should fulfill with null after the default timeout has elapsed", (done) => {
-		const timeout = 10000;
+		it("should create a new mdns server instance each call", async () => {
+			let promise = discoverGateway();
+			clock.runAll();
+			await promise;
 
-		const leSpy = spy();
-		discoverGateway().then(leSpy);
-		wait(timeout - 1).then(() => {
-			leSpy.should.not.have.been.called;
-			wait(1).then(() => {
-				leSpy.should.have.been.calledWith(null);
-				done();
-			});
-			clock.tick(1);
+			fakeMDNSPackage.should.have.been.calledOnce;
+			promise = discoverGateway();
+			clock.runAll();
+			await promise;
+			fakeMDNSPackage.should.have.been.calledTwice;
 		});
-		clock.tick(timeout - 1);
-	});
 
-	it("without a service response, discoverGateway(timeout) should fulfill with null after the passed timeout has elapsed", (done) => {
-		const timeout = 5000;
-
-		const leSpy = spy();
-		discoverGateway(timeout).then(leSpy);
-		wait(timeout - 1).then(() => {
-			leSpy.should.not.have.been.called;
-			wait(1).then(() => {
-				leSpy.should.have.been.calledWith(null);
-				done();
-			});
-			clock.tick(1);
+		it("should register a response handler", async () => {
+			const promise = discoverGateway();
+			clock.runAll();
+			await promise;
+			fakeMDNSServer.on.should.have.been.calledWith("response");
 		});
-		clock.tick(timeout - 1);
-	});
 
-	it("without a service response, discoverGateway should never fulfill with the timeout disabled", (done) => {
-		const spy1 = spy();
-		const spy2 = spy();
-		const oneDay = 1000 * 3600 * 24;
+		it("should query the local coap domain for all necessary record types", async () => {
+			const promise = discoverGateway();
+			clock.runAll();
+			await promise;
 
-		discoverGateway(false).then(spy1);
-		wait(oneDay).then(() => {
-			spy1.should.not.have.been.called;
+			function assertQuery(domain: string, type: string) {
+				const args = fakeMDNSServer.query.getCalls()
+					.map(call => Array.isArray(call.args) ? call.args[0] : call.args)
+					.reduce((all, cur) => [...all, ...cur], [])
+				;
+				args.should.deep.include({
+					name: domain, type,
+				});
+			}
 
-			discoverGateway(-1).then(spy2);
+			assertQuery(coapDomain, "A");
+			assertQuery(coapDomain, "AAAA");
+			assertQuery(coapDomain, "PTR");
+			assertQuery(coapDomain, "SRV");
+			assertQuery(coapDomain, "TXT");
+		});
+
+		it("without a service response, discoverGateway() should fulfill with null after the default timeout has elapsed", (done) => {
+			const timeout = 10000;
+
+			const leSpy = spy();
+			discoverGateway().then(leSpy);
+			wait(timeout - 1).then(() => {
+				leSpy.should.not.have.been.called;
+				wait(1).then(() => {
+					leSpy.should.have.been.calledWith(null);
+					done();
+				});
+				clock.tick(1);
+			});
+			clock.tick(timeout - 1);
+		});
+
+		it("without a service response, discoverGateway(timeout) should fulfill with null after the passed timeout has elapsed", (done) => {
+			const timeout = 5000;
+
+			const leSpy = spy();
+			discoverGateway(timeout).then(leSpy);
+			wait(timeout - 1).then(() => {
+				leSpy.should.not.have.been.called;
+				wait(1).then(() => {
+					leSpy.should.have.been.calledWith(null);
+					done();
+				});
+				clock.tick(1);
+			});
+			clock.tick(timeout - 1);
+		});
+
+		it("without a service response, discoverGateway should never fulfill with the timeout disabled", (done) => {
+			const spy1 = spy();
+			const spy2 = spy();
+			const oneDay = 1000 * 3600 * 24;
+
+			discoverGateway(false).then(spy1);
 			wait(oneDay).then(() => {
-				spy2.should.not.have.been.called;
-				done();
+				spy1.should.not.have.been.called;
+
+				discoverGateway(-1).then(spy2);
+				wait(oneDay).then(() => {
+					spy2.should.not.have.been.called;
+					done();
+				});
+				clock.tick(oneDay);
 			});
 			clock.tick(oneDay);
 		});
-		clock.tick(oneDay);
-	});
 
-	it("discoverGateway should check the received responses if they represent a tradfri gateway", (done) => {
-		const leSpy = spy();
-		findOneCalled = createDeferredPromise();
-		const retVal = discoverGateway(false);
-		retVal.then(leSpy);
+		it("should fulfill the promise with a non-null response when ALL answers have been received", async () => {
+			let promise;
 
-		// wait until we have a findOne callback
-		findOneCalled.then(() => {
-			// no service response
-			findOneCallback(null);
-			leSpy.should.not.have.been.called;
+			const completeResponse = {
+				type: "response",
+				answers: [],
+				additionals: [],
+			};
 
-			// service response without txt property
-			findOneCallback({});
-			leSpy.should.not.have.been.called;
+			function assertNotComplete() {
+				fakeResponseHandler(completeResponse);
+				clock.runAll();
+				promise.should.eventually.become(null);
+			}
 
-			// service response without name property
-			findOneCallback({ txt: "foo" });
-			leSpy.should.not.have.been.called;
+			async function assertComplete() {
+				fakeResponseHandler(completeResponse);
+				clock.runAll();
+				const result = await promise;
+				expect(result).to.not.equal(null);
+				return result;
+			}
 
-			// service response with wrong name property
-			findOneCallback({ txt: "foo", name: "wrong" });
-			leSpy.should.not.have.been.called;
+			// empty response
+			promise = discoverGateway();
+			assertNotComplete();
 
-			// correct service response
-			findOneCallback({
-				name: "gw-abcdef123456",
-				host: "TRADFRI-Gateway-abcdef123456.local",
-				txt: { version: "1.2.3" },
-				addresses: ["localhost"],
+			// We require a certain set of answers:
+			// 1. PTR with the short local domain, pointing to the Tradfri gateway
+			promise = discoverGateway();
+			completeResponse.answers.push({
+				name: coapDomain,
+				type: "PTR",
+				data: completeDomain,
 			});
-			retVal.should.become({
-				name: "gw-abcdef123456",
-				host: "TRADFRI-Gateway-abcdef123456.local",
+			assertNotComplete();
+
+			// 2. TXT for the complete domain
+			promise = discoverGateway();
+			completeResponse.answers.push({
+				name: completeDomain,
+				type: "TXT",
+				data: Buffer.from("\u000eversion=1.2.3"),
+			});
+			assertNotComplete();
+
+			// 3. SRV for the complete domain with the correct port and hostname
+			promise = discoverGateway();
+			completeResponse.answers.push({
+				name: completeDomain,
+				type: "SRV",
+				data: {
+					port: 5684,
+					target: hostname,
+				},
+			});
+			assertNotComplete();
+
+			// 4. A-Record for the hostname
+			promise = discoverGateway();
+			completeResponse.answers.push({
+				name: hostname,
+				type: "A",
+				data: "192.168.1.234",
+			});
+			const discoverResult = await assertComplete();
+
+			discoverResult.should.deep.equal({
+				name: `gw-${gatewayID}`,
+				host: hostname,
 				version: "1.2.3",
-				addresses: ["localhost"],
-			}).then(() => done());
+				addresses: ["192.168.1.234"],
+			});
 		});
+
+		it("should discard responses for the wrong domain", async () => {
+			let promise;
+			const wrongDomain = coapDomain.replace("udp", "tcp");
+
+			const completeResponse = {
+				type: "response",
+				answers: [{
+					name: wrongDomain,
+					type: "PTR",
+					data: completeDomain,
+				}, {
+					name: completeDomain,
+					type: "TXT",
+					data: Buffer.from("\u000eversion=1.2.3"),
+				}, {
+					name: completeDomain,
+					type: "SRV",
+					data: {
+						port: 5684,
+						target: hostname,
+					},
+				}, {
+					name: hostname,
+					type: "A",
+					data: "192.168.1.234",
+				}],
+				additionals: [],
+			};
+
+			function assertNotComplete() {
+				fakeResponseHandler(completeResponse);
+				clock.runAll();
+				promise.should.eventually.become(null);
+			}
+
+			promise = discoverGateway();
+			assertNotComplete();
+
+		});
+
 	});
 
 });

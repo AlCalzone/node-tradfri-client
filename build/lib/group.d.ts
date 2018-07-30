@@ -14,7 +14,7 @@ export declare class Group extends IPSODevice {
      * Ensures this instance is linked to a tradfri client and an accessory
      * @throws Throws an error if it isn't
      */
-    private ensureLink();
+    private ensureLink;
     /** Turn all lightbulbs on */
     turnOn(): Promise<boolean>;
     /** Turn all lightbulbs off */
@@ -23,7 +23,7 @@ export declare class Group extends IPSODevice {
     toggle(value: boolean): Promise<boolean>;
     /** Activates the given scene */
     activateScene(sceneOrId: Scene | number): Promise<boolean>;
-    private operateGroup(operation, transitionTime?);
+    private operateGroup;
     /**
      * Changes this lightbulb's brightness
      * @returns true if a request was sent, false otherwise

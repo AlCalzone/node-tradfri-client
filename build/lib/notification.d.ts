@@ -33,12 +33,12 @@ export declare enum NotificationTypes {
     Reboot = 1003,
     UNKNOWN1 = 1004,
     UNKNOWN2 = 1005,
-    LossOfInternetConnectivity = 5001,
+    LossOfInternetConnectivity = 5001
 }
 export declare enum GatewayRebootReason {
     "default" = -1,
     "firmware upgrade" = 0,
     "initiated by client" = 1,
     "homekit reset" = 3,
-    "factory reset" = 2,
+    "factory reset" = 2
 }

@@ -106,7 +106,7 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
      * @param psk The pre-shared key to use
      * @returns true if the connection attempt was successful, otherwise false.
      */
-    private tryToConnect(identity, psk);
+    private tryToConnect;
     /**
      * Negotiates a new identity and psk with the gateway to use for connections
      * @param securityCode The security code that is printed on the gateway
@@ -125,7 +125,7 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
      * @returns true if the observer was set up, false otherwise (e.g. if it already exists)
      */
     observeResource(path: string, callback: (resp: CoapResponse) => void): Promise<boolean>;
-    private getObserverUrl(path);
+    private getObserverUrl;
     /**
      * Checks if a resource is currently being observed
      * @param path The path of the resource
@@ -157,9 +157,9 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
      * @returns A promise that resolves when the information about all devices has been received.
      */
     observeDevices(): Promise<void>;
-    private observeDevices_callback(response);
+    private observeDevices_callback;
     stopObservingDevices(): void;
-    private observeDevice_callback(instanceId, response);
+    private observeDevice_callback;
     private observeGroupsPromise;
     private observeScenesPromises;
     /**
@@ -167,19 +167,19 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
      * @returns A promise that resolves when the information about all groups and scenes has been received.
      */
     observeGroupsAndScenes(): Promise<void>;
-    private observeGroups_callback(response);
+    private observeGroups_callback;
     stopObservingGroups(): void;
-    private stopObservingGroup(instanceId);
-    private observeGroup_callback(instanceId, response);
-    private observeScenes_callback(groupId, response);
-    private observeScene_callback(groupId, instanceId, response);
+    private stopObservingGroup;
+    private observeGroup_callback;
+    private observeScenes_callback;
+    private observeScene_callback;
     private observeGatewayPromise;
     /**
      * Sets up an observer for the gateway
      * @returns A promise that resolves when the gateway information has been received for the first time
      */
     observeGateway(): Promise<void>;
-    private observeGateway_callback(response);
+    private observeGateway_callback;
     stopObservingGateway(): void;
     private observeNotificationsPromise;
     /**
@@ -187,7 +187,7 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
      * @returns A promise that resolves when a notification has been received for the first time
      */
     observeNotifications(): Promise<void>;
-    private observeNotifications_callback(response);
+    private observeNotifications_callback;
     stopObservingNotifications(): void;
     /**
      * Handles a non-successful response, e.g. by error logging
@@ -195,7 +195,7 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
      * @param context Some logging context to identify where the error comes from
      * @returns true if the calling method may proceed, false if it should break
      */
-    private handleNonSuccessfulResponse(resp, context, ignore404?);
+    private handleNonSuccessfulResponse;
     /**
      * Pings the gateway to check if it is alive
      * @param timeout - (optional) Timeout in ms, after which the ping is deemed unanswered. Default: 5000ms
@@ -220,7 +220,7 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
      * @param reference The reference value to calculate the diff
      * @returns true if a request was sent, false otherwise
      */
-    private updateResource(path, newObj, reference);
+    private updateResource;
     /**
      * Sets some properties on a group
      * @param group The group to be updated
@@ -246,7 +246,7 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
         code: string;
         payload: any;
     }>;
-    private swallowInternalCoapRejections<T>(promise);
+    private swallowInternalCoapRejections;
     /** Reboots the gateway. This operation is additionally acknowledged with a reboot notification. */
     rebootGateway(): Promise<boolean>;
     /** Factory resets the gateway. WARNING: All configuration will be wiped! */

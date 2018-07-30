@@ -75,5 +75,5 @@ export declare class ConnectionWatcher extends EventEmitter {
     private failedPingCount;
     private offlinePingCount;
     private resetAttempts;
-    private pingThread();
+    private pingThread;
 }

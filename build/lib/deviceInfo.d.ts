@@ -7,7 +7,7 @@ export declare enum PowerSources {
     PowerOverEthernet = 4,
     USB = 5,
     AC_Power = 6,
-    Solar = 7,
+    Solar = 7
 }
 export declare class DeviceInfo extends IPSOObject {
     battery: number;

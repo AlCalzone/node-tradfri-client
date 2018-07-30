@@ -1,8 +1,9 @@
+// tslint:disable:no-console
 // tslint:disable:no-unused-expression
+// tslint:disable:variable-name
 
-import { assert, expect, should, use } from "chai";
+import { assert, expect } from "chai";
 import { spy, stub } from "sinon";
-should();
 
 // stub out the debug package for logger
 import * as debugPackage from "debug";

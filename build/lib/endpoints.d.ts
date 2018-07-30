@@ -15,5 +15,5 @@ export declare enum GatewayEndpoints {
     SEND_CERT_TO_GATEWAY = "9094",
     SEND_COGNITO_ID_TO_GATEWAY = "9095",
     SEND_GH_COGNITO_ID_TO_GATEWAY = "9104",
-    Details = "15012",
+    Details = "15012"
 }

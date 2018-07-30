@@ -2,10 +2,8 @@
 // tslint:disable:no-unused-expression
 // tslint:disable:variable-name
 
-import { assert, expect, should, use } from "chai";
-import * as chaiAsPromised from "chai-as-promised";
+import { assert, expect } from "chai";
 import { SinonFakeTimers, spy, stub, useFakeTimers } from "sinon";
-import * as sinonChai from "sinon-chai";
 
 import { createDeferredPromise, DeferredPromise } from "alcalzone-shared/deferred-promise";
 import { padStart } from "alcalzone-shared/strings";
@@ -17,12 +15,6 @@ import "./"; // dummy-import so index.ts is covered
 import { Accessory, AccessoryTypes, GatewayDetails, Light, TradfriError, TradfriErrorCodes } from "./";
 import { GatewayEndpoints } from "./lib/endpoints";
 import { TradfriClient } from "./tradfri-client";
-
-// enable the should interface with sinon
-should();
-// improve stubs for testing
-use(sinonChai);
-use(chaiAsPromised);
 
 function assertPayload(actual: any, expected: {}) {
 	expect(actual).to.be.an.instanceof(Buffer);
