@@ -64,7 +64,7 @@ export const ipsoKey = (key: string): PropertyDecorator => {
  * @param keyOrProperty - ipso key or property name to lookup
  */
 // TODO: in TS 2.8 type keyOrProperty with conditional types
-function lookupKeyOrProperty<T extends IPSOObject>(target: T, keyOrProperty: string | keyof T): string | keyof T {
+function lookupKeyOrProperty<T extends IPSOObject>(target: T, keyOrProperty: string /*| keyof T*/): string /*| keyof T*/ {
 	// get the class constructor
 	const constr = target.constructor;
 	// retrieve the current metadata
@@ -151,7 +151,7 @@ const defaultSerializers: Record<string, PropertyTransform> = {
 /**
  * Retrieves the serializer for a given property
  */
-function getSerializer<T extends IPSOObject>(target: T, property: string | keyof T): PropertyTransform {
+function getSerializer<T extends IPSOObject>(target: T, property: string /* | keyof T*/): PropertyTransform {
 	// get the class constructor
 	const constr = target.constructor;
 	// retrieve the current metadata
@@ -216,7 +216,7 @@ const defaultDeserializers: Record<string, PropertyTransform> = {
 /**
  * Retrieves the deserializer for a given property
  */
-function getDeserializer<T extends IPSOObject>(target: T, property: string | keyof T): PropertyTransform {
+function getDeserializer<T extends IPSOObject>(target: T, property: string /*| keyof T*/): PropertyTransform {
 	// get the class constructor
 	const constr = target.constructor;
 	// retrieve the current metadata
@@ -236,7 +236,7 @@ function getDeserializer<T extends IPSOObject>(target: T, property: string | key
  * Finds the design type for a given property
  */
 // tslint:disable-next-line:ban-types
-function getPropertyType<T extends IPSOObject>(target: T, property: string | keyof T): Function {
+function getPropertyType<T extends IPSOObject>(target: T, property: string /* | keyof T*/): Function {
 	return Reflect.getMetadata("design:type", target, property);
 }
 
@@ -289,7 +289,7 @@ export class IPSOObject {
 		for (const [key, value] of entries(obj)) {
 			let deserializer: PropertyTransform = getDeserializer(this, key);
 			// key might be ipso key or property name
-			let propName: keyof this | string;
+			let propName: string; // keyof this | string;
 			if (deserializer == null) {
 				// deserializers are defined by property name, so key is actually the key
 				propName = lookupKeyOrProperty(this, key);
@@ -313,7 +313,7 @@ export class IPSOObject {
 	}
 
 	// parses a value, depending on the value type and defined parsers
-	private parseValue(propKey: string | symbol, value: any, transform?: PropertyTransform, requiresArraySplitting: boolean = true): any {
+	private parseValue(propKey: string /*| symbol*/, value: any, transform?: PropertyTransform, requiresArraySplitting: boolean = true): any {
 		if (value instanceof Array && requiresArraySplitting) {
 			// Array: parse every element
 			return value.map(v => this.parseValue(propKey, v, transform, requiresArraySplitting));
@@ -382,7 +382,7 @@ export class IPSOObject {
 		};
 
 		// check all set properties
-		for (const propName of Object.keys(this) as (keyof this)[]) {
+		for (const propName of Object.keys(this) as (Extract<keyof this, string>)[]) {
 			// check if this property is going to be serialized
 			if (
 				// properties starting with "_" are private by convention

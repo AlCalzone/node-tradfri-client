@@ -41,14 +41,14 @@ export declare class Light extends IPSODevice {
      * Ensures this instance is linked to a tradfri client and an accessory
      * @throws Throws an error if it isn't
      */
-    private ensureLink();
+    private ensureLink;
     /** Turn this lightbulb on */
     turnOn(): Promise<boolean>;
     /** Turn this lightbulb off */
     turnOff(): Promise<boolean>;
     /** Toggles this lightbulb on or off */
     toggle(value?: boolean): Promise<boolean>;
-    private operateLight(operation, transitionTime?);
+    private operateLight;
     /**
      * Changes this lightbulb's brightness
      * @returns true if a request was sent, false otherwise

@@ -2,9 +2,8 @@
 // tslint:disable:no-unused-expression
 // tslint:disable:variable-name
 
-import { assert, expect, should, use } from "chai";
+import { assert, expect } from "chai";
 import { SinonFakeTimers, spy, stub, useFakeTimers } from "sinon";
-import * as sinonChai from "sinon-chai";
 
 import { createDeferredPromise, DeferredPromise } from "alcalzone-shared/deferred-promise";
 import { CoapClient as coap, CoapResponse } from "node-coap-client";
@@ -12,16 +11,13 @@ import { createNetworkMock } from "../../test/mocks";
 import { TradfriClient } from "../tradfri-client";
 import { ConnectionWatcher, ConnectionWatcherOptions } from "./watcher";
 
-// enable the should interface with sinon
-should();
-// improve stubs for testing
-use(sinonChai);
-
 describe("connection watching => ", () => {
 
 	let clock: SinonFakeTimers;
 
-	beforeEach(() => clock = useFakeTimers());
+	beforeEach(() => {
+		clock = useFakeTimers();
+	});
 	afterEach(() => clock.restore());
 
 	// Setup the mock

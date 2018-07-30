@@ -1,39 +1,75 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const bonjourPackage = require("bonjour");
-let bonjour;
+const createMDNSServer = require("mdns-server");
+function parseTXTRecord(data) {
+    const ret = {};
+    let offset = 0;
+    while (offset < data.length) {
+        const length = data[offset];
+        const label = data.slice(offset + 1, offset + 1 + length).toString("ascii");
+        const [key, value] = label.split("=");
+        ret[key] = value;
+        offset += length;
+    }
+    return ret;
+}
 /**
  * Auto-discover a tradfri gateway on the network.
  * @param timeout (optional) Time in milliseconds to wait for a response. Default 10000.
  * Pass false or a negative number to explicitly wait forever.
  */
 function discoverGateway(timeout = 10000) {
-    if (bonjour == null)
-        bonjour = bonjourPackage();
+    const mdns = createMDNSServer({
+        reuseAddr: true,
+        loopback: false,
+    });
     let timer;
+    const domain = "_coap._udp.local";
     return new Promise((resolve, reject) => {
-        const mdnsBrowser = bonjour.findOne({ type: "coap", protocol: "udp" }, (service) => {
-            if (!service || !service.txt || !service.name || !service.name.startsWith("gw-"))
+        mdns.on("response", (resp) => {
+            const allAnswers = [...resp.answers, ...resp.additionals];
+            const discard = allAnswers.find(a => a.name === domain) == null;
+            if (discard)
                 return;
+            // ensure all record types were received
+            const ptrRecord = allAnswers.find(a => a.type === "PTR");
+            if (!ptrRecord)
+                return;
+            const srvRecord = allAnswers.find(a => a.type === "SRV");
+            if (!srvRecord)
+                return;
+            const txtRecord = allAnswers.find(a => a.type === "TXT");
+            if (!txtRecord)
+                return;
+            const aRecords = allAnswers.filter(a => a.type === "A" || a.type === "AAAA");
+            if (aRecords.length === 0)
+                return;
+            // extract the data
+            const name = /^gw\-[0-9a-f]{12}/.exec(ptrRecord.data)[0];
+            const host = srvRecord.data.target;
+            const { version } = parseTXTRecord(txtRecord.data);
+            const addresses = aRecords.map(a => a.data);
             if (timer != null)
                 clearTimeout(timer);
-            const foundDevice = {
-                name: service.name,
-                version: service.txt.version,
-                addresses: service.addresses,
-            };
-            if (service.host != null)
-                foundDevice.host = service.host;
-            resolve(foundDevice);
+            mdns.destroy();
+            resolve({
+                name, host, version, addresses,
+            });
         });
+        mdns.query([
+            { name: domain, type: "A" },
+            { name: domain, type: "AAAA" },
+            { name: domain, type: "PTR" },
+            { name: domain, type: "SRV" },
+            { name: domain, type: "TXT" },
+        ]);
         if (typeof timeout === "number" && timeout > 0) {
             timer = setTimeout(() => {
-                if (mdnsBrowser != null)
-                    mdnsBrowser.stop();
+                if (mdns != null)
+                    mdns.destroy();
                 resolve(null);
             }, timeout);
         }
-        mdnsBrowser.start();
     });
 }
 exports.discoverGateway = discoverGateway;

@@ -4,7 +4,7 @@ require("reflect-metadata");
 
 // tslint:disable:no-unused-expression
 
-import { assert, expect, should, use } from "chai";
+import { assert, expect } from "chai";
 import { spy, stub } from "sinon";
 
 import { TradfriClient } from "..";
@@ -14,9 +14,6 @@ import { IPSOObject } from "./ipsoObject";
 import { Light, LightOperation, Spectrum } from "./light";
 import { entries } from "./object-polyfill";
 import { MAX_COLOR, predefinedColors, whiteSpectrumHex } from "./predefined-colors";
-
-// enable the should interface with sinon
-should();
 
 function buildAccessory(modelName: string, spectrum: Spectrum) {
 	const attributes = {

@@ -2,7 +2,7 @@
 // tslint:disable:no-unused-expression
 // tslint:disable:variable-name
 
-import { assert, expect, should, use } from "chai";
+import { assert, expect } from "chai";
 import { spy, stub } from "sinon";
 
 import { createDeferredPromise, DeferredPromise } from "alcalzone-shared/deferred-promise";

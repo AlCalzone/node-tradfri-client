@@ -1,5 +1,8 @@
 # Changelog
 
+## __WORK IN PROGRESS__
+* (AlCalzone) Improve gateway discovery in networks with IPv4 and IPv6
+
 ## 1.3.0 (2018-07-30)
 * (AlCalzone) `TradfriErrors` with code `ConnectionFailed` now contain more information about the original error.
 

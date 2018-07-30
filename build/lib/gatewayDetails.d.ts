@@ -37,5 +37,5 @@ export declare enum UpdatePriority {
     Normal = 0,
     Critical = 1,
     Required = 2,
-    Forced = 5,
+    Forced = 5
 }

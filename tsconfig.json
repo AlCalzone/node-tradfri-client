@@ -5,7 +5,7 @@
         "module": "commonjs",
         "moduleResolution": "node",
         "noEmitOnError": true,
-        "noImplicitAny": true,
+        "noImplicitAny": false,
         "outDir": "build/",
         "removeComments": false,
         "experimentalDecorators": true,

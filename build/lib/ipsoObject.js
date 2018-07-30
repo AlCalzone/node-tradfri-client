@@ -57,7 +57,7 @@ exports.ipsoKey = (key) => {
  * @param keyOrProperty - ipso key or property name to lookup
  */
 // TODO: in TS 2.8 type keyOrProperty with conditional types
-function lookupKeyOrProperty(target, keyOrProperty) {
+function lookupKeyOrProperty(target, keyOrProperty /*| keyof T*/) {
     // get the class constructor
     const constr = target.constructor;
     // retrieve the current metadata
@@ -143,7 +143,7 @@ const defaultSerializers = {
 /**
  * Retrieves the serializer for a given property
  */
-function getSerializer(target, property) {
+function getSerializer(target, property /* | keyof T*/) {
     // get the class constructor
     const constr = target.constructor;
     // retrieve the current metadata
@@ -204,7 +204,7 @@ const defaultDeserializers = {
 /**
  * Retrieves the deserializer for a given property
  */
-function getDeserializer(target, property) {
+function getDeserializer(target, property /*| keyof T*/) {
     // get the class constructor
     const constr = target.constructor;
     // retrieve the current metadata
@@ -222,7 +222,7 @@ function getDeserializer(target, property) {
  * Finds the design type for a given property
  */
 // tslint:disable-next-line:ban-types
-function getPropertyType(target, property) {
+function getPropertyType(target, property /* | keyof T*/) {
     return Reflect.getMetadata("design:type", target, property);
 }
 // common base class for all objects that are transmitted somehow
@@ -241,7 +241,7 @@ class IPSOObject {
         for (const [key, value] of object_polyfill_1.entries(obj)) {
             let deserializer = getDeserializer(this, key);
             // key might be ipso key or property name
-            let propName;
+            let propName; // keyof this | string;
             if (deserializer == null) {
                 // deserializers are defined by property name, so key is actually the key
                 propName = lookupKeyOrProperty(this, key);
@@ -265,7 +265,7 @@ class IPSOObject {
         return this;
     }
     // parses a value, depending on the value type and defined parsers
-    parseValue(propKey, value, transform, requiresArraySplitting = true) {
+    parseValue(propKey /*| symbol*/, value, transform, requiresArraySplitting = true) {
         if (value instanceof Array && requiresArraySplitting) {
             // Array: parse every element
             return value.map(v => this.parseValue(propKey, v, transform, requiresArraySplitting));

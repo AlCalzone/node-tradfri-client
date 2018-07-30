@@ -53,7 +53,7 @@ export declare class IPSOObject {
      * Reads this instance's properties from the given object
      */
     parse(obj: Record<string, any>): this;
-    private parseValue(propKey, value, transform?, requiresArraySplitting?);
+    private parseValue;
     /**
      * Overrides this object's properties with those from another partial one
      */
@@ -64,7 +64,7 @@ export declare class IPSOObject {
      * Deeply clones an IPSO Object
      */
     clone(...constructorArgs: any[]): this;
-    private isSerializedObjectEmpty(obj);
+    private isSerializedObjectEmpty;
     /** If this object was proxied or not */
     readonly isProxy: boolean;
     /** Returns the raw object without a wrapping proxy */
