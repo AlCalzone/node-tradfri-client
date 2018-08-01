@@ -239,7 +239,7 @@ describe("tradfri-client => retrying the connection => ", () => {
 	}
 	tradfri.on("connection failed", () => connectionFailedPromise && connectionFailedPromise.resolve());
 
-	it("should retry the connection as many times as configured and then reject", async () => {
+	it("should retry a timed out connection as many times as configured and then reject", async () => {
 		fakeCoap.tryToConnect.returns("timeout");
 
 		// set up spies
@@ -252,7 +252,33 @@ describe("tradfri-client => retrying the connection => ", () => {
 			failedSpy.should.have.been.calledWith(i, 3);
 		}
 
-		await expect(connectionPromise).to.be.rejectedWith("did not respond");
+		await expect(connectionPromise).to.be.rejectedWith("did not respond").then(err => {
+			err.should.be.an.instanceof(TradfriError);
+			err.code.should.equal(TradfriErrorCodes.ConnectionTimedOut);
+		});
+
+		// back to square one
+		tradfri.removeListener("connection failed", failedSpy);
+		fakeCoap.tryToConnect.resetBehavior();
+	});
+
+	it("should retry a connection that failed for unknown reasons as many times as configured and then reject", async () => {
+		fakeCoap.tryToConnect.returns(new Error("foobar"));
+
+		// set up spies
+		const failedSpy = spy();
+		tradfri.on("connection failed", failedSpy);
+		const connectionPromise = tradfri.connect("foo", "bar");
+		// we configured 3 tries, so advance the timer thrice
+		for (let i = 1; i <= 3; i++) {
+			await runAllAsync();
+			failedSpy.should.have.been.calledWith(i, 3);
+		}
+
+		await expect(connectionPromise).to.be.rejectedWith("unexpected").then(err => {
+			err.should.be.an.instanceof(TradfriError);
+			err.code.should.equal(TradfriErrorCodes.ConnectionFailed);
+		});
 
 		// back to square one
 		tradfri.removeListener("connection failed", failedSpy);
@@ -262,7 +288,7 @@ describe("tradfri-client => retrying the connection => ", () => {
 	it("should work when any of the connection attempts succeeds", async () => {
 		fakeCoap.tryToConnect
 			.onFirstCall().returns("timeout")
-			.onSecondCall().returns("timeout")
+			.onSecondCall().returns(new Error("foobar"))
 			;
 		fakeCoap.tryToConnect.returns(true);
 

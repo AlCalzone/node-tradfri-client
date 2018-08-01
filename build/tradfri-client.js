@@ -81,6 +81,7 @@ class TradfriClient extends events_1.EventEmitter {
                 1;
             const interval = this.watcher != null && this.watcher.options.connectionInterval;
             const backoffFactor = this.watcher != null && this.watcher.options.failedConnectionBackoffFactor;
+            let lastFailureReason;
             for (let attempt = 0; attempt < maxAttempts; attempt++) {
                 if (attempt > 0) {
                     const nextTimeout = Math.round(interval * Math.pow(backoffFactor, Math.min(5, attempt - 1)));
@@ -99,22 +100,36 @@ class TradfriClient extends events_1.EventEmitter {
                     case "timeout": {
                         // retry if allowed
                         this.emit("connection failed", attempt + 1, maxAttempts);
+                        lastFailureReason = "timeout";
                         continue;
                     }
                     default: {
                         if (connectionResult instanceof Error) {
-                            const err = new tradfri_error_1.TradfriError(`An unexpected error occured while connecting to the gateway: ${connectionResult.message}`, tradfri_error_1.TradfriErrorCodes.ConnectionFailed);
+                            // If an unexpected error occured, we might fix it by retrying the connection
+                            this.emit("connection failed", attempt + 1, maxAttempts);
+                            // Therefore remember the error
+                            lastFailureReason = new tradfri_error_1.TradfriError(`An unexpected error occured while connecting to the gateway: ${connectionResult.message}`, tradfri_error_1.TradfriErrorCodes.ConnectionFailed);
                             // Use the original stack, we only re-throw as another error type
-                            err.stack = connectionResult.stack;
-                            throw err;
+                            lastFailureReason.stack = connectionResult.stack;
+                            // retry the connection
+                            continue;
                         }
                         else {
+                            // We want to know about unexpected responses though
                             throw new tradfri_error_1.TradfriError(`An unexpected response was received while trying to connect to the gateway: ${connectionResult}`, tradfri_error_1.TradfriErrorCodes.ConnectionFailed);
                         }
                     }
                 }
             }
-            throw new tradfri_error_1.TradfriError(`The gateway did not respond ${maxAttempts === 1 ? "in time" : `after ${maxAttempts} tries`}.`, tradfri_error_1.TradfriErrorCodes.ConnectionTimedOut);
+            if (lastFailureReason === "timeout") {
+                throw new tradfri_error_1.TradfriError(`The gateway did not respond ${maxAttempts === 1 ? "in time" : `after ${maxAttempts} tries`}.`, tradfri_error_1.TradfriErrorCodes.ConnectionTimedOut);
+            }
+            else {
+                lastFailureReason.message =
+                    `Could not connect to the gateway${maxAttempts === 1 ? "" : ` after ${maxAttempts} tries`}:\n`
+                        + lastFailureReason.message;
+                throw lastFailureReason;
+            }
         });
     }
     /**
