@@ -1,6 +1,6 @@
 # Changelog
 
-## __WORK IN PROGRESS__
+## 1.3.2 (2018-08-01)
 * (AlCalzone) Retry the initial connection when it fails with an "unexpected error"
 
 ## 1.3.1 (2018-07-30)
