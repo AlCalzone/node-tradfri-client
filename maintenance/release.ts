@@ -42,7 +42,11 @@ const CHANGELOG_PLACEHOLDER = "## __WORK IN PROGRESS__";
 // check if the changelog contains exactly 1 occurence of the changelog placeholder
 switch ((changelog.match(new RegExp("^" + CHANGELOG_PLACEHOLDER + "$", "gm")) || []).length) {
 	case 0:
-		fail(colors.red("Cannot continue, the changelog placeholder is missing from CHANGELOG.md!"));
+		fail(colors.red(
+			"Cannot continue, the changelog placeholder is missing from CHANGELOG.md!\n"
+			+ "Please add the following line to your changelog:\n"
+			+ CHANGELOG_PLACEHOLDER,
+		));
 	case 1: break; // all good
 	default:
 		fail(colors.red("Cannot continue, there is more than one changelog placeholder in CHANGELOG.md!"));
