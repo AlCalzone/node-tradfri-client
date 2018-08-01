@@ -1,5 +1,8 @@
 # Changelog
 
+## __WORK IN PROGRESS__
+* (AlCalzone) Retry the initial connection when it fails with an "unexpected error"
+
 ## 1.3.1 (2018-07-30)
 * (AlCalzone) Improve gateway discovery in networks with IPv4 and IPv6
 
