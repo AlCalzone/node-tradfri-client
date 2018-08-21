@@ -12,8 +12,10 @@ declare module "mdns-server" {
 	interface MDnsInstance extends EventEmitter {
 		on(event: "response", handler: (resp: Response) => void): this;
 		on(event: "ready", handler: () => void): this;
+		on(event: "error", handler: (e: Error) => void): this;
 		query(...args: any[]): void;
 		destroy(): void;
+		initServer(): void;
 	}
 
 	const package: MDnsPackage;

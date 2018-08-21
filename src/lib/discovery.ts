@@ -30,6 +30,7 @@ export function discoverGateway(timeout: number | false = 10000): Promise<Discov
 	const mdns = createMDNSServer({
 		reuseAddr: true,
 		loopback: false,
+		noInit: true,
 	});
 	let timer: NodeJS.Timer;
 
@@ -66,13 +67,19 @@ export function discoverGateway(timeout: number | false = 10000): Promise<Discov
 			});
 		});
 
-		mdns.query([
-			{ name: domain, type: "A" },
-			{ name: domain, type: "AAAA" },
-			{ name: domain, type: "PTR" },
-			{ name: domain, type: "SRV" },
-			{ name: domain, type: "TXT" },
-		]);
+		mdns.on("ready", () => {
+			mdns.query([
+				{ name: domain, type: "A" },
+				{ name: domain, type: "AAAA" },
+				{ name: domain, type: "PTR" },
+				{ name: domain, type: "SRV" },
+				{ name: domain, type: "TXT" },
+			]);
+		});
+
+		mdns.on("error", reject);
+
+		mdns.initServer();
 
 		if (typeof timeout === "number" && timeout > 0) {
 			timer = setTimeout(() => {

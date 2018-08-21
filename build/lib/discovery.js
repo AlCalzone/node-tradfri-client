@@ -22,6 +22,7 @@ function discoverGateway(timeout = 10000) {
     const mdns = createMDNSServer({
         reuseAddr: true,
         loopback: false,
+        noInit: true,
     });
     let timer;
     const domain = "_coap._udp.local";
@@ -56,13 +57,17 @@ function discoverGateway(timeout = 10000) {
                 name, host, version, addresses,
             });
         });
-        mdns.query([
-            { name: domain, type: "A" },
-            { name: domain, type: "AAAA" },
-            { name: domain, type: "PTR" },
-            { name: domain, type: "SRV" },
-            { name: domain, type: "TXT" },
-        ]);
+        mdns.on("ready", () => {
+            mdns.query([
+                { name: domain, type: "A" },
+                { name: domain, type: "AAAA" },
+                { name: domain, type: "PTR" },
+                { name: domain, type: "SRV" },
+                { name: domain, type: "TXT" },
+            ]);
+        });
+        mdns.on("error", reject);
+        mdns.initServer();
         if (typeof timeout === "number" && timeout > 0) {
             timer = setTimeout(() => {
                 if (mdns != null)
