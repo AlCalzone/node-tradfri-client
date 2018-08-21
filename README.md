@@ -30,8 +30,7 @@ The `result` variable has the following properties:
     ]
 }
 ```
-Note about addresses and host attributes: the addresses array contains ipv4 and/or ipv6 IP addresses and will be always filled. The host contains the mDNS name
-of the gateway - to use this host you need a working mDNS name resolution (should work out of the box for OSX, needs Name Service Switch service and Avahi).
+Note about addresses and host attributes: the `addresses` array contains IPv4 and/or IPv6 addresses and will always contain at least one item. The host contains the mDNS name of the gateway - to use this host you need a working mDNS name resolution (should work out of the box for OSX, needs Name Service Switch service and Avahi).
 
 ### Common code for all examples
 ```TS
