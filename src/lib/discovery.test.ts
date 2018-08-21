@@ -9,12 +9,15 @@ import { wait } from "alcalzone-shared/async";
 
 // create stubs
 let fakeResponseHandler: (response: any) => void;
+let fakeReadyHandler: () => void;
 const fakeMDNSServer = {
 	on: stub().callsFake((event, handler) => {
 		if (event === "response") fakeResponseHandler = handler;
+		if (event === "ready") fakeReadyHandler = handler;
 	}),
 	query: stub(),
 	destroy: stub(),
+	initServer: stub(),
 };
 const fakeMDNSPackage = stub().returns(fakeMDNSServer);
 
@@ -76,6 +79,7 @@ describe("lib/discovery2 => ", () => {
 
 		it("should query the local coap domain for all necessary record types", async () => {
 			const promise = discoverGateway();
+			fakeReadyHandler();
 			clock.runAll();
 			await promise;
 
