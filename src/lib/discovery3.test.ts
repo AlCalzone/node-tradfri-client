@@ -21,6 +21,30 @@ const fakeMDNSServer = {
 };
 const fakeMDNSPackage = stub().returns(fakeMDNSServer);
 
+const fakeInterfaces = Object.freeze({
+	// an internal interface with two addresses
+	internal: [{
+		address: "foo",
+		internal: true,
+	}, {
+		address: "bar",
+		internal: true,
+	}],
+	// an external interface with two addresses (IPv4 and v6)
+	external: [{
+		address: "1.2.3.4",
+		internal: false,
+		family: "IPv4",
+	}, {
+		address: "1:2:3::4",
+		internal: false,
+		family: "IPv6",
+	}],
+});
+const fakeOS = {
+	networkInterfaces: stub().returns(fakeInterfaces),
+};
+
 import * as proxyquireModule from "proxyquire";
 const proxyquire = proxyquireModule.noPreserveCache();
 const {
@@ -28,6 +52,7 @@ const {
 	// tslint:disable-next-line:whitespace
 } = proxyquire<typeof import("./discovery3")>("./discovery3", {
 	"multicast-dns": fakeMDNSPackage,
+	"os": fakeOS,
 });
 
 describe("lib/discovery3 => ", () => {
@@ -42,15 +67,25 @@ describe("lib/discovery3 => ", () => {
 		fakeMDNSServer.query.resetHistory();
 		fakeMDNSServer.destroy.resetHistory();
 
+		fakeOS.networkInterfaces.resetHistory();
+
 		clock.restore();
 	});
 
-	describe("discoverGateway() => ", () => {
+	describe.only("discoverGateway() => ", () => {
 
 		const coapDomain = "_coap._udp.local";
 		const gatewayID = "123456abcdef";
 		const completeDomain = `gw-${gatewayID}.${coapDomain}`;
 		const hostname = `TRADFRI-Gateway-${gatewayID}.local`;
+
+		it("should query the network interfaces", async () => {
+			const promise = discoverGateway();
+			clock.runAll();
+			await promise;
+
+			fakeOS.networkInterfaces.should.have.been.called;
+		});
 
 		it.skip("should create a new mdns server instance each call", async () => {
 			let promise = discoverGateway();
@@ -81,7 +116,7 @@ describe("lib/discovery3 => ", () => {
 				const args = fakeMDNSServer.query.getCalls()
 					.map(call => Array.isArray(call.args) ? call.args[0] : call.args)
 					.reduce((all, cur) => [...all, ...cur], [])
-				;
+					;
 				args.should.deep.include({
 					name: domain, type,
 				});
