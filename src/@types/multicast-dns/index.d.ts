@@ -24,6 +24,8 @@ declare module "multicast-dns" {
 			loopback: boolean;
 			/** set the reuseAddr option when creating the socket (requires node >= 0.11.13) */
 			reuseAddr: boolean;
+			/** The type of the underlying UDP socket */
+			type: dgram.SocketOptions["type"];
 		}
 
 		export type PacketType = "A" | "AAAA" | "PTR" | "TXT" | "SRV" | "HINFO";

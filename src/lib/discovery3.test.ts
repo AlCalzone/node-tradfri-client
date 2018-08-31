@@ -40,10 +40,21 @@ const fakeInterfaces = Object.freeze({
 		internal: false,
 		family: "IPv6",
 	}],
+	// another external interface with two addresses
+	external2: [{
+		address: "4.3.2.1",
+		internal: false,
+		family: "IPv4",
+	}, {
+		address: "4:3:2::1",
+		internal: false,
+		family: "IPv6",
+	}],
 });
 const fakeOS = {
 	networkInterfaces: stub().returns(fakeInterfaces),
 };
+const IPv6MulticastAddress = "ff02::fb";
 
 import * as proxyquireModule from "proxyquire";
 const proxyquire = proxyquireModule.noPreserveCache();
@@ -79,6 +90,13 @@ describe("lib/discovery3 => ", () => {
 		const completeDomain = `gw-${gatewayID}.${coapDomain}`;
 		const hostname = `TRADFRI-Gateway-${gatewayID}.local`;
 
+		// 1 for IPv4, and 1 per IPv6 interface (2)
+		const expectedCallsPerDiscovery = 3;
+
+		it("returns a Promise", () => {
+			discoverGateway().should.be.an.instanceof(Promise);
+		});
+
 		it("should query the network interfaces", async () => {
 			const promise = discoverGateway();
 			clock.runAll();
@@ -87,19 +105,52 @@ describe("lib/discovery3 => ", () => {
 			fakeOS.networkInterfaces.should.have.been.called;
 		});
 
-		it.skip("should create a new mdns server instance each call", async () => {
+		it("should create an mdns instance for the IPv4-catchall address (0.0.0.0)", async () => {
+			const promise = discoverGateway();
+			clock.runAll();
+			await promise;
+
+			fakeMDNSPackage.should.have.been.calledWith({
+				interface: "0.0.0.0",
+				type: "udp4",
+			});
+		});
+
+		it("should create an mdns instance for the IPv6 catchall address (::%<name>) of all non-internal interfaces", async () => {
+			const promise = discoverGateway();
+			clock.runAll();
+			await promise;
+
+			fakeMDNSPackage.should.have.been.calledWith({
+				interface: "::%external",
+				type: "udp6",
+				ip: IPv6MulticastAddress,
+			});
+			fakeMDNSPackage.should.have.been.calledWith({
+				interface: "::%external2",
+				type: "udp6",
+				ip: IPv6MulticastAddress,
+			});
+		});
+
+		it("should create new mdns instances each call", async () => {
 			let promise = discoverGateway();
 			clock.runAll();
 			await promise;
+			fakeMDNSPackage.callCount.should.equal(expectedCallsPerDiscovery);
 
-			fakeMDNSPackage.should.have.been.calledOnce;
 			promise = discoverGateway();
 			clock.runAll();
 			await promise;
-			fakeMDNSPackage.should.have.been.calledTwice;
+			fakeMDNSPackage.callCount.should.equal(2 * expectedCallsPerDiscovery);
+
+			promise = discoverGateway();
+			clock.runAll();
+			await promise;
+			fakeMDNSPackage.callCount.should.equal(3 * expectedCallsPerDiscovery);
 		});
 
-		it.skip("should register a response handler", async () => {
+		it("should register a response handler", async () => {
 			const promise = discoverGateway();
 			clock.runAll();
 			await promise;
