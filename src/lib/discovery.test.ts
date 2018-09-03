@@ -21,16 +21,52 @@ const fakeMDNSServer = {
 };
 const fakeMDNSPackage = stub().returns(fakeMDNSServer);
 
+const fakeInterfaces = Object.freeze({
+	// an internal interface with two addresses
+	internal: [{
+		address: "foo",
+		internal: true,
+	}, {
+		address: "bar",
+		internal: true,
+	}],
+	// an external interface with two addresses (IPv4 and v6)
+	external: [{
+		address: "1.2.3.4",
+		internal: false,
+		family: "IPv4",
+	}, {
+		address: "1:2:3::4",
+		internal: false,
+		family: "IPv6",
+	}],
+	// another external interface with two addresses
+	external2: [{
+		address: "4.3.2.1",
+		internal: false,
+		family: "IPv4",
+	}, {
+		address: "4:3:2::1",
+		internal: false,
+		family: "IPv6",
+	}],
+});
+const fakeOS = {
+	networkInterfaces: stub().returns(fakeInterfaces),
+};
+const IPv6MulticastAddress = "ff02::fb";
+
 import * as proxyquireModule from "proxyquire";
 const proxyquire = proxyquireModule.noPreserveCache();
 const {
 	discoverGateway,
 	// tslint:disable-next-line:whitespace
 } = proxyquire<typeof import("./discovery")>("./discovery", {
-	"mdns-server": fakeMDNSPackage,
+	"multicast-dns": fakeMDNSPackage,
+	"os": fakeOS,
 });
 
-describe("lib/discovery => ", () => {
+describe("lib/discovery3 => ", () => {
 
 	let clock: SinonFakeTimers;
 	beforeEach(() => {
@@ -39,8 +75,11 @@ describe("lib/discovery => ", () => {
 
 	afterEach(() => {
 		fakeMDNSPackage.resetHistory();
+		fakeMDNSServer.on.resetHistory();
 		fakeMDNSServer.query.resetHistory();
 		fakeMDNSServer.destroy.resetHistory();
+
+		fakeOS.networkInterfaces.resetHistory();
 
 		clock.restore();
 	});
@@ -52,36 +91,83 @@ describe("lib/discovery => ", () => {
 		const completeDomain = `gw-${gatewayID}.${coapDomain}`;
 		const hostname = `TRADFRI-Gateway-${gatewayID}.local`;
 
-		it("should create a new mdns server instance each call", async () => {
+		// 1 for IPv4, and 1 per IPv6 interface (2)
+		const expectedCallsPerDiscovery = 3;
+
+		it("returns a Promise", () => {
+			discoverGateway().should.be.an.instanceof(Promise);
+		});
+
+		it("should query the network interfaces", async () => {
+			const promise = discoverGateway();
+			clock.runAll();
+
+			fakeOS.networkInterfaces.should.have.been.called;
+		});
+
+		it("should create an mdns instance for the IPv4-catchall address (0.0.0.0)", async () => {
+			const promise = discoverGateway();
+			clock.runAll();
+
+			fakeMDNSPackage.should.have.been.calledWith({
+				interface: "0.0.0.0",
+				type: "udp4",
+			});
+		});
+
+		it("should create an mdns instance for the IPv6 catchall address (::%<name>) of all non-internal interfaces", async () => {
+			const promise = discoverGateway();
+			clock.runAll();
+
+			fakeMDNSPackage.should.have.been.calledWith({
+				interface: "::%external",
+				type: "udp6",
+				ip: IPv6MulticastAddress,
+			});
+			fakeMDNSPackage.should.have.been.calledWith({
+				interface: "::%external2",
+				type: "udp6",
+				ip: IPv6MulticastAddress,
+			});
+		});
+
+		it("should create new mdns instances each call", async () => {
 			let promise = discoverGateway();
 			clock.runAll();
-			await promise;
+			fakeMDNSPackage.callCount.should.equal(expectedCallsPerDiscovery);
 
-			fakeMDNSPackage.should.have.been.calledOnce;
 			promise = discoverGateway();
 			clock.runAll();
-			await promise;
-			fakeMDNSPackage.should.have.been.calledTwice;
+			fakeMDNSPackage.callCount.should.equal(2 * expectedCallsPerDiscovery);
+
+			promise = discoverGateway();
+			clock.runAll();
+			fakeMDNSPackage.callCount.should.equal(3 * expectedCallsPerDiscovery);
 		});
 
 		it("should register a response handler", async () => {
 			const promise = discoverGateway();
 			clock.runAll();
-			await promise;
 			fakeMDNSServer.on.should.have.been.calledWith("response");
 		});
 
-		it("should query the local coap domain for all necessary record types", async () => {
+		it("should register a ready handler", async () => {
 			const promise = discoverGateway();
-			fakeReadyHandler();
 			clock.runAll();
-			await promise;
+			fakeMDNSServer.on.should.have.been.calledWith("ready");
+		});
+
+		it("after the instance is ready, it should query the local coap domain for all necessary record types", async () => {
+			const promise = discoverGateway();
+			clock.runAll();
+
+			fakeReadyHandler();
 
 			function assertQuery(domain: string, type: string) {
 				const args = fakeMDNSServer.query.getCalls()
 					.map(call => Array.isArray(call.args) ? call.args[0] : call.args)
 					.reduce((all, cur) => [...all, ...cur], [])
-				;
+					;
 				args.should.deep.include({
 					name: domain, type,
 				});

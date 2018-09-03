@@ -1,7 +1,12 @@
 "use strict";
-// This is buggy...
+// TODO:
+// - [ ] use multicast-dns package
+// - [ ] manually cycle interfaces and set opts.interface (IPv6 with %<name> suffix)
+// - [ ] use the following opts.ip: IPv4: 224.0.0.251, IPv6: FF02::FB
 Object.defineProperty(exports, "__esModule", { value: true });
-const createMDNSServer = require("mdns-server");
+const objects_1 = require("alcalzone-shared/objects");
+const mdns = require("multicast-dns");
+const os_1 = require("os");
 function parseTXTRecord(data) {
     const ret = {};
     let offset = 0;
@@ -14,65 +19,91 @@ function parseTXTRecord(data) {
     }
     return ret;
 }
+// tslint:disable-next-line:variable-name
+const IPv6_MULTICAST_ADDRESS = "ff02::fb";
+const COAP_DOMAIN = "_coap._udp.local";
 /**
  * Auto-discover a tradfri gateway on the network.
  * @param timeout (optional) Time in milliseconds to wait for a response. Default 10000.
  * Pass false or a negative number to explicitly wait forever.
  */
 function discoverGateway(timeout = 10000) {
-    const mdns = createMDNSServer({
-        reuseAddr: true,
-        loopback: false,
-        noInit: true,
+    const allInterfaces = os_1.networkInterfaces();
+    const externalInterfaces = objects_1.filter(allInterfaces, ifaces => {
+        return ifaces.filter(addr => !addr.internal).length > 0;
     });
-    let timer;
-    const domain = "_coap._udp.local";
+    const ipv4Interfaces = objects_1.filter(allInterfaces, addrs => {
+        return addrs.filter(addr => addr.family === "IPv4").length > 0;
+    });
+    const ipv6Interfaces = objects_1.filter(allInterfaces, addrs => {
+        return addrs.filter(addr => addr.family === "IPv6").length > 0;
+    });
+    const mdnsOptions = [];
+    if (Object.keys(ipv4Interfaces).length > 0) {
+        // we have IPv4 interfaces, so create a listener for them
+        mdnsOptions.push({
+            interface: "0.0.0.0",
+            type: "udp4",
+        });
+    }
+    for (const iface of Object.keys(ipv6Interfaces)) {
+        mdnsOptions.push({
+            interface: `::%${iface}`,
+            type: "udp6",
+            ip: IPv6_MULTICAST_ADDRESS,
+        });
+    }
+    // create all the mdns instances
+    const mdnsInstances = mdnsOptions.map(opts => mdns(opts));
+    function destroyInstances() {
+        mdnsInstances.forEach(inst => inst.destroy());
+    }
     return new Promise((resolve, reject) => {
-        mdns.on("response", (resp) => {
-            const allAnswers = [...resp.answers, ...resp.additionals];
-            const discard = allAnswers.find(a => a.name === domain) == null;
-            if (discard)
-                return;
-            // ensure all record types were received
-            const ptrRecord = allAnswers.find(a => a.type === "PTR");
-            if (!ptrRecord)
-                return;
-            const srvRecord = allAnswers.find(a => a.type === "SRV");
-            if (!srvRecord)
-                return;
-            const txtRecord = allAnswers.find(a => a.type === "TXT");
-            if (!txtRecord)
-                return;
-            const aRecords = allAnswers.filter(a => a.type === "A" || a.type === "AAAA");
-            if (aRecords.length === 0)
-                return;
-            // extract the data
-            const name = /^gw\-[0-9a-f]{12}/.exec(ptrRecord.data)[0];
-            const host = srvRecord.data.target;
-            const { version } = parseTXTRecord(txtRecord.data);
-            const addresses = aRecords.map(a => a.data);
-            if (timer != null)
-                clearTimeout(timer);
-            mdns.destroy();
-            resolve({
-                name, host, version, addresses,
+        let timer;
+        for (const instance of mdnsInstances) {
+            instance.on("response", (packet, rinfo) => {
+                const allAnswers = [...packet.answers, ...packet.additionals];
+                const discard = allAnswers.find(a => a.name === COAP_DOMAIN) == null;
+                if (discard)
+                    return;
+                // ensure all record types were received
+                const ptrRecord = allAnswers.find(a => a.type === "PTR");
+                if (!ptrRecord)
+                    return;
+                const srvRecord = allAnswers.find(a => a.type === "SRV");
+                if (!srvRecord)
+                    return;
+                const txtRecord = allAnswers.find(a => a.type === "TXT");
+                if (!txtRecord)
+                    return;
+                const aRecords = allAnswers.filter(a => a.type === "A" || a.type === "AAAA");
+                if (aRecords.length === 0)
+                    return;
+                // extract the data
+                const name = /^gw\-[0-9a-f]{12}/.exec(ptrRecord.data)[0];
+                const host = srvRecord.data.target;
+                const { version } = parseTXTRecord(txtRecord.data);
+                const addresses = aRecords.map(a => a.data);
+                if (timer != null)
+                    clearTimeout(timer);
+                destroyInstances();
+                resolve({
+                    name, host, version, addresses,
+                });
             });
-        });
-        mdns.on("ready", () => {
-            mdns.query([
-                { name: domain, type: "A" },
-                { name: domain, type: "AAAA" },
-                { name: domain, type: "PTR" },
-                { name: domain, type: "SRV" },
-                { name: domain, type: "TXT" },
-            ]);
-        });
-        mdns.on("error", reject);
-        mdns.initServer();
+            instance.on("ready", () => {
+                instance.query([
+                    { name: COAP_DOMAIN, type: "A" },
+                    { name: COAP_DOMAIN, type: "AAAA" },
+                    { name: COAP_DOMAIN, type: "PTR" },
+                    { name: COAP_DOMAIN, type: "SRV" },
+                    { name: COAP_DOMAIN, type: "TXT" },
+                ]);
+            });
+        }
         if (typeof timeout === "number" && timeout > 0) {
             timer = setTimeout(() => {
-                if (mdns != null)
-                    mdns.destroy();
+                destroyInstances();
                 resolve(null);
             }, timeout);
         }
