@@ -1,8 +1,4 @@
 "use strict";
-// TODO:
-// - [ ] use multicast-dns package
-// - [ ] manually cycle interfaces and set opts.interface (IPv6 with %<name> suffix)
-// - [ ] use the following opts.ip: IPv4: 224.0.0.251, IPv6: FF02::FB
 Object.defineProperty(exports, "__esModule", { value: true });
 const objects_1 = require("alcalzone-shared/objects");
 const mdns = require("multicast-dns");
