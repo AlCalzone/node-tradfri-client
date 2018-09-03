@@ -1,4 +1,5 @@
 "use strict";
+// This is buggy...
 Object.defineProperty(exports, "__esModule", { value: true });
 const createMDNSServer = require("mdns-server");
 function parseTXTRecord(data) {

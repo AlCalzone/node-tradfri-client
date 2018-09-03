@@ -75,6 +75,7 @@ describe("lib/discovery3 => ", () => {
 
 	afterEach(() => {
 		fakeMDNSPackage.resetHistory();
+		fakeMDNSServer.on.resetHistory();
 		fakeMDNSServer.query.resetHistory();
 		fakeMDNSServer.destroy.resetHistory();
 
@@ -100,7 +101,6 @@ describe("lib/discovery3 => ", () => {
 		it("should query the network interfaces", async () => {
 			const promise = discoverGateway();
 			clock.runAll();
-			await promise;
 
 			fakeOS.networkInterfaces.should.have.been.called;
 		});
@@ -108,7 +108,6 @@ describe("lib/discovery3 => ", () => {
 		it("should create an mdns instance for the IPv4-catchall address (0.0.0.0)", async () => {
 			const promise = discoverGateway();
 			clock.runAll();
-			await promise;
 
 			fakeMDNSPackage.should.have.been.calledWith({
 				interface: "0.0.0.0",
@@ -119,7 +118,6 @@ describe("lib/discovery3 => ", () => {
 		it("should create an mdns instance for the IPv6 catchall address (::%<name>) of all non-internal interfaces", async () => {
 			const promise = discoverGateway();
 			clock.runAll();
-			await promise;
 
 			fakeMDNSPackage.should.have.been.calledWith({
 				interface: "::%external",
@@ -136,32 +134,34 @@ describe("lib/discovery3 => ", () => {
 		it("should create new mdns instances each call", async () => {
 			let promise = discoverGateway();
 			clock.runAll();
-			await promise;
 			fakeMDNSPackage.callCount.should.equal(expectedCallsPerDiscovery);
 
 			promise = discoverGateway();
 			clock.runAll();
-			await promise;
 			fakeMDNSPackage.callCount.should.equal(2 * expectedCallsPerDiscovery);
 
 			promise = discoverGateway();
 			clock.runAll();
-			await promise;
 			fakeMDNSPackage.callCount.should.equal(3 * expectedCallsPerDiscovery);
 		});
 
 		it("should register a response handler", async () => {
 			const promise = discoverGateway();
 			clock.runAll();
-			await promise;
 			fakeMDNSServer.on.should.have.been.calledWith("response");
 		});
 
-		it.skip("should query the local coap domain for all necessary record types", async () => {
+		it("should register a ready handler", async () => {
 			const promise = discoverGateway();
-			fakeReadyHandler();
 			clock.runAll();
-			await promise;
+			fakeMDNSServer.on.should.have.been.calledWith("ready");
+		});
+
+		it("after the instance is ready, it should query the local coap domain for all necessary record types", async () => {
+			const promise = discoverGateway();
+			clock.runAll();
+
+			fakeReadyHandler();
 
 			function assertQuery(domain: string, type: string) {
 				const args = fakeMDNSServer.query.getCalls()
@@ -180,7 +180,7 @@ describe("lib/discovery3 => ", () => {
 			assertQuery(coapDomain, "TXT");
 		});
 
-		it.skip("without a service response, discoverGateway() should fulfill with null after the default timeout has elapsed", (done) => {
+		it("without a service response, discoverGateway() should fulfill with null after the default timeout has elapsed", (done) => {
 			const timeout = 10000;
 
 			const leSpy = spy();
@@ -196,7 +196,7 @@ describe("lib/discovery3 => ", () => {
 			clock.tick(timeout - 1);
 		});
 
-		it.skip("without a service response, discoverGateway(timeout) should fulfill with null after the passed timeout has elapsed", (done) => {
+		it("without a service response, discoverGateway(timeout) should fulfill with null after the passed timeout has elapsed", (done) => {
 			const timeout = 5000;
 
 			const leSpy = spy();
@@ -212,7 +212,7 @@ describe("lib/discovery3 => ", () => {
 			clock.tick(timeout - 1);
 		});
 
-		it.skip("without a service response, discoverGateway should never fulfill with the timeout disabled", (done) => {
+		it("without a service response, discoverGateway should never fulfill with the timeout disabled", (done) => {
 			const spy1 = spy();
 			const spy2 = spy();
 			const oneDay = 1000 * 3600 * 24;
@@ -231,7 +231,7 @@ describe("lib/discovery3 => ", () => {
 			clock.tick(oneDay);
 		});
 
-		it.skip("should fulfill the promise with a non-null response when ALL answers have been received", async () => {
+		it("should fulfill the promise with a non-null response when ALL answers have been received", async () => {
 			let promise;
 
 			const completeResponse = {
@@ -306,7 +306,7 @@ describe("lib/discovery3 => ", () => {
 			});
 		});
 
-		it.skip("should discard responses for the wrong domain", async () => {
+		it("should discard responses for the wrong domain", async () => {
 			let promise;
 			const wrongDomain = coapDomain.replace("udp", "tcp");
 

@@ -66,14 +66,59 @@ export function discoverGateway(timeout: number | false = 10000): Promise<Discov
 	}
 	// create all the mdns instances
 	const mdnsInstances = mdnsOptions.map(opts => mdns(opts));
+	function destroyInstances() {
+		mdnsInstances.forEach(inst => inst.destroy());
+	}
 
 	return new Promise((resolve, reject) => {
+		let timer: NodeJS.Timer;
+
 		for (const instance of mdnsInstances) {
 			instance.on("response", (packet, rinfo) => {
+				const allAnswers = [...packet.answers, ...packet.additionals];
+				const discard = allAnswers.find(a => a.name === COAP_DOMAIN) == null;
+				if (discard) return;
 
+				// ensure all record types were received
+				const ptrRecord = allAnswers.find(a => a.type === "PTR");
+				if (!ptrRecord) return;
+				const srvRecord = allAnswers.find(a => a.type === "SRV");
+				if (!srvRecord) return;
+				const txtRecord = allAnswers.find(a => a.type === "TXT");
+				if (!txtRecord) return;
+				const aRecords = allAnswers.filter(a => a.type === "A" || a.type === "AAAA");
+				if (aRecords.length === 0) return;
+
+				// extract the data
+				const name: string = /^gw\-[0-9a-f]{12}/.exec(ptrRecord.data)[0];
+				const host: string = srvRecord.data.target;
+				const { version } = parseTXTRecord(txtRecord.data);
+				const addresses = aRecords.map(a => a.data);
+
+				if (timer != null) clearTimeout(timer);
+				destroyInstances();
+				resolve({
+					name, host, version, addresses,
+				});
+			});
+
+			instance.on("ready", () => {
+				instance.query([
+					{ name: COAP_DOMAIN, type: "A" },
+					{ name: COAP_DOMAIN, type: "AAAA" },
+					{ name: COAP_DOMAIN, type: "PTR" },
+					{ name: COAP_DOMAIN, type: "SRV" },
+					{ name: COAP_DOMAIN, type: "TXT" },
+				]);
 			});
 		}
-		// TODO: Delete this
-		resolve();
+
+		if (typeof timeout === "number" && timeout > 0) {
+			timer = setTimeout(() => {
+				destroyInstances();
+				resolve(null);
+			}, timeout);
+		}
+
 	});
 }
