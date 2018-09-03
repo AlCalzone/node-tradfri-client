@@ -1,5 +1,8 @@
 # Changelog
 
+## __WORK IN PROGRESS__
+* (AlCalzone) Fix gateway discovery on Mac OSX over WiFi
+
 ## 1.3.2 (2018-08-01)
 * (AlCalzone) Retry the initial connection when it fails with an "unexpected error"
 
