@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const createMDNSServer = require("mdns-server");
+const createMDNSServer = require("@alcalzone/mdns-server");
 function parseTXTRecord(data) {
     const ret = {};
     let offset = 0;

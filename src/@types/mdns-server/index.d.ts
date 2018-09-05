@@ -1,6 +1,6 @@
 // tslint:disable:no-namespace
 
-declare module "mdns-server" {
+declare module "@alcalzone/mdns-server" {
 
 	import * as dgram from "dgram";
 	import { EventEmitter } from "events";
