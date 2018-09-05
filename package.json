@@ -63,7 +63,7 @@
   "dependencies": {
     "alcalzone-shared": "^1.0.1",
     "debug": "^3.1.0",
-    "mdns-server": "^1.0.5",
+    "mdns-server": "git+https://github.com/AlCalzone/mdns-server.git",
     "node-coap-client": "^1.0.0",
     "reflect-metadata": "^0.1.12"
   },

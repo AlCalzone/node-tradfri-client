@@ -2,8 +2,7 @@
 
 const { TradfriClient } = require("../");
 const { Notification } = require("../build/lib/notification");
-const { } = require("..")
-const { wait } = require("../build/lib/promises");
+const { wait } = require("alcalzone-shared/async");
 
 async function main() {
 	const tradfri = new TradfriClient("gw-b072bf257a41");
