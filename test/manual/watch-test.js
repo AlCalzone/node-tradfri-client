@@ -1,4 +1,4 @@
-const TradfriClient = require("../").TradfriClient;
+const TradfriClient = require("../../").TradfriClient;
 
 async function main() {
 	const tradfri = new TradfriClient("gw-b072bf257a41", {watchConnection: {

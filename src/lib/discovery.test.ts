@@ -27,7 +27,7 @@ const {
 	discoverGateway,
 	// tslint:disable-next-line:whitespace
 } = proxyquire<typeof import("./discovery")>("./discovery", {
-	"@alcalzone/mdns-server": fakeMDNSPackage,
+	"mdns-server": fakeMDNSPackage,
 });
 
 describe("lib/discovery2 => ", () => {

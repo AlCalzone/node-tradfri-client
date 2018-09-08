@@ -1,4 +1,4 @@
-import * as createMDNSServer from "@alcalzone/mdns-server";
+import * as createMDNSServer from "mdns-server";
 
 export interface DiscoveredGateway {
 	name: string;

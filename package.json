@@ -61,9 +61,9 @@
     "yargs": "^11.0.0"
   },
   "dependencies": {
-    "@alcalzone/mdns-server": "^1.0.6",
     "alcalzone-shared": "^1.0.1",
     "debug": "^3.1.0",
+    "mdns-server": "^1.0.6",
     "node-coap-client": "^1.0.0",
     "reflect-metadata": "^0.1.12"
   },
