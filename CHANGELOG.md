@@ -1,6 +1,6 @@
 # Changelog
 
-## __WORK IN PROGRESS__
+## 1.3.4 (2018-09-08)
 * (AlCalzone) Fix gateway discovery on Mac OSX over WiFi
 
 ## 1.3.2 (2018-08-01)
