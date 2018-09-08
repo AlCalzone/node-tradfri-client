@@ -1,2 +1,2 @@
-const { discoverGateway } = require("../build");
+const { discoverGateway } = require("../../");
 discoverGateway().then(console.dir);

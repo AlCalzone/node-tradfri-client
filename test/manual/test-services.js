@@ -1,7 +1,7 @@
 // @ts-check
 
-const { TradfriClient } = require("../");
-const { Notification } = require("../build/lib/notification");
+const { TradfriClient } = require("../../");
+const { Notification } = require("../../build/lib/notification");
 const { wait } = require("alcalzone-shared/async");
 
 async function main() {
