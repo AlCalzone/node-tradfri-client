@@ -2,7 +2,7 @@ import { clamp } from "alcalzone-shared/math";
 import { Accessory } from "./accessory";
 import { conversions, deserializers, serializers } from "./conversions";
 import { IPSODevice } from "./ipsoDevice";
-import { deserializeWith, doNotSerialize, ipsoKey, IPSOOptions, PropertyTransform, required, serializeWith } from "./ipsoObject";
+import { deserializeWith, doNotSerialize, ipsoKey, IPSOOptions, required, serializeWith } from "./ipsoObject";
 import { MAX_COLOR, predefinedColors, whiteSpectrumHex } from "./predefined-colors";
 
 // see https://github.com/hreichert/smarthome/blob/master/extensions/binding/org.eclipse.smarthome.binding.tradfri/src/main/java/org/eclipse/smarthome/binding/modules/internal/TradfriColor.java
@@ -347,7 +347,7 @@ function createRGBProxy<T extends Light>(raw: boolean = false) {
 			default: return me[key as keyof T];
 		}
 	}
-	function set(me: T, key: PropertyKey, value: any, receiver: any) {
+	function set(me: T, key: PropertyKey, value: any) {
 		switch (key) {
 			case "color": {
 				if (predefinedColors.has(value)) {
@@ -365,7 +365,7 @@ function createRGBProxy<T extends Light>(raw: boolean = false) {
 					if (rgbRegex.test(value)) {
 						// calculate the X/Y values
 						const { r, g, b } = conversions.rgbFromString(value);
-						const { h, s, v } = conversions.rgbToHSV(r, g, b);
+						const { h, s /* ignore v */ } = conversions.rgbToHSV(r, g, b);
 						if (raw) {
 							me.hue = Math.round(h / 360 * MAX_COLOR);
 							me.saturation = Math.round(s * MAX_COLOR);

@@ -1,6 +1,6 @@
 import { DeviceInfo } from "./deviceInfo";
 import { IPSODevice } from "./ipsoDevice";
-import { deserializeWith, ipsoKey, required, serializeWith } from "./ipsoObject";
+import { deserializeWith, ipsoKey } from "./ipsoObject";
 import { Light } from "./light";
 import { OperationProvider } from "./operation-provider";
 import { Plug } from "./plug";

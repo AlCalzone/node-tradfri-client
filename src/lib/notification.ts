@@ -1,6 +1,5 @@
 import { UpdatePriority } from "./gatewayDetails";
-import { IPSODevice } from "./ipsoDevice";
-import { deserializeWith, ipsoKey, IPSOObject, PropertyTransform, required, serializeWith } from "./ipsoObject";
+import { deserializeWith, ipsoKey, IPSOObject } from "./ipsoObject";
 
 export class Notification extends IPSOObject {
 

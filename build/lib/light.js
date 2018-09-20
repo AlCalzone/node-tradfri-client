@@ -340,7 +340,7 @@ function createRGBProxy(raw = false) {
             default: return me[key];
         }
     }
-    function set(me, key, value, receiver) {
+    function set(me, key, value) {
         switch (key) {
             case "color": {
                 if (predefined_colors_1.predefinedColors.has(value)) {
@@ -360,7 +360,7 @@ function createRGBProxy(raw = false) {
                     if (rgbRegex.test(value)) {
                         // calculate the X/Y values
                         const { r, g, b } = conversions_1.conversions.rgbFromString(value);
-                        const { h, s, v } = conversions_1.conversions.rgbToHSV(r, g, b);
+                        const { h, s /* ignore v */ } = conversions_1.conversions.rgbToHSV(r, g, b);
                         if (raw) {
                             me.hue = Math.round(h / 360 * predefined_colors_1.MAX_COLOR);
                             me.saturation = Math.round(s * predefined_colors_1.MAX_COLOR);

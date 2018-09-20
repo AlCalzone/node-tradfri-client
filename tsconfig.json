@@ -16,6 +16,8 @@
         "watch": false, // true breaks circleci
 
         "noImplicitAny": true,
+        "noImplicitThis": true,
+        "noUnusedLocals": true
     },
     "include": [
         "src/**/*.ts"

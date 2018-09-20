@@ -1,6 +1,6 @@
 import { deserializers, serializers } from "./conversions";
 import { IPSODevice } from "./ipsoDevice";
-import { deserializeWith, ipsoKey, IPSOObject, PropertyTransform, required, serializeWith } from "./ipsoObject";
+import { deserializeWith, ipsoKey, serializeWith } from "./ipsoObject";
 
 /* istanbul ignore next */
 export class Plug extends IPSODevice {

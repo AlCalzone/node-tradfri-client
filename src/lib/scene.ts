@@ -1,5 +1,5 @@
 import { IPSODevice } from "./ipsoDevice";
-import { deserializeWith, ipsoKey, PropertyTransform, required, serializeWith } from "./ipsoObject";
+import { deserializeWith, ipsoKey } from "./ipsoObject";
 import { LightSetting } from "./lightSetting";
 
 export class Scene extends IPSODevice {
