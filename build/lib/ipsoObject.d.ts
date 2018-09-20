@@ -6,7 +6,7 @@ export interface PropertyTransform extends PropertyTransformKernel {
     /** If this transform requires arrays to be split */
     splitArrays: boolean;
 }
-export declare type RequiredPredicate = (me: IPSOObject, reference: IPSOObject) => boolean;
+export declare type RequiredPredicate = (me: IPSOObject, reference?: IPSOObject) => boolean;
 /**
  * Defines the ipso key neccessary to serialize a property to a CoAP object
  */
@@ -75,7 +75,7 @@ export declare class IPSOObject {
      * @param set Custom setter trap (optional). This is called after mandatory traps are in place and before default behavior
      */
     createProxy(get?: (me: this, key: PropertyKey) => any, set?: (me: this, key: PropertyKey, value: any, receiver: any) => boolean): this;
-    protected client: OperationProvider;
+    protected client: OperationProvider | undefined;
     /**
      * Fixes property values that are known to be bugged
      */

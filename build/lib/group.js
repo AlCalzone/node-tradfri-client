@@ -57,6 +57,7 @@ class Group extends ipsoDevice_1.IPSODevice {
         }, true);
     }
     operateGroup(operation, transitionTime) {
+        this.ensureLink();
         if (transitionTime != null) {
             transitionTime = Math.max(0, transitionTime);
             operation.transitionTime = transitionTime;

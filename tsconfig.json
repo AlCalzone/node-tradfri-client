@@ -1,31 +1,33 @@
 {
-    "compileOnSave": true,
-    "compilerOptions": {
-        "declaration": true,
-        "module": "commonjs",
-        "moduleResolution": "node",
-        "noEmitOnError": true,
-        "outDir": "build/",
-        "removeComments": false,
-        "experimentalDecorators": true,
-        "emitDecoratorMetadata": true,
-        "sourceMap": false,
-        "inlineSourceMap": false,
-        "stripInternal": true,
-        "target": "es2015",
-        "watch": false, // true breaks circleci
+	"compileOnSave": true,
+	"compilerOptions": {
+		"declaration": true,
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"noEmitOnError": true,
+		"outDir": "build/",
+		"removeComments": false,
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
+		"sourceMap": false,
+		"inlineSourceMap": false,
+		"stripInternal": true,
+		"target": "es2015",
+		"watch": false, // true breaks circleci
 
-        "noImplicitAny": true,
-        "noImplicitThis": true,
-        "noUnusedLocals": true,
-        "noUnusedParameters": true
-    },
-    "include": [
-        "src/**/*.ts"
-    ],
-    "exclude": [
-        "src/**/*.test.ts",
-        "build/**",
-        "node_modules/**"
-    ]
+		"noImplicitAny": true,
+		"noImplicitThis": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"strictPropertyInitialization": true,
+		"strictNullChecks": true
+	},
+	"include": [
+		"src/**/*.ts"
+	],
+	"exclude": [
+		"src/**/*.test.ts",
+		"build/**",
+		"node_modules/**"
+	]
 }

@@ -40,7 +40,7 @@ function buildPropertyTransform(
 	return ret;
 }
 
-export type RequiredPredicate = (me: IPSOObject, reference: IPSOObject) => boolean;
+export type RequiredPredicate = (me: IPSOObject, reference?: IPSOObject) => boolean;
 
 /**
  * Defines the ipso key neccessary to serialize a property to a CoAP object
@@ -64,13 +64,13 @@ export const ipsoKey = (key: string): PropertyDecorator => {
  * @param keyOrProperty - ipso key or property name to lookup
  */
 // TODO: in TS 2.8 type keyOrProperty with conditional types
-function lookupKeyOrProperty<T extends IPSOObject>(target: T, keyOrProperty: string /*| keyof T*/): string /*| keyof T*/ {
+function lookupKeyOrProperty<T extends IPSOObject>(target: T, keyOrProperty: string /*| keyof T*/): string | undefined /*| keyof T*/ {
 	// get the class constructor
 	const constr = target.constructor;
 	// retrieve the current metadata
 	const metadata = Reflect.getMetadata(METADATA_ipsoKey, constr) || {};
 	if (metadata.hasOwnProperty(keyOrProperty)) return metadata[keyOrProperty];
-	return null;
+	return undefined;
 }
 
 /**
@@ -92,7 +92,7 @@ export const required = (predicate: boolean | RequiredPredicate = true): Propert
  * Checks if a property is required to be present in a serialized CoAP object
  * @param property - property name to lookup
  */
-function isRequired<T extends IPSOObject>(target: T, reference: T, property: keyof T): boolean {
+function isRequired<T extends IPSOObject>(target: T, reference: T | undefined, property: keyof T): boolean {
 	// get the class constructor
 	const constr = target.constructor;
 	log(`${constr.name}: checking if ${property} is required...`, "silly");
@@ -151,7 +151,7 @@ const defaultSerializers: Record<string, PropertyTransform> = {
 /**
  * Retrieves the serializer for a given property
  */
-function getSerializer<T extends IPSOObject>(target: T, property: string /* | keyof T*/): PropertyTransform {
+function getSerializer<T extends IPSOObject>(target: T, property: string /* | keyof T*/): PropertyTransform | undefined {
 	// get the class constructor
 	const constr = target.constructor;
 	// retrieve the current metadata
@@ -216,7 +216,7 @@ const defaultDeserializers: Record<string, PropertyTransform> = {
 /**
  * Retrieves the deserializer for a given property
  */
-function getDeserializer<T extends IPSOObject>(target: T, property: string /*| keyof T*/): PropertyTransform {
+function getDeserializer<T extends IPSOObject>(target: T, property: string /*| keyof T*/): PropertyTransform | undefined {
 	// get the class constructor
 	const constr = target.constructor;
 	// retrieve the current metadata
@@ -287,9 +287,9 @@ export class IPSOObject {
 	 */
 	public parse(obj: Record<string, any>): this {
 		for (const [key, value] of entries(obj)) {
-			let deserializer: PropertyTransform = getDeserializer(this, key);
+			let deserializer: PropertyTransform | undefined = getDeserializer(this, key);
 			// key might be ipso key or property name
-			let propName: string; // keyof this | string;
+			let propName: string | undefined; // keyof this | string;
 			if (deserializer == null) {
 				// deserializers are defined by property name, so key is actually the key
 				propName = lookupKeyOrProperty(this, key);
@@ -346,7 +346,7 @@ export class IPSOObject {
 	}
 
 	/** serializes this object in order to transfer it via COAP */
-	public serialize(reference: this = null): Record<string, any> {
+	public serialize(reference?: this): Record<string, any> {
 		// unproxy objects before serialization
 		if (this.isProxy) return this.unproxy().serialize(reference);
 		if (
@@ -427,7 +427,7 @@ export class IPSOObject {
 				}
 
 				// only output the value if it's != null
-				if (value != null) ret[key] = value;
+				if (!!value && !!key) ret[key] = value;
 			}
 		}
 
@@ -528,7 +528,7 @@ export class IPSOObject {
 		});
 	}
 
-	@doNotSerialize protected client: OperationProvider;
+	@doNotSerialize protected client: OperationProvider | undefined;
 	/**
 	 * Link this object to a TradfriClient for a simplified API.
 	 * @internal

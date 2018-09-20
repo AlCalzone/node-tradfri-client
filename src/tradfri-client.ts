@@ -132,7 +132,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	private ipsoOptions: IPSOOptions = {};
 
 	/** Automatic connection watching */
-	private watcher: ConnectionWatcher;
+	private watcher: ConnectionWatcher | undefined;
 	/** A dictionary of the observer callbacks. Used to restore it after a soft reset */
 	private rememberedObserveCallbacks = new Map<string, (resp: CoapResponse) => void>();
 
@@ -185,14 +185,16 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		const maxAttempts = (this.watcher != null && this.watcher.options.reconnectionEnabled) ?
 			this.watcher.options.maximumConnectionAttempts :
 			1;
-		const interval = this.watcher != null && this.watcher.options.connectionInterval;
-		const backoffFactor = this.watcher != null && this.watcher.options.failedConnectionBackoffFactor;
+		const interval = this.watcher && this.watcher.options.connectionInterval;
+		const backoffFactor = this.watcher && this.watcher.options.failedConnectionBackoffFactor;
 
 		let lastFailureReason: "timeout" | Error;
 
 		for (let attempt = 0; attempt < maxAttempts; attempt++) {
 			if (attempt > 0) {
-				const nextTimeout = Math.round(interval * backoffFactor ** Math.min(5, attempt - 1));
+				// If the reconnection is not enabled, we don't hit this branch,
+				// so interval and backoffFactor are defined
+				const nextTimeout = Math.round(interval! * backoffFactor! ** Math.min(5, attempt - 1));
 				log(`retrying connection in ${nextTimeout} ms`, "debug");
 				await wait(nextTimeout);
 			}
@@ -238,14 +240,18 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 			}
 		}
 
-		if (lastFailureReason === "timeout") {
+		if (lastFailureReason! === "timeout") {
 			throw new TradfriError(
 				`The gateway did not respond ${maxAttempts === 1 ? "in time" : `after ${maxAttempts} tries`}.`,
 				TradfriErrorCodes.ConnectionTimedOut,
 			);
 		} else {
+			// @ts-ignore This is a false positive, lastFailureReason is an Error instance
+			// https://github.com/Microsoft/TypeScript/issues/27239
 			lastFailureReason.message =
 				`Could not connect to the gateway${maxAttempts === 1 ? "" : ` after ${maxAttempts} tries`}:\n`
+				// @ts-ignore This is a false positive, lastFailureReason is an Error instance
+				// https://github.com/Microsoft/TypeScript/issues/27239
 				+ lastFailureReason.message
 			;
 			throw lastFailureReason;
@@ -325,7 +331,8 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 			);
 		}
 		// the response is a buffer containing a JSON object as a string
-		const pskResponse = JSON.parse(response.payload.toString("utf8"));
+		// TODO: check when payload is defined and when not
+		const pskResponse = JSON.parse(response.payload!.toString("utf8"));
 		const psk = pskResponse["9091"];
 
 		return { identity, psk };
@@ -441,7 +448,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	// =================================================================================
 	// =================================================================================
 
-	private observeDevicesPromise: DeferredPromise<void>;
+	private observeDevicesPromise: DeferredPromise<void> | undefined;
 	/**
 	 * Sets up an observer for all devices
 	 * @returns A promise that resolves when the information about all devices has been received.
@@ -490,11 +497,11 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 					if (result) {
 						if (newKeys.every(k => k in this.devices)) {
 							this.observeDevicesPromise.resolve();
-							this.observeDevicesPromise = null;
+							this.observeDevicesPromise = undefined;
 						}
 					} else {
 						this.observeDevicesPromise.reject(`The device with the id ${id} could not be observed`);
-						this.observeDevicesPromise = null;
+						this.observeDevicesPromise = undefined;
 					}
 				}
 			};
@@ -557,8 +564,8 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	// =================================================================================
 	// =================================================================================
 
-	private observeGroupsPromise: DeferredPromise<void>;
-	private observeScenesPromises: Map<number, DeferredPromise<void>>;
+	private observeGroupsPromise: DeferredPromise<void> | undefined;
+	private observeScenesPromises: Map<number, DeferredPromise<void>> | undefined;
 	/**
 	 * Sets up an observer for all groups and scenes
 	 * @returns A promise that resolves when the information about all groups and scenes has been received.
@@ -615,25 +622,25 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 						if (newKeys.every(k => k in this.groups)) {
 							// once we have all groups, wait for all scenes to be received
 							Promise
-								.all(this.observeScenesPromises.values())
+								.all(this.observeScenesPromises!.values())
 								.then(() => {
-									this.observeGroupsPromise.resolve();
-									this.observeGroupsPromise = null;
-									this.observeScenesPromises = null;
+									this.observeGroupsPromise!.resolve();
+									this.observeGroupsPromise = undefined;
+									this.observeScenesPromises = undefined;
 								})
 								.catch(reason => {
 									// in some cases, the promises can be null here
 									if (this.observeGroupsPromise != null) {
 										this.observeGroupsPromise.reject(reason);
 									}
-									this.observeGroupsPromise = null;
-									this.observeScenesPromises = null;
+									this.observeGroupsPromise = undefined;
+									this.observeScenesPromises = undefined;
 								})
 								;
 						}
 					} else {
 						this.observeGroupsPromise.reject(`The group with the id ${id} could not be observed`);
-						this.observeGroupsPromise = null;
+						this.observeGroupsPromise = undefined;
 					}
 				}
 			};
@@ -694,7 +701,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		if (!(instanceId in this.groups)) {
 			// if there's none, create one
 			this.groups[instanceId] = {
-				group: null,
+				group: undefined!, // we assign this immediately afterwards
 				scenes: {},
 			};
 		}
@@ -748,10 +755,10 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 					const scenePromise = this.observeScenesPromises.get(groupId);
 					if (result) {
 						if (newKeys.every(k => k in groupInfo.scenes)) {
-							scenePromise.resolve();
+							if (!!scenePromise) scenePromise.resolve();
 						}
 					} else {
-						scenePromise.reject(`The scene with the id ${id} could not be observed`);
+						if (!!scenePromise) scenePromise.reject(`The scene with the id ${id} could not be observed`);
 					}
 				}
 			};
@@ -804,7 +811,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	// =================================================================================
 	// =================================================================================
 
-	private observeGatewayPromise: DeferredPromise<void>;
+	private observeGatewayPromise: DeferredPromise<void> | undefined;
 	/**
 	 * Sets up an observer for the gateway
 	 * @returns A promise that resolves when the gateway information has been received for the first time
@@ -821,7 +828,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 			(resp) => this.observeGateway_callback(resp),
 		).catch(e => {
 			// pass errors through
-			if (this.observeGateway != null) this.observeGatewayPromise.reject(e);
+			if (!!this.observeGatewayPromise) this.observeGatewayPromise.reject(e);
 		});
 		return this.observeGatewayPromise;
 	}
@@ -838,7 +845,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 				log(`  => not successful`);
 				if (this.observeGatewayPromise != null) {
 					this.observeGatewayPromise.reject(`The gateway could not be observed`);
-					this.observeGatewayPromise = null;
+					this.observeGatewayPromise = undefined;
 				}
 				return;
 			}
@@ -858,7 +865,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 
 		if (this.observeGatewayPromise != null) {
 			this.observeGatewayPromise.resolve();
-			this.observeGatewayPromise = null;
+			this.observeGatewayPromise = undefined;
 		}
 
 	}
@@ -869,7 +876,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 
 	// =================================================================================
 
-	private observeNotificationsPromise: DeferredPromise<void>;
+	private observeNotificationsPromise: DeferredPromise<void> | undefined;
 	/**
 	 * Sets up an observer for the notification
 	 * @returns A promise that resolves when a notification has been received for the first time
@@ -886,7 +893,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 			(resp) => this.observeNotifications_callback(resp),
 		).catch(e => {
 			// pass errors through
-			if (this.observeNotifications != null) this.observeNotificationsPromise.reject(e);
+			if (!!this.observeNotificationsPromise) this.observeNotificationsPromise.reject(e);
 		});
 		return this.observeNotificationsPromise;
 	}
@@ -903,7 +910,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 				log(`  => not successful`);
 				if (this.observeNotificationsPromise != null) {
 					this.observeNotificationsPromise.reject(`The notifications could not be observed`);
-					this.observeNotificationsPromise = null;
+					this.observeNotificationsPromise = undefined;
 				}
 				return;
 			}
@@ -933,7 +940,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 
 		if (this.observeNotificationsPromise != null) {
 			this.observeNotificationsPromise.resolve();
-			this.observeNotificationsPromise = null;
+			this.observeNotificationsPromise = undefined;
 		}
 
 	}
@@ -1124,7 +1131,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		const resp = await this.swallowInternalCoapRejections(coap.request(
 			`${this.requestBase}${path}`,
 			method,
-			jsonPayload as Buffer,
+			jsonPayload! as Buffer,
 		));
 		return {
 			code: resp.code.toString(),

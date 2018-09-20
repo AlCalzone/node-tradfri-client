@@ -64,7 +64,7 @@ function lookupKeyOrProperty(target, keyOrProperty /*| keyof T*/) {
     const metadata = Reflect.getMetadata(METADATA_ipsoKey, constr) || {};
     if (metadata.hasOwnProperty(keyOrProperty))
         return metadata[keyOrProperty];
-    return null;
+    return undefined;
 }
 /**
  * Declares that a property is required to be present in a serialized CoAP object
@@ -300,7 +300,7 @@ class IPSOObject {
         return this;
     }
     /** serializes this object in order to transfer it via COAP */
-    serialize(reference = null) {
+    serialize(reference) {
         // unproxy objects before serialization
         if (this.isProxy)
             return this.unproxy().serialize(reference);
@@ -382,7 +382,7 @@ class IPSOObject {
                     value = serializeValue(propName, value, refValue, serializer);
                 }
                 // only output the value if it's != null
-                if (value != null)
+                if (!!value && !!key)
                     ret[key] = value;
             }
         }

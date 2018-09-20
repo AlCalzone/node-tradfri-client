@@ -12,7 +12,7 @@ export class Scene extends IPSODevice {
 
 	@ipsoKey("15013")
 	@deserializeWith(obj => new LightSetting().parse(obj))
-	public lightSettings: LightSetting[];
+	public lightSettings: LightSetting[] = [];
 
 	@ipsoKey("9057")
 	public sceneIndex: number = 0; // <int>

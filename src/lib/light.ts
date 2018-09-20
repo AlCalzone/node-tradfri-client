@@ -36,8 +36,11 @@ export class Light extends IPSODevice {
 		}
 	}
 
-	@doNotSerialize private _modelName: string;
-	@doNotSerialize private _accessory: Accessory;
+	@doNotSerialize private _modelName: string | undefined;
+	@doNotSerialize private _accessory: Accessory | undefined;
+
+	// All properties only exist after the light has been received from the gateway
+	// so they are definitely assigned!
 
 	@ipsoKey("5706")
 	@doNotSerialize // this is done through hue/saturation
@@ -49,32 +52,32 @@ export class Light extends IPSODevice {
 	@serializeWith(serializers.hue)
 	@deserializeWith(deserializers.hue)
 	@required((me: Light, ref: Light) => ref != null && me.saturation !== ref.saturation) // force hue to be present if saturation is
-	public hue: number; // 0-360
+	public hue!: number; // 0-360
 	@ipsoKey("5708")
 	@serializeWith(serializers.saturation)
 	@deserializeWith(deserializers.saturation)
 	@required((me: Light, ref: Light) => ref != null && me.hue !== ref.hue) // force saturation to be present if hue is
-	public saturation: number; // 0-100%
+	public saturation!: number; // 0-100%
 
 	@ipsoKey("5709")
 	@doNotSerialize
-	public colorX: number; // int
+	public colorX!: number; // int
 
 	@ipsoKey("5710")
 	@doNotSerialize
-	public colorY: number; // int
+	public colorY!: number; // int
 
 	// As of Gateway version v1.3.14, this is finally supported
 	@ipsoKey("5711")
 	@serializeWith(serializers.colorTemperature)
 	@deserializeWith(deserializers.colorTemperature)
-	public colorTemperature: number;
+	public colorTemperature!: number;
 
 	// This property was added in Gateway v1.3.14
 	// not sure what it does, as it is not in the IKEA app yet
 	/** @internal */
 	@ipsoKey("5717")
-	public UNKNOWN1: any;
+	public UNKNOWN1!: any;
 
 	@ipsoKey("5712")
 	@required()
@@ -83,24 +86,24 @@ export class Light extends IPSODevice {
 	public transitionTime: number = 0.5; // <float>
 
 	@ipsoKey("5805")
-	public cumulativeActivePower: number; // <float>
+	public cumulativeActivePower!: number; // <float>
 
 	@ipsoKey("5851")
 	@serializeWith(serializers.brightness)
 	@deserializeWith(deserializers.brightness)
-	public dimmer: number; // <int> [0..100]
+	public dimmer!: number; // <int> [0..100]
 
 	@ipsoKey("5850")
-	public onOff: boolean;
+	public onOff!: boolean;
 
 	@ipsoKey("5852")
-	public onTime: number; // <int>
+	public onTime!: number; // <int>
 
 	@ipsoKey("5820")
-	public powerFactor: number; // <float>
+	public powerFactor!: number; // <float>
 
 	@ipsoKey("5701")
-	public unit: string;
+	public unit!: string;
 
 	/**
 	 * Returns true if the current lightbulb is dimmable
@@ -125,7 +128,7 @@ export class Light extends IPSODevice {
 	/**
 	 * Returns the supported color spectrum of the lightbulb
 	 */
-	private _spectrum: Spectrum = null;
+	private _spectrum: Spectrum | undefined;
 	public get spectrum(): Spectrum {
 		if (this._spectrum == null) {
 			// determine the spectrum
@@ -176,7 +179,7 @@ export class Light extends IPSODevice {
 	/** Turn this lightbulb on */
 	public turnOn(): Promise<boolean> {
 		this.ensureLink();
-		return this.client.operateLight(this._accessory, {
+		return this.client!.operateLight(this._accessory!, {
 			onOff: true,
 		});
 	}
@@ -184,7 +187,7 @@ export class Light extends IPSODevice {
 	/** Turn this lightbulb off */
 	public turnOff(): Promise<boolean> {
 		this.ensureLink();
-		return this.client.operateLight(this._accessory, {
+		return this.client!.operateLight(this._accessory!, {
 			onOff: false,
 		});
 	}
@@ -192,17 +195,18 @@ export class Light extends IPSODevice {
 	/** Toggles this lightbulb on or off */
 	public toggle(value: boolean = !this.onOff): Promise<boolean> {
 		this.ensureLink();
-		return this.client.operateLight(this._accessory, {
+		return this.client!.operateLight(this._accessory!, {
 			onOff: value,
 		});
 	}
 
 	private operateLight(operation: LightOperation, transitionTime?: number): Promise<boolean> {
+		this.ensureLink();
 		if (transitionTime != null) {
 			transitionTime = Math.max(0, transitionTime);
 			operation.transitionTime = transitionTime;
 		}
-		return this.client.operateLight(this._accessory, operation);
+		return this.client!.operateLight(this._accessory!, operation);
 	}
 
 	/**
@@ -352,7 +356,7 @@ function createRGBProxy<T extends Light>(raw: boolean = false) {
 			case "color": {
 				if (predefinedColors.has(value)) {
 					// its a predefined color, use the predefined values
-					const definition = predefinedColors.get(value);
+					const definition = predefinedColors.get(value)!; // we checked with `has`
 					if (raw) {
 						me.hue = definition.hue_raw;
 						me.saturation = definition.saturation_raw;

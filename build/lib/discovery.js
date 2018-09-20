@@ -46,7 +46,8 @@ function discoverGateway(timeout = 10000) {
             if (aRecords.length === 0)
                 return;
             // extract the data
-            const name = /^gw\-[0-9a-f]{12}/.exec(ptrRecord.data)[0];
+            const match = /^gw\-[0-9a-f]{12}/.exec(ptrRecord.data);
+            const name = !!match ? match[0] : "unknown";
             const host = srvRecord.data.target;
             const { version } = parseTXTRecord(txtRecord.data);
             const addresses = aRecords.map(a => a.data);

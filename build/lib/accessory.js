@@ -25,6 +25,8 @@ var AccessoryTypes;
 })(AccessoryTypes = exports.AccessoryTypes || (exports.AccessoryTypes = {}));
 class Accessory extends ipsoDevice_1.IPSODevice {
     constructor() {
+        // All properties only exist after the light has been received from the gateway
+        // so they are definitely assigned!
         super(...arguments);
         this.type = AccessoryTypes.remote;
         this.alive = false;

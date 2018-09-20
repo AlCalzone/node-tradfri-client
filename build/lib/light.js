@@ -18,12 +18,10 @@ const predefined_colors_1 = require("./predefined-colors");
 class Light extends ipsoDevice_1.IPSODevice {
     constructor(options, accessory) {
         super(options);
+        // All properties only exist after the light has been received from the gateway
+        // so they are definitely assigned!
         this.color = "f1e0b5"; // hex string
         this.transitionTime = 0.5; // <float>
-        /**
-         * Returns the supported color spectrum of the lightbulb
-         */
-        this._spectrum = null;
         // In order for the simplified API to work, the
         // accessory reference must be a proxy
         if (accessory != null && !accessory.isProxy) {
@@ -122,6 +120,7 @@ class Light extends ipsoDevice_1.IPSODevice {
         });
     }
     operateLight(operation, transitionTime) {
+        this.ensureLink();
         if (transitionTime != null) {
             transitionTime = Math.max(0, transitionTime);
             operation.transitionTime = transitionTime;
@@ -234,11 +233,11 @@ class Light extends ipsoDevice_1.IPSODevice {
 }
 __decorate([
     ipsoObject_1.doNotSerialize,
-    __metadata("design:type", String)
+    __metadata("design:type", Object)
 ], Light.prototype, "_modelName", void 0);
 __decorate([
     ipsoObject_1.doNotSerialize,
-    __metadata("design:type", accessory_1.Accessory)
+    __metadata("design:type", Object)
 ], Light.prototype, "_accessory", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("5706"),
@@ -345,7 +344,7 @@ function createRGBProxy(raw = false) {
             case "color": {
                 if (predefined_colors_1.predefinedColors.has(value)) {
                     // its a predefined color, use the predefined values
-                    const definition = predefined_colors_1.predefinedColors.get(value);
+                    const definition = predefined_colors_1.predefinedColors.get(value); // we checked with `has`
                     if (raw) {
                         me.hue = definition.hue_raw;
                         me.saturation = definition.saturation_raw;

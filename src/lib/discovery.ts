@@ -26,7 +26,7 @@ function parseTXTRecord(data: Buffer) {
  * @param timeout (optional) Time in milliseconds to wait for a response. Default 10000.
  * Pass false or a negative number to explicitly wait forever.
  */
-export function discoverGateway(timeout: number | false = 10000): Promise<DiscoveredGateway> {
+export function discoverGateway(timeout: number | false = 10000): Promise<DiscoveredGateway | null> {
 	const mdns = createMDNSServer({
 		reuseAddr: true,
 		loopback: false,
@@ -55,7 +55,8 @@ export function discoverGateway(timeout: number | false = 10000): Promise<Discov
 			if (aRecords.length === 0) return;
 
 			// extract the data
-			const name: string = /^gw\-[0-9a-f]{12}/.exec(ptrRecord.data)[0];
+			const match = /^gw\-[0-9a-f]{12}/.exec(ptrRecord.data);
+			const name: string = !!match ? match[0] : "unknown";
 			const host: string = srvRecord.data.target;
 			const { version } = parseTXTRecord(txtRecord.data);
 			const addresses = aRecords.map(a => a.data);

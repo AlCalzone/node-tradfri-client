@@ -16,12 +16,15 @@ export enum AccessoryTypes {
 
 export class Accessory extends IPSODevice {
 
+	// All properties only exist after the light has been received from the gateway
+	// so they are definitely assigned!
+
 	@ipsoKey("5750")
 	public type: AccessoryTypes = AccessoryTypes.remote;
 
 	@ipsoKey("3")
-	@deserializeWith((obj, me) => new DeviceInfo(me.options).parse(obj))
-	public deviceInfo: DeviceInfo;
+	@deserializeWith((obj, me: Accessory) => new DeviceInfo(me.options).parse(obj))
+	public deviceInfo!: DeviceInfo;
 
 	@ipsoKey("9019")
 	public alive: boolean = false;
@@ -31,19 +34,19 @@ export class Accessory extends IPSODevice {
 
 	@ipsoKey("3311")
 	@deserializeWith((obj, me: Accessory) => new Light(me.options, me).parse(obj))
-	public lightList: Light[];
+	public lightList!: Light[];
 
 	@ipsoKey("3312")
-	@deserializeWith((obj, me) => new Plug(me.options).parse(obj))
-	public plugList: Plug[];
+	@deserializeWith((obj, me: Accessory) => new Plug(me.options).parse(obj))
+	public plugList!: Plug[];
 
 	@ipsoKey("3300")
-	@deserializeWith((obj, me) => new Sensor(me.options).parse(obj))
-	public sensorList: Sensor[];
+	@deserializeWith((obj, me: Accessory) => new Sensor(me.options).parse(obj))
+	public sensorList!: Sensor[];
 
 	@ipsoKey("15009")
-	@deserializeWith((obj, me) => new IPSODevice(me.options).parse(obj))
-	public switchList: IPSODevice[]; // <[Switch]> // seems unsupported atm.
+	@deserializeWith((obj, me: Accessory) => new IPSODevice(me.options).parse(obj))
+	public switchList!: IPSODevice[]; // <[Switch]> // seems unsupported atm.
 
 	@ipsoKey("9054")
 	public otaUpdateState: number = 0; // boolean?

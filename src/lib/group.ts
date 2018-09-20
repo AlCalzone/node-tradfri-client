@@ -11,22 +11,25 @@ export interface GroupInfo {
 
 export class Group extends IPSODevice {
 
+	// All properties only exist after the light has been received from the gateway
+	// so they are definitely assigned!
+
 	@ipsoKey("5850")
 	@required((me: Group, ref: Group) => ref != null && me.sceneId !== ref.sceneId) // force on/off to be present if sceneId is
-	public onOff: boolean; // <bool>
+	public onOff!: boolean; // <bool>
 
 	@ipsoKey("5851")
 	@serializeWith(serializers.brightness)
 	@deserializeWith(deserializers.brightness)
-	public dimmer: number; // <int> [0..100]
+	public dimmer!: number; // <int> [0..100]
 
 	@ipsoKey("9039")
-	public sceneId: number;
+	public sceneId!: number;
 
 	@ipsoKey("9018")
 	@deserializeWith(obj => parseAccessoryLink(obj))
 	@serializeWith(ids => toAccessoryLink(ids), {splitArrays: false})
-	public deviceIDs: number[];
+	public deviceIDs!: number[];
 
 	// The transition time is not reported by the gateway
 	// but it accepts it for a state change
@@ -36,7 +39,7 @@ export class Group extends IPSODevice {
 	@required((me: Group, ref: Group) => ref != null && me.dimmer !== ref.dimmer)
 	@serializeWith(serializers.transitionTime, {neverSkip: true})
 	@deserializeWith(deserializers.transitionTime, {neverSkip: true})
-	public transitionTime: number; // <float>
+	public transitionTime!: number; // <float>
 
 	// =================================
 	// Simplified API access
@@ -53,7 +56,7 @@ export class Group extends IPSODevice {
 	/** Turn all lightbulbs on */
 	public turnOn(): Promise<boolean> {
 		this.ensureLink();
-		return this.client.operateGroup(this, {
+		return this.client!.operateGroup(this, {
 			onOff: true,
 		}, true);
 	}
@@ -61,7 +64,7 @@ export class Group extends IPSODevice {
 	/** Turn all lightbulbs off */
 	public turnOff(): Promise<boolean> {
 		this.ensureLink();
-		return this.client.operateGroup(this, {
+		return this.client!.operateGroup(this, {
 			onOff: false,
 		}, true);
 	}
@@ -69,7 +72,7 @@ export class Group extends IPSODevice {
 	/** Set all lightbulbs on/off to the given state */
 	public toggle(value: boolean): Promise<boolean> {
 		this.ensureLink();
-		return this.client.operateGroup(this, {
+		return this.client!.operateGroup(this, {
 			onOff: value,
 		}, true);
 	}
@@ -78,18 +81,19 @@ export class Group extends IPSODevice {
 	public activateScene(sceneOrId: Scene | number): Promise<boolean> {
 		this.ensureLink();
 		const id: number = (sceneOrId instanceof Scene) ? sceneOrId.instanceId : sceneOrId;
-		return this.client.operateGroup(this, {
+		return this.client!.operateGroup(this, {
 			sceneId: id,
 			onOff: true, // this has to be true when changing a scene
 		}, true);
 	}
 
 	private operateGroup(operation: GroupOperation, transitionTime?: number): Promise<boolean> {
+		this.ensureLink();
 		if (transitionTime != null) {
 			transitionTime = Math.max(0, transitionTime);
 			operation.transitionTime = transitionTime;
 		}
-		return this.client.operateGroup(this, operation, true);
+		return this.client!.operateGroup(this, operation, true);
 	}
 
 	/**

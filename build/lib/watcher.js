@@ -77,7 +77,7 @@ class ConnectionWatcher extends events_1.EventEmitter {
     stop() {
         if (this.pingTimer != null) {
             clearTimeout(this.pingTimer);
-            this.pingTimer = null;
+            this.pingTimer = undefined;
         }
         this.isActive = false;
     }

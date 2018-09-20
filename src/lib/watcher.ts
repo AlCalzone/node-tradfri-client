@@ -135,7 +135,7 @@ export class ConnectionWatcher extends EventEmitter {
 	public get options() {
 		return this._options;
 	}
-	private pingTimer: NodeJS.Timer;
+	private pingTimer: NodeJS.Timer | undefined;
 
 	/** Starts watching the connection */
 	public start() {
@@ -144,17 +144,17 @@ export class ConnectionWatcher extends EventEmitter {
 		this.pingTimer = setTimeout(() => this.pingThread(), this._options.pingInterval);
 	}
 
-	private isActive: boolean;
+	private isActive: boolean | undefined;
 	/** Stops watching the connection */
 	public stop() {
 		if (this.pingTimer != null) {
 			clearTimeout(this.pingTimer);
-			this.pingTimer = null;
+			this.pingTimer = undefined;
 		}
 		this.isActive = false;
 	}
 
-	private connectionAlive: boolean;
+	private connectionAlive: boolean | undefined;
 	private failedPingCount: number = 0;
 	private offlinePingCount: number = 0;
 	private resetAttempts: number = 0;
