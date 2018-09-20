@@ -120,8 +120,8 @@ function isAlwaysRequired(target, property) {
 }
 /**
  * Defines the required transformations to serialize a property to a CoAP object
- * @param transform: The transformation to apply during serialization
- * @param options: Some options regarding the behavior of the property transform
+ * @param kernel The transformation to apply during serialization
+ * @param options Some options regarding the behavior of the property transform
  */
 function serializeWith(kernel, options) {
     const transform = buildPropertyTransform(kernel, options);
@@ -158,8 +158,8 @@ function getSerializer(target, property /* | keyof T*/) {
 }
 /**
  * Defines the required transformations to deserialize a property from a CoAP object
- * @param transform: The transformation to apply during deserialization
- * @param splitArrays: Whether the deserializer expects arrays to be split up in advance
+ * @param kernel The transformation to apply during deserialization
+ * @param options Options for deserialisation
  */
 function deserializeWith(kernel, options) {
     const transform = buildPropertyTransform(kernel, options);

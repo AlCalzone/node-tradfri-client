@@ -17,8 +17,8 @@ export declare const ipsoKey: (key: string) => PropertyDecorator;
 export declare const required: (predicate?: boolean | RequiredPredicate) => PropertyDecorator;
 /**
  * Defines the required transformations to serialize a property to a CoAP object
- * @param transform: The transformation to apply during serialization
- * @param options: Some options regarding the behavior of the property transform
+ * @param kernel The transformation to apply during serialization
+ * @param options Some options regarding the behavior of the property transform
  */
 export declare function serializeWith(kernel: PropertyTransformKernel, options?: {
     splitArrays?: boolean;
@@ -26,8 +26,8 @@ export declare function serializeWith(kernel: PropertyTransformKernel, options?:
 }): PropertyDecorator;
 /**
  * Defines the required transformations to deserialize a property from a CoAP object
- * @param transform: The transformation to apply during deserialization
- * @param splitArrays: Whether the deserializer expects arrays to be split up in advance
+ * @param kernel The transformation to apply during deserialization
+ * @param options Options for deserialisation
  */
 export declare function deserializeWith(kernel: PropertyTransformKernel, options?: {
     splitArrays?: boolean;

@@ -126,8 +126,8 @@ function isAlwaysRequired<T extends IPSOObject>(target: T, property: keyof T): b
 
 /**
  * Defines the required transformations to serialize a property to a CoAP object
- * @param transform: The transformation to apply during serialization
- * @param options: Some options regarding the behavior of the property transform
+ * @param kernel The transformation to apply during serialization
+ * @param options Some options regarding the behavior of the property transform
  */
 export function serializeWith(kernel: PropertyTransformKernel, options?: { splitArrays?: boolean, neverSkip?: boolean}): PropertyDecorator {
 	const transform = buildPropertyTransform(kernel, options);
@@ -166,8 +166,8 @@ function getSerializer<T extends IPSOObject>(target: T, property: string /* | ke
 
 /**
  * Defines the required transformations to deserialize a property from a CoAP object
- * @param transform: The transformation to apply during deserialization
- * @param splitArrays: Whether the deserializer expects arrays to be split up in advance
+ * @param kernel The transformation to apply during deserialization
+ * @param options Options for deserialisation
  */
 export function deserializeWith(kernel: PropertyTransformKernel, options?: { splitArrays?: boolean, neverSkip?: boolean}): PropertyDecorator {
 	const transform = buildPropertyTransform(kernel, options);
