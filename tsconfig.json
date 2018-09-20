@@ -5,7 +5,6 @@
         "module": "commonjs",
         "moduleResolution": "node",
         "noEmitOnError": true,
-        "noImplicitAny": false,
         "outDir": "build/",
         "removeComments": false,
         "experimentalDecorators": true,
@@ -14,7 +13,9 @@
         "inlineSourceMap": false,
         "stripInternal": true,
         "target": "es2015",
-        "watch": false // true breaks circleci
+        "watch": false, // true breaks circleci
+
+        "noImplicitAny": true,
     },
     "include": [
         "src/**/*.ts"
