@@ -382,7 +382,8 @@ class IPSOObject {
                     value = serializeValue(propName, value, refValue, serializer);
                 }
                 // only output the value if it's != null
-                if (!!value && !!key)
+                // We cannot use !!value here because that would strip out "" and 0
+                if (!!key && value != null)
                     ret[key] = value;
             }
         }

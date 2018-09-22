@@ -427,7 +427,8 @@ export class IPSOObject {
 				}
 
 				// only output the value if it's != null
-				if (!!value && !!key) ret[key] = value;
+				// We cannot use !!value here because that would strip out "" and 0
+				if (!!key && value != null) ret[key] = value;
 			}
 		}
 
