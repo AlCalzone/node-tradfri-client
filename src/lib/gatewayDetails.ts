@@ -1,16 +1,19 @@
-import { deserializeWith, ipsoKey, IPSOObject, PropertyTransform, required, serializeWith } from "./ipsoObject";
+import { ipsoKey, IPSOObject } from "./ipsoObject";
 
 /** contains information about the gateway */
 /* istanbul ignore next */
 export class GatewayDetails extends IPSOObject {
 
-	@ipsoKey("9093")
-	public alexaPairStatus: boolean;
-	@ipsoKey("9105")
-	public googleHomePairStatus: boolean;
+	// All properties only exist after the light has been received from the gateway
+	// so they are definitely assigned!
 
 	@ipsoKey("9093")
-	public certificateProvisioned: boolean;
+	public alexaPairStatus!: boolean;
+	@ipsoKey("9105")
+	public googleHomePairStatus!: boolean;
+
+	@ipsoKey("9093")
+	public certificateProvisioned!: boolean;
 
 	@ipsoKey("9061")
 	public commissioningMode: number = 0; // some enum => which one?
@@ -35,7 +38,7 @@ export class GatewayDetails extends IPSOObject {
 	public UNKNOWN_9062: number = 0; // <int> => something more with commissioning?
 
 	@ipsoKey("9054")
-	public otaUpdateState: boolean;
+	public otaUpdateState!: boolean;
 	@ipsoKey("9055")
 	public updateProgress: number = 100;  // <int>
 	@ipsoKey("9066")
@@ -68,13 +71,13 @@ export class GatewayDetails extends IPSOObject {
 	@ipsoKey("9081")
 	public UNKNOWN_9081: string = ""; // some kind of hex code
 	@ipsoKey("9082")
-	public UNKNOWN_9082: boolean;
+	public UNKNOWN_9082!: boolean;
 	@ipsoKey("9083")
-	public UNKNOWN_9083: string; // some kind of serial number maybe?
+	public UNKNOWN_9083!: string; // some kind of serial number maybe?
 	@ipsoKey("9092")
-	public UNKNOWN_9092: number;
+	public UNKNOWN_9092!: number;
 	@ipsoKey("9106")
-	public UNKNOWN_9106: number;
+	public UNKNOWN_9106!: number;
 
 	// are those used?
 	@ipsoKey("9032")

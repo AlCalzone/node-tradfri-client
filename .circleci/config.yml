@@ -45,6 +45,7 @@ whitelist: &whitelist
     - package.json
     - README.md
     - tsconfig.json
+    - tsconfig.*.json
     - tslint.json
 
 version: 2

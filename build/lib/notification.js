@@ -17,6 +17,7 @@ class Notification extends ipsoObject_1.IPSOObject {
         this.timestamp = 0; // Timestamp of the notification as unix time
         this.event = 0;
         this._details = {};
+        this.isActive = false;
     }
     get details() {
         return this.event === NotificationTypes.Reboot ? (new RebootNotification().parse(this._details))
@@ -50,6 +51,7 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Notification.prototype, "isActive", void 0);
 exports.Notification = Notification;
+// These classes are only read, so their properties must be defined
 class RebootNotification extends ipsoObject_1.IPSOObject {
     toJSON() {
         return {

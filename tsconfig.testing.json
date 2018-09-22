@@ -1,0 +1,26 @@
+{
+	"compilerOptions": {
+		"noEmit": true,
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
+		// Stop checking declaration files in node_modules
+		"skipLibCheck": true,
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"noEmitOnError": false,
+		"removeComments": false,
+		"stripInternal": true,
+		"resolveJsonModule": true,
+		"target": "es2015",
+		
+		// this is more annoying in tests than it helps
+		"noImplicitAny": false,
+		"noUnusedLocals": false,
+		"noUnusedParameters": false,
+		"noImplicitThis": true
+	},
+	"include": [
+		"test/**/*.ts",
+		"src/**/*.test.ts"
+	]
+}

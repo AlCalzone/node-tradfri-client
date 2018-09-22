@@ -17,6 +17,7 @@ class Scene extends ipsoDevice_1.IPSODevice {
         super(...arguments);
         this.isActive = false; // <bool>
         this.isPredefined = true; // <bool>
+        this.lightSettings = [];
         this.sceneIndex = 0; // <int>
         this.useCurrentLightSettings = false; // <bool>
     }

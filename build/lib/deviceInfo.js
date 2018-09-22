@@ -24,6 +24,8 @@ var PowerSources;
 // contains information about a specific device
 class DeviceInfo extends ipsoObject_1.IPSOObject {
     constructor() {
+        // All properties only exist after the light has been received from the gateway
+        // so they are definitely assigned!
         super(...arguments);
         this.firmwareVersion = "";
         this.manufacturer = "";

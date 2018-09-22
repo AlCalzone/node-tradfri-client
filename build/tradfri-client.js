@@ -79,11 +79,13 @@ class TradfriClient extends events_1.EventEmitter {
             const maxAttempts = (this.watcher != null && this.watcher.options.reconnectionEnabled) ?
                 this.watcher.options.maximumConnectionAttempts :
                 1;
-            const interval = this.watcher != null && this.watcher.options.connectionInterval;
-            const backoffFactor = this.watcher != null && this.watcher.options.failedConnectionBackoffFactor;
+            const interval = this.watcher && this.watcher.options.connectionInterval;
+            const backoffFactor = this.watcher && this.watcher.options.failedConnectionBackoffFactor;
             let lastFailureReason;
             for (let attempt = 0; attempt < maxAttempts; attempt++) {
                 if (attempt > 0) {
+                    // If the reconnection is not enabled, we don't hit this branch,
+                    // so interval and backoffFactor are defined
                     const nextTimeout = Math.round(interval * Math.pow(backoffFactor, Math.min(5, attempt - 1)));
                     logger_1.log(`retrying connection in ${nextTimeout} ms`, "debug");
                     yield async_1.wait(nextTimeout);
@@ -125,8 +127,12 @@ class TradfriClient extends events_1.EventEmitter {
                 throw new tradfri_error_1.TradfriError(`The gateway did not respond ${maxAttempts === 1 ? "in time" : `after ${maxAttempts} tries`}.`, tradfri_error_1.TradfriErrorCodes.ConnectionTimedOut);
             }
             else {
+                // @ts-ignore This is a false positive, lastFailureReason is an Error instance
+                // https://github.com/Microsoft/TypeScript/issues/27239
                 lastFailureReason.message =
                     `Could not connect to the gateway${maxAttempts === 1 ? "" : ` after ${maxAttempts} tries`}:\n`
+                        // @ts-ignore This is a false positive, lastFailureReason is an Error instance
+                        // https://github.com/Microsoft/TypeScript/issues/27239
                         + lastFailureReason.message;
                 throw lastFailureReason;
             }
@@ -185,6 +191,7 @@ class TradfriClient extends events_1.EventEmitter {
                 throw new tradfri_error_1.TradfriError(`unexpected response (${response.code.toString()}) to getPSK().`, tradfri_error_1.TradfriErrorCodes.AuthenticationFailed);
             }
             // the response is a buffer containing a JSON object as a string
+            // TODO: check when payload is defined and when not
             const pskResponse = JSON.parse(response.payload.toString("utf8"));
             const psk = pskResponse["9091"];
             return { identity, psk };
@@ -334,12 +341,12 @@ class TradfriClient extends events_1.EventEmitter {
                         if (result) {
                             if (newKeys.every(k => k in this.devices)) {
                                 this.observeDevicesPromise.resolve();
-                                this.observeDevicesPromise = null;
+                                this.observeDevicesPromise = undefined;
                             }
                         }
                         else {
                             this.observeDevicesPromise.reject(`The device with the id ${id} could not be observed`);
-                            this.observeDevicesPromise = null;
+                            this.observeDevicesPromise = undefined;
                         }
                     }
                 };
@@ -437,22 +444,22 @@ class TradfriClient extends events_1.EventEmitter {
                                     .all(this.observeScenesPromises.values())
                                     .then(() => {
                                     this.observeGroupsPromise.resolve();
-                                    this.observeGroupsPromise = null;
-                                    this.observeScenesPromises = null;
+                                    this.observeGroupsPromise = undefined;
+                                    this.observeScenesPromises = undefined;
                                 })
                                     .catch(reason => {
                                     // in some cases, the promises can be null here
                                     if (this.observeGroupsPromise != null) {
                                         this.observeGroupsPromise.reject(reason);
                                     }
-                                    this.observeGroupsPromise = null;
-                                    this.observeScenesPromises = null;
+                                    this.observeGroupsPromise = undefined;
+                                    this.observeScenesPromises = undefined;
                                 });
                             }
                         }
                         else {
                             this.observeGroupsPromise.reject(`The group with the id ${id} could not be observed`);
-                            this.observeGroupsPromise = null;
+                            this.observeGroupsPromise = undefined;
                         }
                     }
                 };
@@ -503,7 +510,7 @@ class TradfriClient extends events_1.EventEmitter {
         if (!(instanceId in this.groups)) {
             // if there's none, create one
             this.groups[instanceId] = {
-                group: null,
+                group: undefined,
                 scenes: {},
             };
         }
@@ -545,11 +552,13 @@ class TradfriClient extends events_1.EventEmitter {
                         const scenePromise = this.observeScenesPromises.get(groupId);
                         if (result) {
                             if (newKeys.every(k => k in groupInfo.scenes)) {
-                                scenePromise.resolve();
+                                if (!!scenePromise)
+                                    scenePromise.resolve();
                             }
                         }
                         else {
-                            scenePromise.reject(`The scene with the id ${id} could not be observed`);
+                            if (!!scenePromise)
+                                scenePromise.reject(`The scene with the id ${id} could not be observed`);
                         }
                     }
                 };
@@ -602,7 +611,7 @@ class TradfriClient extends events_1.EventEmitter {
             // starting the observation
             this.observeResource(endpoints_1.endpoints.gateway(endpoints_1.GatewayEndpoints.Details), (resp) => this.observeGateway_callback(resp)).catch(e => {
                 // pass errors through
-                if (this.observeGateway != null)
+                if (!!this.observeGatewayPromise)
                     this.observeGatewayPromise.reject(e);
             });
             return this.observeGatewayPromise;
@@ -617,7 +626,7 @@ class TradfriClient extends events_1.EventEmitter {
                     logger_1.log(`  => not successful`);
                     if (this.observeGatewayPromise != null) {
                         this.observeGatewayPromise.reject(`The gateway could not be observed`);
-                        this.observeGatewayPromise = null;
+                        this.observeGatewayPromise = undefined;
                     }
                     return;
                 }
@@ -633,7 +642,7 @@ class TradfriClient extends events_1.EventEmitter {
             this.emit("gateway updated", gateway.link(this));
             if (this.observeGatewayPromise != null) {
                 this.observeGatewayPromise.resolve();
-                this.observeGatewayPromise = null;
+                this.observeGatewayPromise = undefined;
             }
         });
     }
@@ -654,7 +663,7 @@ class TradfriClient extends events_1.EventEmitter {
             // starting the observation
             this.observeResource(endpoints_1.endpoints.notifications, (resp) => this.observeNotifications_callback(resp)).catch(e => {
                 // pass errors through
-                if (this.observeNotifications != null)
+                if (!!this.observeNotificationsPromise)
                     this.observeNotificationsPromise.reject(e);
             });
             return this.observeNotificationsPromise;
@@ -669,7 +678,7 @@ class TradfriClient extends events_1.EventEmitter {
                     logger_1.log(`  => not successful`);
                     if (this.observeNotificationsPromise != null) {
                         this.observeNotificationsPromise.reject(`The notifications could not be observed`);
-                        this.observeNotificationsPromise = null;
+                        this.observeNotificationsPromise = undefined;
                     }
                     return;
                 }
@@ -697,7 +706,7 @@ class TradfriClient extends events_1.EventEmitter {
             }
             if (this.observeNotificationsPromise != null) {
                 this.observeNotificationsPromise.resolve();
-                this.observeNotificationsPromise = null;
+                this.observeNotificationsPromise = undefined;
             }
         });
     }

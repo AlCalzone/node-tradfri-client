@@ -9,4 +9,4 @@ export interface DiscoveredGateway {
  * @param timeout (optional) Time in milliseconds to wait for a response. Default 10000.
  * Pass false or a negative number to explicitly wait forever.
  */
-export declare function discoverGateway(timeout?: number | false): Promise<DiscoveredGateway>;
+export declare function discoverGateway(timeout?: number | false): Promise<DiscoveredGateway | null>;

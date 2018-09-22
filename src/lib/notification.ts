@@ -1,6 +1,5 @@
 import { UpdatePriority } from "./gatewayDetails";
-import { IPSODevice } from "./ipsoDevice";
-import { deserializeWith, ipsoKey, IPSOObject, PropertyTransform, required, serializeWith } from "./ipsoObject";
+import { deserializeWith, ipsoKey, IPSOObject } from "./ipsoObject";
 
 export class Notification extends IPSOObject {
 
@@ -20,7 +19,7 @@ export class Notification extends IPSOObject {
 	}
 
 	@ipsoKey("9014")
-	public isActive: boolean;
+	public isActive: boolean = false;
 
 	public toJSON() {
 		return {
@@ -33,10 +32,11 @@ export class Notification extends IPSOObject {
 
 }
 
+// These classes are only read, so their properties must be defined
 export class RebootNotification extends IPSOObject {
 
 	@ipsoKey("9052")
-	public reason: GatewayRebootReason;
+	public reason!: GatewayRebootReason;
 
 	public toJSON() {
 		return {
@@ -49,11 +49,11 @@ export class RebootNotification extends IPSOObject {
 export class FirmwareUpdateNotification extends IPSOObject {
 
 	@ipsoKey("9056")
-	public releaseNotes: string;
+	public releaseNotes!: string;
 
 	@ipsoKey("9066")
 	@deserializeWith(str => parseInt(str, 10))
-	public priority: UpdatePriority;
+	public priority!: UpdatePriority;
 
 	public toJSON() {
 		return {

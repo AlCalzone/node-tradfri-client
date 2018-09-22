@@ -1,5 +1,6 @@
 {
 	"files.insertFinalNewline": true,
 	"editor.insertSpaces": false,
-	"tslint.autoFixOnSave": true
+	"tslint.autoFixOnSave": true,
+	"typescript.tsdk": "node_modules\\typescript\\lib"
 }

@@ -1,4 +1,4 @@
-import { deserializeWith, ipsoKey, IPSOObject, PropertyTransform, required, serializeWith } from "./ipsoObject";
+import { ipsoKey, IPSOObject } from "./ipsoObject";
 
 export enum PowerSources {
 	Unknown = 0,
@@ -14,8 +14,11 @@ export enum PowerSources {
 // contains information about a specific device
 export class DeviceInfo extends IPSOObject {
 
+	// All properties only exist after the light has been received from the gateway
+	// so they are definitely assigned!
+
 	@ipsoKey("9")
-	public battery: number; // no default value, some devices don't have a battery
+	public battery!: number; // no default value, some devices don't have a battery
 
 	@ipsoKey("3")
 	public firmwareVersion: string = "";

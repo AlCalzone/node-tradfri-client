@@ -119,7 +119,7 @@ function rgbToHSV(r: number, g: number, b: number) {
 	} else if (max === b) {
 		h = 60 * (4 + (r - g) / (max - min));
 	}
-	h = Math.round(h);
+	h = Math.round(h!); // h is defined, we checked all possibilities
 	if (h < 0) h += 360;
 
 	if (max === 0) {
@@ -152,8 +152,8 @@ function rgbFromHSV(h: number, s: number, v: number) {
 			case 5: [r, g, b] = [v, p, q]; break;
 		}
 	}
-	// transform back to [0..255]
-	[r, g, b] = [r, g, b].map(c => Math.round(clamp(c, 0, 1) * 255));
+	// transform back to [0..255] - r, g and b are defined always
+	[r, g, b] = [r!, g!, b!].map(c => Math.round(clamp(c, 0, 1) * 255));
 	return {r, g, b};
 }
 

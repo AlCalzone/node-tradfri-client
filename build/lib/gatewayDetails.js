@@ -14,6 +14,8 @@ const ipsoObject_1 = require("./ipsoObject");
 /* istanbul ignore next */
 class GatewayDetails extends ipsoObject_1.IPSOObject {
     constructor() {
+        // All properties only exist after the light has been received from the gateway
+        // so they are definitely assigned!
         super(...arguments);
         this.commissioningMode = 0; // some enum => which one?
         this.utcNowUnixTimestamp = 0;

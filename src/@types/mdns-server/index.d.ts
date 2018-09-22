@@ -63,9 +63,9 @@ declare module "mdns-server" {
 			on(event: "error", handler: (e: Error) => void): this;
 			// tslint:disable:unified-signatures
 			query(packet: QueryPacket, callback?: () => void): void;
-			query(packet: Pick<QueryPacket, "questions">, callback?: () => void);
-			query(name: string, type: PacketType, callback?: () => void);
-			query(questions: Question[], callback?: () => void);
+			query(packet: Pick<QueryPacket, "questions">, callback?: () => void): void;
+			query(name: string, type: PacketType, callback?: () => void): void;
+			query(questions: Question[], callback?: () => void): void;
 			// TODO: type .respond()
 			// tslint:enable:unified-signatures
 			destroy(): void;
