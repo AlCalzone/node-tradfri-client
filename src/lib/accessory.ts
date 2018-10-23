@@ -10,6 +10,7 @@ import { Sensor } from "./sensor";
 export enum AccessoryTypes {
 	remote = 0,
 	lightbulb = 2,
+	plug = 3,
 	motionSensor = 4,
 	// TODO: find out the other ones
 }
@@ -50,6 +51,14 @@ export class Accessory extends IPSODevice {
 
 	@ipsoKey("9054")
 	public otaUpdateState: number = 0; // boolean?
+
+	// TODO: This property is reported by the gateway, but not in
+	// the IKEA app as of version 1.7.0
+	// It seems to be some kind of hash, find out what it does
+	// e.g. "9084":" 6c ba 7f 97 47 8e 75 88 10 20 29 30 60 a9 3b 7d"
+	/** @internal */
+	@ipsoKey("9084")
+	public UNKNOWN1!: string;
 
 	/**
 	 * Link this object to a TradfriClient for a simplified API.
