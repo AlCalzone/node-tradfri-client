@@ -37,6 +37,24 @@ describe("tradfri-client => infrastructure => ", () => {
 	after(restoreStubs);
 	afterEach(resetStubHistory);
 
+	describe("constructor => ", () => {
+		it("should only accept strings as the hostname", () => {
+			const invalidHostnames = [
+				null, undefined, 1, true, false,
+			] as any;
+			invalidHostnames.forEach(hostname => {
+				expect(() => new TradfriClient(hostname)).to.throw("hostname");
+			});
+
+			const validHostnames = [
+				"", "a", "a.b.c",
+			] as any;
+			validHostnames.forEach(hostname => {
+				expect(() => new TradfriClient(hostname)).not.to.throw();
+			});
+		});
+	});
+
 	describe("reset => ", () => {
 		it("should call coap.reset", () => {
 			tradfri.reset();
@@ -1274,7 +1292,7 @@ describe("tradfri-client => gateway actions => ", () => {
 		createStubs,
 		restoreStubs,
 		resetStubHistory,
-	} = createNetworkMock(undefined, undefined, {interceptRequestResponse: true});
+	} = createNetworkMock(undefined, undefined, { interceptRequestResponse: true });
 	before(createStubs);
 	after(restoreStubs);
 	afterEach(resetStubHistory);

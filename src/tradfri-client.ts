@@ -146,6 +146,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		optionsOrLogger?: LoggerFunction | Partial<TradfriOptions>,
 	) {
 		super();
+		if (typeof hostname !== "string") throw new Error("The hostname must be a string.");
 		this.requestBase = `coaps://${hostname}:5684/`;
 
 		if (typeof optionsOrLogger === "function") {

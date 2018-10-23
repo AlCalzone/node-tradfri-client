@@ -41,6 +41,8 @@ class TradfriClient extends events_1.EventEmitter {
         this.ipsoOptions = {};
         /** A dictionary of the observer callbacks. Used to restore it after a soft reset */
         this.rememberedObserveCallbacks = new Map();
+        if (typeof hostname !== "string")
+            throw new Error("The hostname must be a string.");
         this.requestBase = `coaps://${hostname}:5684/`;
         if (typeof optionsOrLogger === "function") {
             // Legacy version: 2nd parameter is a logger
