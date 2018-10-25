@@ -113,7 +113,7 @@ __decorate([
 ], Accessory.prototype, "lightList", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("3312"),
-    ipsoObject_1.deserializeWith((obj, me) => new plug_1.Plug(me.options).parse(obj)),
+    ipsoObject_1.deserializeWith((obj, me) => new plug_1.Plug(me.options, me).parse(obj)),
     __metadata("design:type", Array)
 ], Accessory.prototype, "plugList", void 0);
 __decorate([

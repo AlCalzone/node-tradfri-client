@@ -38,7 +38,7 @@ export class Accessory extends IPSODevice {
 	public lightList!: Light[];
 
 	@ipsoKey("3312")
-	@deserializeWith((obj, me: Accessory) => new Plug(me.options).parse(obj))
+	@deserializeWith((obj, me: Accessory) => new Plug(me.options, me).parse(obj))
 	public plugList!: Plug[];
 
 	@ipsoKey("3300")

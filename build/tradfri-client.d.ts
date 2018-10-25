@@ -8,6 +8,7 @@ import { LightOperation } from "./lib/light";
 import { LoggerFunction } from "./lib/logger";
 import { GatewayRebootReason } from "./lib/notification";
 import { OperationProvider } from "./lib/operation-provider";
+import { PlugOperation } from "./lib/plug";
 import { Scene } from "./lib/scene";
 import { ConnectionEvents, ConnectionWatcherOptions, PingFailedCallback, ReconnectingCallback } from "./lib/watcher";
 export declare type ObserveResourceCallback = (resp: CoapResponse) => void;
@@ -236,6 +237,13 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
      * @returns true if a request was sent, false otherwise
      */
     operateLight(accessory: Accessory, operation: LightOperation): Promise<boolean>;
+    /**
+     * Sets some properties on a plug
+     * @param accessory The parent accessory of the plug
+     * @param operation The properties to be set
+     * @returns true if a request was sent, false otherwise
+     */
+    operatePlug(accessory: Accessory, operation: PlugOperation): Promise<boolean>;
     /**
      * Sends a custom request to a resource
      * @param path The path of the resource

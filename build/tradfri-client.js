@@ -836,6 +836,21 @@ class TradfriClient extends events_1.EventEmitter {
         return this.updateResource(`${endpoints_1.endpoints.devices}/${accessory.instanceId}`, newAccessory, reference);
     }
     /**
+     * Sets some properties on a plug
+     * @param accessory The parent accessory of the plug
+     * @param operation The properties to be set
+     * @returns true if a request was sent, false otherwise
+     */
+    operatePlug(accessory, operation) {
+        if (accessory.type !== accessory_1.AccessoryTypes.plug) {
+            throw new Error("The parameter accessory must be a plug!");
+        }
+        const reference = accessory.clone();
+        const newAccessory = reference.clone();
+        newAccessory.plugList[0].merge(operation);
+        return this.updateResource(`${endpoints_1.endpoints.devices}/${accessory.instanceId}`, newAccessory, reference);
+    }
+    /**
      * Sends a custom request to a resource
      * @param path The path of the resource
      * @param method The method of the request
