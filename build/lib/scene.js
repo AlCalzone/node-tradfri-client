@@ -12,14 +12,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const ipsoDevice_1 = require("./ipsoDevice");
 const ipsoObject_1 = require("./ipsoObject");
 const lightSetting_1 = require("./lightSetting");
-const plugSetting_1 = require("./plugSetting");
+// import { PlugSetting } from "./plugSetting";
 class Scene extends ipsoDevice_1.IPSODevice {
     constructor() {
         super(...arguments);
         this.isActive = false; // <bool>
         this.isPredefined = true; // <bool>
         this.lightSettings = [];
-        this.plugSettings = [];
+        // Plugs can be part of a scene but we need to find out how they are included
+        // @ipsoKey("15015")
+        // @deserializeWith(obj => new PlugSetting().parse(obj))
+        // public plugSettings: PlugSetting[] = [];
         this.sceneIndex = 0; // <int>
         this.useCurrentLightSettings = false; // <bool>
     }
@@ -37,12 +40,6 @@ __decorate([
     ipsoObject_1.deserializeWith(obj => new lightSetting_1.LightSetting().parse(obj)),
     __metadata("design:type", Array)
 ], Scene.prototype, "lightSettings", void 0);
-__decorate([
-    ipsoObject_1.ipsoKey("15015") /// ??? (guessed ID, does not work, how to get this data? Plugs can be part of a Scene.
-    ,
-    ipsoObject_1.deserializeWith(obj => new plugSetting_1.PlugSetting().parse(obj)),
-    __metadata("design:type", Array)
-], Scene.prototype, "plugSettings", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("9057"),
     __metadata("design:type", Number)

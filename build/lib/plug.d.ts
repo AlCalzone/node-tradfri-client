@@ -6,7 +6,11 @@ export declare class Plug extends IPSODevice {
     constructor(options?: IPSOOptions, accessory?: Accessory);
     private _modelName;
     private _accessory;
+    cumulativeActivePower: number;
+    dimmer: number;
     onOff: boolean;
+    onTime: number;
+    powerFactor: number;
     /**
      * Returns true if the current plug is dimmable
      */
