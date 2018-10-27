@@ -15,9 +15,10 @@ export class Scene extends IPSODevice {
 	@deserializeWith(obj => new LightSetting().parse(obj))
 	public lightSettings: LightSetting[] = [];
 
-	@ipsoKey("15015") /// ??? (guessed ID, does not work, how to get this data? Plugs can be part of a Scene.
-	@deserializeWith(obj => new PlugSetting().parse(obj))
-	public plugSettings: PlugSetting[] = [];
+	// Plugs can be part of a scene but we need to find out how they are included
+	// @ipsoKey("15015")
+	// @deserializeWith(obj => new PlugSetting().parse(obj))
+	// public plugSettings: PlugSetting[] = [];
 
 	@ipsoKey("9057")
 	public sceneIndex: number = 0; // <int>

@@ -583,11 +583,11 @@ A LightOperation is an object containing at least one of a `Light`'s properties,
 or a subset thereof.
 
 ### `Plug`
-A plug represents a single outlet plug and has several properties describing its state:
+A plug represents a single outlet plug and has a single writable describing its state:
 * `onOff: boolean` - If the plug is on (`true`) or off (`false`)
 
 as well as a few readonly properties:
-* `isSwitchable: boolean` - Whether the plugs supports on/off (always true).
+* `isSwitchable: boolean` - Whether the plug supports on/off (always true).
 * `isDimmable: boolean` - Whether the plug supports setting the dimmer value (always false for now).
 
 If the plug object was returned from a library function and not created by you, the following methods are available to change its appearance directly. You can await them to make sure the commands were sent or just fire-and-forget them. The returned Promises resolve to true if a command was sent, otherwise to false.
@@ -596,13 +596,11 @@ If the plug object was returned from a library function and not created by you, 
 * `toggle([value: boolean])` - Toggles the plug's state to the given value or the opposite of its current state.
 
 ### `PlugOperation`
-A PlugOperation is an object containing at least one of a `Plug`'s properties, which are:
+A `PlugOperation` is an object containing the desired on/off state of a `Plug`:
 ```TS
 {
     onOff: boolean;
 }
-```
-or a subset thereof.
 
 ### `Group`
 A group contains several devices, usually a remote control or dimmer and some lightbulbs. To control the group's lightbulbs, use the following properties:
