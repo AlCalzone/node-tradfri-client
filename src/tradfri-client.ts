@@ -17,6 +17,7 @@ import { Notification } from "./lib/notification";
 import { FirmwareUpdateNotification, GatewayRebootReason, NotificationTypes, RebootNotification } from "./lib/notification";
 import { composeObject, entries } from "./lib/object-polyfill";
 import { OperationProvider } from "./lib/operation-provider";
+import { PlugOperation } from "./lib/plug";
 import { Scene } from "./lib/scene";
 import { TradfriError, TradfriErrorCodes } from "./lib/tradfri-error";
 import { ConnectionEvents, ConnectionWatcher, ConnectionWatcherOptions, PingFailedCallback, ReconnectingCallback } from "./lib/watcher";
@@ -1098,6 +1099,27 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		const reference = accessory.clone();
 		const newAccessory = reference.clone();
 		newAccessory.lightList[0].merge(operation);
+
+		return this.updateResource(
+			`${coapEndpoints.devices}/${accessory.instanceId}`,
+			newAccessory, reference,
+		);
+	}
+
+	/**
+	 * Sets some properties on a plug
+	 * @param accessory The parent accessory of the plug
+	 * @param operation The properties to be set
+	 * @returns true if a request was sent, false otherwise
+	 */
+	public operatePlug(accessory: Accessory, operation: PlugOperation): Promise<boolean> {
+		if (accessory.type !== AccessoryTypes.plug) {
+			throw new Error("The parameter accessory must be a plug!");
+		}
+
+		const reference = accessory.clone();
+		const newAccessory = reference.clone();
+		newAccessory.plugList[0].merge(operation);
 
 		return this.updateResource(
 			`${coapEndpoints.devices}/${accessory.instanceId}`,

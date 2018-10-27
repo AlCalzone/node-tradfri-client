@@ -20,6 +20,7 @@ var AccessoryTypes;
 (function (AccessoryTypes) {
     AccessoryTypes[AccessoryTypes["remote"] = 0] = "remote";
     AccessoryTypes[AccessoryTypes["lightbulb"] = 2] = "lightbulb";
+    AccessoryTypes[AccessoryTypes["plug"] = 3] = "plug";
     AccessoryTypes[AccessoryTypes["motionSensor"] = 4] = "motionSensor";
     // TODO: find out the other ones
 })(AccessoryTypes = exports.AccessoryTypes || (exports.AccessoryTypes = {}));
@@ -112,7 +113,7 @@ __decorate([
 ], Accessory.prototype, "lightList", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("3312"),
-    ipsoObject_1.deserializeWith((obj, me) => new plug_1.Plug(me.options).parse(obj)),
+    ipsoObject_1.deserializeWith((obj, me) => new plug_1.Plug(me.options, me).parse(obj)),
     __metadata("design:type", Array)
 ], Accessory.prototype, "plugList", void 0);
 __decorate([
@@ -129,4 +130,8 @@ __decorate([
     ipsoObject_1.ipsoKey("9054"),
     __metadata("design:type", Number)
 ], Accessory.prototype, "otaUpdateState", void 0);
+__decorate([
+    ipsoObject_1.ipsoKey("9084"),
+    __metadata("design:type", String)
+], Accessory.prototype, "UNKNOWN1", void 0);
 exports.Accessory = Accessory;

@@ -9,23 +9,103 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const accessory_1 = require("./accessory");
 const conversions_1 = require("./conversions");
 const ipsoDevice_1 = require("./ipsoDevice");
 const ipsoObject_1 = require("./ipsoObject");
-/* istanbul ignore next */
 class Plug extends ipsoDevice_1.IPSODevice {
-    constructor() {
-        super(...arguments);
+    constructor(options, accessory) {
+        super(options);
         this.cumulativeActivePower = 0.0; // <float>
         this.dimmer = 0; // <int> [0..100]
         this.onOff = false;
         this.onTime = 0; // <int>
         this.powerFactor = 0.0; // <float>
-        // TODO: no unit???
-        // @ipsoKey("5701")
-        // public unit: string = "";
+        // In order for the simplified API to work, the
+        // accessory reference must be a proxy
+        if (accessory != null && !accessory.isProxy) {
+            accessory = accessory.createProxy();
+        }
+        this._accessory = accessory;
+        // get the model number to detect features
+        if (accessory != null &&
+            accessory.deviceInfo != null &&
+            accessory.deviceInfo.modelNumber != null &&
+            accessory.deviceInfo.modelNumber.length > 0) {
+            this._modelName = accessory.deviceInfo.modelNumber;
+        }
+    }
+    // TODO: no unit???
+    // @ipsoKey("5701")
+    // public unit: string = "";
+    /**
+     * Returns true if the current plug is dimmable
+     */
+    get isDimmable() {
+        return false; // we know no plugs that are dimmable
+    }
+    /**
+     * Returns true if the current plug is switchable
+     */
+    get isSwitchable() {
+        return true; // we know no plugs that aren't switchable
+    }
+    clone() {
+        const ret = super.clone(this._accessory);
+        ret._modelName = this._modelName;
+        return ret;
+    }
+    /**
+     * Creates a proxy which redirects the properties to the correct internal one, does nothing now
+     */
+    createProxy() {
+        return this;
+    }
+    // =================================
+    // Simplified API access
+    /**
+     * Ensures this instance is linked to a tradfri client and an accessory
+     * @throws Throws an error if it isn't
+     */
+    ensureLink() {
+        if (this.client == null) {
+            throw new Error("Cannot use the simplified API on devices which aren't linked to a client instance.");
+        }
+        if (!(this._accessory instanceof accessory_1.Accessory)) {
+            throw new Error("Cannot use the simplified API on plugs which aren't linked to an Accessory instance.");
+        }
+    }
+    /** Turn this plug on */
+    turnOn() {
+        return this.operatePlug({ onOff: true });
+    }
+    /** Turn this plug off */
+    turnOff() {
+        return this.operatePlug({ onOff: false });
+    }
+    /** Toggles this plug on or off */
+    toggle(value = !this.onOff) {
+        return this.operatePlug({ onOff: value });
+    }
+    operatePlug(operation) {
+        this.ensureLink();
+        return this.client.operatePlug(this._accessory, operation);
+    }
+    /** Turns this object into JSON while leaving out the potential circular reference */
+    toJSON() {
+        return {
+            onOff: this.onOff,
+        };
     }
 }
+__decorate([
+    ipsoObject_1.doNotSerialize,
+    __metadata("design:type", Object)
+], Plug.prototype, "_modelName", void 0);
+__decorate([
+    ipsoObject_1.doNotSerialize,
+    __metadata("design:type", Object)
+], Plug.prototype, "_accessory", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("5805"),
     __metadata("design:type", Number)

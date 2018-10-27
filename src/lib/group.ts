@@ -31,6 +31,13 @@ export class Group extends IPSODevice {
 	@serializeWith(ids => toAccessoryLink(ids), {splitArrays: false})
 	public deviceIDs!: number[];
 
+	// TODO: This property is present in the IKEA app as of version 1.7.0
+	// but its values are unclear
+	// It is some kind of enum (0/1/?). Find out what the values mean.
+	/** @internal */
+	@ipsoKey("9108")
+	public groupType!: number;
+
 	// The transition time is not reported by the gateway
 	// but it accepts it for a state change
 	@ipsoKey("5712")

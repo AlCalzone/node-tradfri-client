@@ -1,5 +1,8 @@
 # Changelog
 
+## __WORK IN PROGRESS__
+* (AlCalzone & rogierhofboer) Experimental support for smart plugs
+
 ## 1.3.4 (2018-09-08)
 * (AlCalzone) Fix gateway discovery on Mac OSX over WiFi
 

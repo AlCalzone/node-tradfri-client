@@ -6,6 +6,7 @@ import { Sensor } from "./sensor";
 export declare enum AccessoryTypes {
     remote = 0,
     lightbulb = 2,
+    plug = 3,
     motionSensor = 4
 }
 export declare class Accessory extends IPSODevice {

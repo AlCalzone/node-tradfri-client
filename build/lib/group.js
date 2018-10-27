@@ -99,6 +99,10 @@ __decorate([
     __metadata("design:type", Array)
 ], Group.prototype, "deviceIDs", void 0);
 __decorate([
+    ipsoObject_1.ipsoKey("9108"),
+    __metadata("design:type", Number)
+], Group.prototype, "groupType", void 0);
+__decorate([
     ipsoObject_1.ipsoKey("5712")
     // force transition time to be present if brightness is
     // all other properties don't support the transition time

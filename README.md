@@ -582,6 +582,27 @@ A LightOperation is an object containing at least one of a `Light`'s properties,
 ```
 or a subset thereof.
 
+### `Plug`
+A plug represents a single outlet plug and has a single writable describing its state:
+* `onOff: boolean` - If the plug is on (`true`) or off (`false`)
+
+as well as a few readonly properties:
+* `isSwitchable: boolean` - Whether the plug supports on/off (always true).
+* `isDimmable: boolean` - Whether the plug supports setting the dimmer value (always false for now).
+
+If the plug object was returned from a library function and not created by you, the following methods are available to change its state directly. You can await them to make sure the commands were sent or just fire-and-forget them. The returned Promises resolve to true if a command was sent, otherwise to false.
+* `turnOn()` - Turns the plug on.
+* `turnOff()` - Turns the plug off.
+* `toggle([value: boolean])` - Toggles the plug's state to the given value or the opposite of its current state.
+
+### `PlugOperation`
+A `PlugOperation` is an object containing the desired on/off state of a `Plug`:
+```TS
+{
+    onOff: boolean;
+}
+```
+
 ### `Group`
 A group contains several devices, usually a remote control or dimmer and some lightbulbs. To control the group's lightbulbs, use the following properties:
 * `onOff: boolean` - Turn the group's lightbulbs on (`true`) or off (`false`)
@@ -613,7 +634,7 @@ A GroupOperation is an object containing at least one of a `Group`'s controllabl
 ```
 or a subset thereof.
 
-### `Plug`, `Sensor` - Not supported
+### `Sensor` - Not supported
 
 ### `DeviceInfo`
 A DeviceInfo object contains general information about a device. It has the following properties:
