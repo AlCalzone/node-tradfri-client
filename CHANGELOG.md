@@ -1,6 +1,6 @@
 # Changelog
 
-## __WORK IN PROGRESS__
+## 1.4.0 (2018-10-27)
 * (AlCalzone & rogierhofboer) Experimental support for smart plugs
 
 ## 1.3.4 (2018-09-08)
