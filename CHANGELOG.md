@@ -1,6 +1,6 @@
 # Changelog
 
-## __WORK IN PROGRESS__
+## 1.4.1 (2018-10-29)
 * (AlCalzone) Add `setBrightness` method to plugs for better compatibility with lights.
 
 ## 1.4.0 (2018-10-27)
