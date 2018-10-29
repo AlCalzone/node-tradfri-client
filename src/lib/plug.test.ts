@@ -163,6 +163,7 @@ describe("ipso/plug => simplified API => ", () => {
 
 	const apiMethods = [
 		"turnOn", "turnOff", "toggle",
+		"setBrightness",
 	];
 
 	describe("all methods should fail when no client instance has been linked", () => {
@@ -272,6 +273,16 @@ describe("ipso/plug => simplified API => ", () => {
 			assertPayload(fakeCoap.request.getCall(0).args[2], {
 				3312: [{
 					5850: 0,
+				}],
+			});
+		});
+
+		it("setBrightness() ", async () => {
+			plug.dimmer = 0;
+			await plug.setBrightness(100).should.become(true);
+			assertPayload(fakeCoap.request.getCall(0).args[2], {
+				3312: [{
+					5851: 254,
 				}],
 			});
 		});

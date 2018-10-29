@@ -1,10 +1,11 @@
+import { clamp } from "alcalzone-shared/math";
 import { Accessory } from "./accessory";
 import { deserializers, serializers } from "./conversions";
 import { IPSODevice } from "./ipsoDevice";
 import { deserializeWith, doNotSerialize, ipsoKey, IPSOOptions, serializeWith } from "./ipsoObject";
 
 export type PlugOperation = Partial<Pick<Plug,
-	"onOff"
+	"onOff" | "dimmer"
 	>>;
 
 export class Plug extends IPSODevice {
@@ -113,6 +114,15 @@ export class Plug extends IPSODevice {
 	private operatePlug(operation: PlugOperation): Promise<boolean> {
 		this.ensureLink();
 		return this.client!.operatePlug(this._accessory!, operation);
+	}
+
+	/**
+	 * Changes this plug's "brightness". Any value > 0 turns the plug on, 0 turns it off.
+	 * @returns true if a request was sent, false otherwise
+	 */
+	public setBrightness(value: number): Promise<boolean> {
+		value = clamp(value, 0, 100);
+		return this.operatePlug({ dimmer: value });
 	}
 
 	/** Turns this object into JSON while leaving out the potential circular reference */

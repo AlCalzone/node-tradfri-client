@@ -1,5 +1,8 @@
 # Changelog
 
+## __WORK IN PROGRESS__
+* (AlCalzone) Add `setBrightness` method to plugs for better compatibility with lights.
+
 ## 1.4.0 (2018-10-27)
 * (AlCalzone & rogierhofboer) Experimental support for smart plugs
 

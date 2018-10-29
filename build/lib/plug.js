@@ -9,6 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const math_1 = require("alcalzone-shared/math");
 const accessory_1 = require("./accessory");
 const conversions_1 = require("./conversions");
 const ipsoDevice_1 = require("./ipsoDevice");
@@ -90,6 +91,14 @@ class Plug extends ipsoDevice_1.IPSODevice {
     operatePlug(operation) {
         this.ensureLink();
         return this.client.operatePlug(this._accessory, operation);
+    }
+    /**
+     * Changes this plug's "brightness". Any value > 0 turns the plug on, 0 turns it off.
+     * @returns true if a request was sent, false otherwise
+     */
+    setBrightness(value) {
+        value = math_1.clamp(value, 0, 100);
+        return this.operatePlug({ dimmer: value });
     }
     /** Turns this object into JSON while leaving out the potential circular reference */
     toJSON() {

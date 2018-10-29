@@ -594,6 +594,7 @@ If the plug object was returned from a library function and not created by you, 
 * `turnOn()` - Turns the plug on.
 * `turnOff()` - Turns the plug off.
 * `toggle([value: boolean])` - Toggles the plug's state to the given value or the opposite of its current state.
+* `setBrightness(value: number)` - In order to keep compatibility with lights, plugs also have this method. Any value > 0 turns the plug on, 0 turns it off.
 
 ### `PlugOperation`
 A `PlugOperation` is an object containing the desired on/off state of a `Plug`:

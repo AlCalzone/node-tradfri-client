@@ -1,7 +1,7 @@
 import { Accessory } from "./accessory";
 import { IPSODevice } from "./ipsoDevice";
 import { IPSOOptions } from "./ipsoObject";
-export declare type PlugOperation = Partial<Pick<Plug, "onOff">>;
+export declare type PlugOperation = Partial<Pick<Plug, "onOff" | "dimmer">>;
 export declare class Plug extends IPSODevice {
     constructor(options?: IPSOOptions, accessory?: Accessory);
     private _modelName;
@@ -36,6 +36,11 @@ export declare class Plug extends IPSODevice {
     /** Toggles this plug on or off */
     toggle(value?: boolean): Promise<boolean>;
     private operatePlug;
+    /**
+     * Changes this plug's "brightness". Any value > 0 turns the plug on, 0 turns it off.
+     * @returns true if a request was sent, false otherwise
+     */
+    setBrightness(value: number): Promise<boolean>;
     /** Turns this object into JSON while leaving out the potential circular reference */
     toJSON(): {};
 }
