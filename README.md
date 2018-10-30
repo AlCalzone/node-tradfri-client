@@ -173,7 +173,7 @@ interface TradfriOptions {
 You can provide all the options or just some of them:
 * The custom logger function is used as above.
 * By setting `useRawCoAPValues` to true, you can instruct `TradfriClient` to use raw CoAP values instead of the simplified scales used internally. See below for a detailed description how the scales change.
-* `watchConnection` accepts a boolean to enable/disable connection watching with default parameters or a set of options. See below ("watching the connection") for a detailed description.
+* `watchConnection` accepts a `boolean` to enable/disable connection watching with default parameters or a set of options. See below ("watching the connection") for a detailed description.
 
 The following code samples use the new `async/await` syntax which is available through TypeScript/Babel or in ES7. If that is no option for you, you can also consume the library by using promises:
 ```TS
@@ -314,7 +314,7 @@ type SceneRemovedCallback = (groupId: number, instanceId: number) => void;
 ```
 
 ### Handle errors
-The `"error"` event gets emitted when something unexpected happens. The callback has the following form.
+The `"error"` event gets emitted when something unexpected happens. The callback has the following form:
 ```TS
 type ErrorCallback = (e: Error) => void;
 ```
@@ -473,7 +473,7 @@ const requestSent = await tradfri.operateGroup(
     [force: boolean = false]
 );
 ```
-It is similar to the `operateLight` method, see the chapter "Data structures" below for a complete list of all properties. Because the gateway does not report back group properties, the sent payloads are computed using the old properties of the group. To ensure the entire `GroupOperation` is always present in the payload, set the `force` parameter to `true`. **Note:** `force = true` might become the default in a future release.
+It is similar to the `operateLight` method, see the chapter [Data structures](#data-structure) below for a complete list of all properties. Because the gateway does not report back group properties, the sent payloads are computed using the old properties of the group. To ensure the entire `GroupOperation` is always present in the payload, set the `force` parameter to `true`. **Note:** `force = true` might become the default in a future release.
 
 ### Custom requests
 For all one-time requests currently not possible through specialized methods, you can use
@@ -528,11 +528,11 @@ The properties available on an `Accessory` are:
 * `deviceInfo: DeviceInfo` - Some additional information about the device in form of a `DeviceInfo` object (see below)
 * `alive: boolean` - Whether the gateway considers this device as alive.
 * `lastSeen: number` - The unix timestamp of the last communication with the gateway.
-* `lightList: Light[]` - An array of all lights belonging to this accessory.
-* `plugList: Plug[]` - An array of all plugs belonging to this accessory.
+* `lightList: Light[]` - An array of all lights belonging to this accessory. Is `undefined` for non-light devices.
+* `plugList: Plug[]` - An array of all plugs belonging to this accessory. Is `undefined` for non-plug devices.
 * `sensorList: Sensor[]` - An array of all sensors belonging to this accessory.
 * `switchList: any[]` - An array of all switches belonging to this accessory. **Unsupported atm.**
-* `otaUpdateState: number` - Unknown. Might be a boolean
+* `otaUpdateState: number` - Unknown. Might be a `boolean`
 
 ### `Light`
 A light represents a single lightbulb and has several properties describing its state. The supported properties depend on the spectrum of the lightbulb. All of them support the most basic properties:
@@ -555,7 +555,7 @@ RGB lightbulbs have the following properties:
 
 The additional properties are either for internal use (`colorX`/`colorY`) or not supported by the gateway. So don't use them!
 
-If the light object was returned from a library function and not created by you, the following methods are available to change its appearance directly. You can await them to make sure the commands were sent or just fire-and-forget them. The returned Promises resolve to true if a command was sent, otherwise to false.
+If the light object was returned from a library function and not created by you, the following methods are available to change its appearance directly. You can `await` them to make sure the commands were sent or just fire-and-forget them. The returned `Promise`s resolve to `true` if a command was sent, otherwise to `false`.
 * `turnOn()` - Turns the light on.
 * `turnOff()` - Turns the light off.
 * `toggle([value: boolean])` - Toggles the light's state to the given value or the opposite of its current state.
@@ -587,14 +587,14 @@ A plug represents a single outlet plug and has a single writable describing its 
 * `onOff: boolean` - If the plug is on (`true`) or off (`false`)
 
 as well as a few readonly properties:
-* `isSwitchable: boolean` - Whether the plug supports on/off (always true).
-* `isDimmable: boolean` - Whether the plug supports setting the dimmer value (always false for now).
+* `isSwitchable: boolean` - Whether the plug supports on/off (always `true`).
+* `isDimmable: boolean` - Whether the plug supports setting the dimmer value (always `false` for now).
 
-If the plug object was returned from a library function and not created by you, the following methods are available to change its state directly. You can await them to make sure the commands were sent or just fire-and-forget them. The returned Promises resolve to true if a command was sent, otherwise to false.
+If the plug object was returned from a library function and not created by you, the following methods are available to change its state directly. Just like with lights, you can `await` them to make sure the commands were sent or just fire-and-forget them. The returned `Promise`s resolve to `true` if a command was sent, otherwise to `false`.
 * `turnOn()` - Turns the plug on.
 * `turnOff()` - Turns the plug off.
 * `toggle([value: boolean])` - Toggles the plug's state to the given value or the opposite of its current state.
-* `setBrightness(value: number)` - In order to keep compatibility with lights, plugs also have this method. Any value > 0 turns the plug on, 0 turns it off.
+* `setBrightness(value: number)` - In order to keep compatibility with lights, plugs also have this method. Any value `>0` turns the plug on, `0` turns it off.
 
 ### `PlugOperation`
 A `PlugOperation` is an object containing the desired on/off state of a `Plug`:
@@ -617,7 +617,7 @@ Additionally, these properties are also supported:
 * `sceneId: number` - Set this to the `instanceId` of a scene (or "mood" as IKEA calls them), to activate it.
 * `deviceIDs: number[]` - A **readonly** array of all `instanceId`s of the devices in this group.
 
-Similar to lightbulbs, groups provide the following methods if they were returned from a library function. You can await them to make sure the commands were sent or just fire-and-forget them. The returned Promises resolve to true if a command was sent, otherwise to false.
+Similar to lightbulbs, groups provide the following methods if they were returned from a library function. You can `await` them to make sure the commands were sent or just fire-and-forget them. The returned `Promise`s resolve to `true` if a command was sent, otherwise to `false`.
 * `turnOn()` - Turns all lights on.
 * `turnOff()` - Turns all lights off.
 * `toggle(value: boolean)` - Sets all lights' state to the given value.
