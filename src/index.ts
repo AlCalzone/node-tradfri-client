@@ -11,7 +11,6 @@ export { Light, LightOperation, Spectrum } from "./lib/light";
 export { LightSetting } from "./lib/lightSetting";
 export { Notification, NotificationTypes } from "./lib/notification";
 export { Plug } from "./lib/plug";
-export { PlugSetting } from "./lib/plugSetting";
 export { Scene } from "./lib/scene";
 export { Sensor } from "./lib/sensor";
 export { TradfriError, TradfriErrorCodes } from "./lib/tradfri-error";

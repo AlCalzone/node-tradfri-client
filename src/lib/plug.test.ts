@@ -143,6 +143,15 @@ describe("ipso/plug => basic functionality =>", () => {
 
 	});
 
+	it("cloning a plug should create a deep copy of it", () => {
+		const acc = new Accessory().parse(buildAccessory());
+		const plug = acc.plugList[0];
+		const clone = plug.clone();
+		// plug should be !== clone, but its properties should be identical
+		expect(plug).to.deep.equal(clone);
+		expect(plug).to.not.equal(clone);
+	});
+
 });
 
 describe("ipso/plug => simplified API => ", () => {

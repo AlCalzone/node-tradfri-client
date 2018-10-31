@@ -295,14 +295,14 @@ describe("ipso/light => basic functionality =>", () => {
 
 	});
 
-	it("cloning a light should correctly copy the model name", () => {
+	it("cloning a light should correctly copy a deep copy of it", () => {
 		const source = buildAccessory("TRADFRI bulb E27 C/WS opal 600lm", "rgb");
 		const acc = new Accessory().parse(source);
 		const light = acc.lightList[0];
 		const clone = light.clone();
-		// the model name is internally responsible for detecting the spectrum
-		// so we use that to test
-		expect(light.spectrum).to.equal(clone.spectrum);
+		// light should be !== clone, but its properties should be identical
+		expect(light).to.deep.equal(clone);
+		expect(light).to.not.equal(clone);
 	});
 
 });
@@ -701,4 +701,29 @@ describe("ipso/light => spectrum detection (GH#70)", () => {
 			bulb.spectrum.should.equal("white");
 		}
 	});
+});
+
+describe("ipso/light => special cases => ", () => {
+
+	it("serialized non-rgb lights should not include color properties, even if explicitly set", () => {
+		const rgb = new Accessory()
+			.parse(buildAccessory("TRADFRI bulb E27 WS clear 950lm", "white"))
+			.createProxy()
+			;
+		const original = rgb.clone();
+		const light = rgb.lightList[0];
+
+		// A valid property for WS lights, forces "3311" to be present
+		light.dimmer = 55;
+		// Two invalid properties for WS lights
+		light.hue = 123;
+		light.saturation = 63;
+
+		const serialized = rgb.serialize(original);
+		expect(serialized).to.haveOwnProperty("3311");
+		expect(serialized["3311"]).to.have.length(1);
+		expect(serialized["3311"][0]).to.not.haveOwnProperty("5707");
+		expect(serialized["3311"][0]).to.not.haveOwnProperty("5708");
+	});
+
 });

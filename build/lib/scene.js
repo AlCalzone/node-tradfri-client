@@ -12,17 +12,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const ipsoDevice_1 = require("./ipsoDevice");
 const ipsoObject_1 = require("./ipsoObject");
 const lightSetting_1 = require("./lightSetting");
-// import { PlugSetting } from "./plugSetting";
 class Scene extends ipsoDevice_1.IPSODevice {
     constructor() {
         super(...arguments);
         this.isActive = false; // <bool>
         this.isPredefined = true; // <bool>
-        this.lightSettings = [];
         // Plugs can be part of a scene but we need to find out how they are included
-        // @ipsoKey("15015")
-        // @deserializeWith(obj => new PlugSetting().parse(obj))
-        // public plugSettings: PlugSetting[] = [];
+        // I currently believe, they are part of this, as LightSettings are a superset
+        // of the available settings for plugs.
+        this.lightSettings = [];
         this.sceneIndex = 0; // <int>
         this.useCurrentLightSettings = false; // <bool>
     }

@@ -770,6 +770,14 @@ describe("tradfri-client => updating resources => ", () => {
 		});
 	});
 
+	describe("operatePlug => ", () => {
+		it("should throw when called with a non-plug accessory", () => {
+			const notAPlug = new Accessory();
+			notAPlug.type = AccessoryTypes.lightbulb;
+			expect(() => tradfri.operatePlug(notAPlug, {})).to.throw("must be a plug");
+		});
+	});
+
 });
 
 describe("tradfri-client => custom requests => ", () => {
