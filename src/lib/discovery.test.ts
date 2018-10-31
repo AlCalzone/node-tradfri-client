@@ -172,6 +172,15 @@ describe("lib/discovery2 => ", () => {
 			promise = discoverGateway();
 			assertNotComplete();
 
+			// Some unrelated response, to test the check for PTR record existence
+			promise = discoverGateway();
+			completeResponse.answers.push({
+				name: coapDomain,
+				type: "FOOBAR",
+				data: "baz",
+			});
+			assertNotComplete();
+
 			// We require a certain set of answers:
 			// 1. PTR with the short local domain, pointing to the Tradfri gateway
 			promise = discoverGateway();
@@ -182,16 +191,7 @@ describe("lib/discovery2 => ", () => {
 			});
 			assertNotComplete();
 
-			// 2. TXT for the complete domain
-			promise = discoverGateway();
-			completeResponse.answers.push({
-				name: completeDomain,
-				type: "TXT",
-				data: Buffer.from("\u000eversion=1.2.3"),
-			});
-			assertNotComplete();
-
-			// 3. SRV for the complete domain with the correct port and hostname
+			// 2. SRV for the complete domain with the correct port and hostname
 			promise = discoverGateway();
 			completeResponse.answers.push({
 				name: completeDomain,
@@ -200,6 +200,15 @@ describe("lib/discovery2 => ", () => {
 					port: 5684,
 					target: hostname,
 				},
+			});
+			assertNotComplete();
+
+			// 3. TXT for the complete domain
+			promise = discoverGateway();
+			completeResponse.answers.push({
+				name: completeDomain,
+				type: "TXT",
+				data: Buffer.from("\u000eversion=1.2.3"),
 			});
 			assertNotComplete();
 
@@ -259,6 +268,55 @@ describe("lib/discovery2 => ", () => {
 			assertNotComplete();
 
 		});
+
+		it(`should use "unknown" as the name when the PTR record data doesn't match the schema "gw-..." `, async () => {
+			let promise;
+
+			const wrongCompleteDomain = completeDomain.replace("gw-", "fake-");
+
+			const completeResponse = {
+				type: "response",
+				answers: [{
+					name: coapDomain,
+					type: "PTR",
+					data: wrongCompleteDomain,
+				}, {
+					name: wrongCompleteDomain,
+					type: "TXT",
+					data: Buffer.from("\u000eversion=1.2.3"),
+				}, {
+					name: wrongCompleteDomain,
+					type: "SRV",
+					data: {
+						port: 5684,
+						target: hostname,
+					},
+				}, {
+					name: hostname,
+					type: "A",
+					data: "192.168.1.234",
+				}],
+				additionals: [],
+			};
+
+			async function assertComplete() {
+				fakeResponseHandler(completeResponse);
+				clock.runAll();
+				const result = await promise;
+				expect(result).to.not.equal(null);
+				return result;
+			}
+
+			promise = discoverGateway();
+			const discoverResult = await assertComplete();
+
+			discoverResult.should.deep.include({
+				name: "unknown",
+			});
+
+		});
+
+		// TODO: Test cases where the responses don't belong together
 
 	});
 

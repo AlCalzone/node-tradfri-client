@@ -41,12 +41,14 @@ export class Accessory extends IPSODevice {
 	@deserializeWith((obj, me: Accessory) => new Plug(me.options, me).parse(obj))
 	public plugList!: Plug[];
 
+	// Don't test sensors for now, they are unsupported
 	@ipsoKey("3300")
-	@deserializeWith((obj, me: Accessory) => new Sensor(me.options).parse(obj))
+	@deserializeWith(/* istanbul ignore next */ (obj, me: Accessory) => new Sensor(me.options).parse(obj))
 	public sensorList!: Sensor[];
 
+	// Don't test switches for now, they are unsupported
 	@ipsoKey("15009")
-	@deserializeWith((obj, me: Accessory) => new IPSODevice(me.options).parse(obj))
+	@deserializeWith(/* istanbul ignore next */ (obj, me: Accessory) => new IPSODevice(me.options).parse(obj))
 	public switchList!: IPSODevice[]; // <[Switch]> // seems unsupported atm.
 
 	@ipsoKey("9054")

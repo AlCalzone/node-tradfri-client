@@ -248,12 +248,12 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 				TradfriErrorCodes.ConnectionTimedOut,
 			);
 		} else {
-			// @ts-ignore This is a false positive, lastFailureReason is an Error instance
+			// Control-flow analysis runs into a false positive here.
+			// lastFailureReason is an Error instance, so we "cast" it as one
 			// https://github.com/Microsoft/TypeScript/issues/27239
+			lastFailureReason = lastFailureReason as Error;
 			lastFailureReason.message =
 				`Could not connect to the gateway${maxAttempts === 1 ? "" : ` after ${maxAttempts} tries`}:\n`
-				// @ts-ignore This is a false positive, lastFailureReason is an Error instance
-				// https://github.com/Microsoft/TypeScript/issues/27239
 				+ lastFailureReason.message
 			;
 			throw lastFailureReason;
