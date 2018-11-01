@@ -125,16 +125,16 @@ class TradfriClient extends events_1.EventEmitter {
                     }
                 }
             }
+            // Control-flow analysis doesn't check the loop body
+            // lastFailureReason is definitely assigned here
+            // https://github.com/Microsoft/TypeScript/issues/27239
+            lastFailureReason = lastFailureReason;
             if (lastFailureReason === "timeout") {
                 throw new tradfri_error_1.TradfriError(`The gateway did not respond ${maxAttempts === 1 ? "in time" : `after ${maxAttempts} tries`}.`, tradfri_error_1.TradfriErrorCodes.ConnectionTimedOut);
             }
             else {
-                // @ts-ignore This is a false positive, lastFailureReason is an Error instance
-                // https://github.com/Microsoft/TypeScript/issues/27239
                 lastFailureReason.message =
                     `Could not connect to the gateway${maxAttempts === 1 ? "" : ` after ${maxAttempts} tries`}:\n`
-                        // @ts-ignore This is a false positive, lastFailureReason is an Error instance
-                        // https://github.com/Microsoft/TypeScript/issues/27239
                         + lastFailureReason.message;
                 throw lastFailureReason;
             }

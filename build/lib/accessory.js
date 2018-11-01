@@ -118,12 +118,12 @@ __decorate([
 ], Accessory.prototype, "plugList", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("3300"),
-    ipsoObject_1.deserializeWith((obj, me) => new sensor_1.Sensor(me.options).parse(obj)),
+    ipsoObject_1.deserializeWith(/* istanbul ignore next */ (obj, me) => new sensor_1.Sensor(me.options).parse(obj)),
     __metadata("design:type", Array)
 ], Accessory.prototype, "sensorList", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("15009"),
-    ipsoObject_1.deserializeWith((obj, me) => new ipsoDevice_1.IPSODevice(me.options).parse(obj)),
+    ipsoObject_1.deserializeWith(/* istanbul ignore next */ (obj, me) => new ipsoDevice_1.IPSODevice(me.options).parse(obj)),
     __metadata("design:type", Array)
 ], Accessory.prototype, "switchList", void 0);
 __decorate([
