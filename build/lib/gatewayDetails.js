@@ -60,15 +60,11 @@ __decorate([
     __metadata("design:type", Number)
 ], GatewayDetails.prototype, "commissioningMode", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9059")
-    /** Current UTC time in seconds since 1970 (unix timestamp) */
-    ,
+    ipsoObject_1.ipsoKey("9059"),
     __metadata("design:type", Number)
 ], GatewayDetails.prototype, "utcNowUnixTimestamp", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9060")
-    /** Current UTC time as XML (ISO) date */
-    ,
+    ipsoObject_1.ipsoKey("9060"),
     __metadata("design:type", String)
 ], GatewayDetails.prototype, "utcNowISODate", void 0);
 __decorate([
