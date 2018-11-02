@@ -25,6 +25,14 @@ describe("ipso/ipsoObject => proxies", () => {
 		expect(unproxied.isProxy).to.be.false;
 	});
 
+	it("unproxying a non-proxy object should work (but not do anything)", () => {
+		const stillNotAProxy = unproxied.unproxy();
+		expect(stillNotAProxy.isProxy).to.be.false;
+		// equality check for proxies is pointless, but whatever...
+		expect(unproxied).to.equal(stillNotAProxy);
+		expect(unproxied).to.deep.equal(stillNotAProxy);
+	});
+
 	it("serialize() should return an empty object for IPSOObject", () => {
 		expect(obj.serialize()).to.deep.equal({});
 	});

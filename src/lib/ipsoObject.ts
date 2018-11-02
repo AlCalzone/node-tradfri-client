@@ -63,14 +63,12 @@ export const ipsoKey = (key: string): PropertyDecorator => {
  * Returns a property name if the key was given, or the key if a property name was given.
  * @param keyOrProperty - ipso key or property name to lookup
  */
-// TODO: in TS 2.8 type keyOrProperty with conditional types
 function lookupKeyOrProperty<T extends IPSOObject>(target: T, keyOrProperty: string /*| keyof T*/): string | undefined /*| keyof T*/ {
 	// get the class constructor
 	const constr = target.constructor;
 	// retrieve the current metadata
-	const metadata = Reflect.getMetadata(METADATA_ipsoKey, constr) || {};
-	if (metadata.hasOwnProperty(keyOrProperty)) return metadata[keyOrProperty];
-	return undefined;
+	const metadata = Reflect.getMetadata(METADATA_ipsoKey, constr);
+	return metadata && metadata[keyOrProperty];
 }
 
 /**
@@ -97,11 +95,11 @@ function isRequired<T extends IPSOObject>(target: T, reference: T | undefined, p
 	const constr = target.constructor;
 	log(`${constr.name}: checking if ${property} is required...`, "silly");
 	// retrieve the current metadata
-	const metadata = Reflect.getMetadata(METADATA_required, constr) || {};
+	const metadata: {[prop: string]: boolean | RequiredPredicate} = Reflect.getMetadata(METADATA_required, constr) || {};
 	if (metadata.hasOwnProperty(property)) {
-		const ret = metadata[property];
+		const ret = metadata[property as keyof typeof metadata];
 		if (typeof ret === "boolean") return ret;
-		if (typeof ret === "function") return (ret as RequiredPredicate)(target, reference);
+		return ret(target, reference);
 	}
 	return false;
 }
@@ -116,9 +114,9 @@ function isAlwaysRequired<T extends IPSOObject>(target: T, property: keyof T): b
 	const constr = target.constructor;
 	log(`${constr.name}: checking if ${property} is always required...`, "silly");
 	// retrieve the current metadata
-	const metadata = Reflect.getMetadata(METADATA_required, constr) || {};
+	const metadata: {[prop: string]: boolean | RequiredPredicate} = Reflect.getMetadata(METADATA_required, constr) || {};
 	if (metadata.hasOwnProperty(property)) {
-		const ret = metadata[property];
+		const ret = metadata[property as keyof typeof metadata];
 		if (typeof ret === "boolean") return ret;
 	}
 	return false;

@@ -56,15 +56,12 @@ exports.ipsoKey = (key) => {
  * Returns a property name if the key was given, or the key if a property name was given.
  * @param keyOrProperty - ipso key or property name to lookup
  */
-// TODO: in TS 2.8 type keyOrProperty with conditional types
 function lookupKeyOrProperty(target, keyOrProperty /*| keyof T*/) {
     // get the class constructor
     const constr = target.constructor;
     // retrieve the current metadata
-    const metadata = Reflect.getMetadata(METADATA_ipsoKey, constr) || {};
-    if (metadata.hasOwnProperty(keyOrProperty))
-        return metadata[keyOrProperty];
-    return undefined;
+    const metadata = Reflect.getMetadata(METADATA_ipsoKey, constr);
+    return metadata && metadata[keyOrProperty];
 }
 /**
  * Declares that a property is required to be present in a serialized CoAP object
@@ -95,8 +92,7 @@ function isRequired(target, reference, property) {
         const ret = metadata[property];
         if (typeof ret === "boolean")
             return ret;
-        if (typeof ret === "function")
-            return ret(target, reference);
+        return ret(target, reference);
     }
     return false;
 }
