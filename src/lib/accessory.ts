@@ -9,6 +9,7 @@ import { Sensor } from "./sensor";
 // list of known endpoints defined on the gateway
 export enum AccessoryTypes {
 	remote = 0,
+	extraRemote = 1, // i.e. remote which has been paired with another remote (https://www.reddit.com/r/tradfri/comments/6x1miq)
 	lightbulb = 2,
 	plug = 3,
 	motionSensor = 4,
