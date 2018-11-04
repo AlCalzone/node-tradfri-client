@@ -1,6 +1,6 @@
 # Changelog
 
-## __WORK IN PROGRESS__
+## 1.4.3 (2018-11-04)
 * (AlCalzone) Rework installation procedure. `node-aead-crypto` is now optional.
 
 ## 1.4.2 (2018-11-04)
