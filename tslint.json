@@ -11,8 +11,8 @@
         "max-line-length": [false],
         "interface-name": [false],
         "variable-name": [
-            true, 
-            "ban-keywords", 
+            true,
+            "ban-keywords",
             "check-format", "allow-leading-underscore", "allow-trailing-underscore"
         ],
         "member-ordering": [false],
@@ -20,8 +20,9 @@
         "triple-equals": [true, "allow-undefined-check", "allow-null-check"],
         "arrow-parens": false,
         "no-bitwise": false,
-        "max-classes-per-file": [false],
+        "max-classes-per-file": false,
         "quotemark": [true, "double", "avoid-escape"],
-        "no-console": [true, "log", "error"]
+        "no-console": [true, "log", "error"],
+        "no-trailing-whitespace": [true, "ignore-jsdoc"]
     }
 }

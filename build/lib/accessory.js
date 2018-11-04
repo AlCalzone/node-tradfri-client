@@ -18,11 +18,19 @@ const sensor_1 = require("./sensor");
 // list of known endpoints defined on the gateway
 var AccessoryTypes;
 (function (AccessoryTypes) {
+    /** A "normal" remote */
     AccessoryTypes[AccessoryTypes["remote"] = 0] = "remote";
+    /**
+     * A remote which has been paired with another remote.
+     * See https://www.reddit.com/r/tradfri/comments/6x1miq for details
+     */
+    AccessoryTypes[AccessoryTypes["slaveRemote"] = 1] = "slaveRemote";
+    /** A lightbulb */
     AccessoryTypes[AccessoryTypes["lightbulb"] = 2] = "lightbulb";
+    /** A smart plug */
     AccessoryTypes[AccessoryTypes["plug"] = 3] = "plug";
+    /** A motion sensor (currently unsupported) */
     AccessoryTypes[AccessoryTypes["motionSensor"] = 4] = "motionSensor";
-    // TODO: find out the other ones
 })(AccessoryTypes = exports.AccessoryTypes || (exports.AccessoryTypes = {}));
 class Accessory extends ipsoDevice_1.IPSODevice {
     constructor() {

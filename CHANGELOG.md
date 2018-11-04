@@ -1,5 +1,8 @@
 # Changelog
 
+## __WORK IN PROGRESS__
+* (jareware) Add enum member for slave remotes (remotes that have been paired with other remotes)
+
 ## 1.4.1 (2018-10-29)
 * (AlCalzone) Add `setBrightness` method to plugs for better compatibility with lights.
 

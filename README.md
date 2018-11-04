@@ -524,7 +524,12 @@ The properties available on an `Accessory` are:
 * `name: string` - The name of this accessory as displayed in the app. Defaults to the model name.
 * `createdAt: number` - The unix timestamp of the creation of the device. Unknown what this is exactly.
 * `instanceId: number` - The ID under which the accessory is known to the gateway. Is used in callbacks throughout the library.
-* `type: AccessoryTypes` - The type of the accessory: `remote (0)`, `lightbulb (2)` or `motionSensor (4)`. Currently only lightbulbs contain meaningful information.
+* `type: AccessoryTypes` - The type of the accessory. Currently, the following types are supported, but only `lightbulb` and `plug` contain any meaningful information:
+  * `remote (0)` - A "normal" remote
+  * `slaveRemote (1)` - A remote which has been paired with another remote. You can find details [here](https://www.reddit.com/r/tradfri/comments/6x1miq) on how to achieve this configuration.
+  * `lightbulb (2)` - A lightbulb
+  * `plug (3)` - A smart plug
+  * `motionSensor (4)` - A motion sensor
 * `deviceInfo: DeviceInfo` - Some additional information about the device in form of a `DeviceInfo` object (see below)
 * `alive: boolean` - Whether the gateway considers this device as alive.
 * `lastSeen: number` - The unix timestamp of the last communication with the gateway.

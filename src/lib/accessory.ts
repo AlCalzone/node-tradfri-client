@@ -8,12 +8,19 @@ import { Sensor } from "./sensor";
 
 // list of known endpoints defined on the gateway
 export enum AccessoryTypes {
+	/** A "normal" remote */
 	remote = 0,
-	extraRemote = 1, // i.e. remote which has been paired with another remote (https://www.reddit.com/r/tradfri/comments/6x1miq)
+	/**
+	 * A remote which has been paired with another remote.
+	 * See https://www.reddit.com/r/tradfri/comments/6x1miq for details
+	 */
+	slaveRemote = 1,
+	/** A lightbulb */
 	lightbulb = 2,
+	/** A smart plug */
 	plug = 3,
+	/** A motion sensor (currently unsupported) */
 	motionSensor = 4,
-	// TODO: find out the other ones
 }
 
 export class Accessory extends IPSODevice {
