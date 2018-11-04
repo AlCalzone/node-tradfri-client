@@ -1,5 +1,8 @@
 # Changelog
 
+## __WORK IN PROGRESS__
+* (AlCalzone) Rework installation procedure. `node-aead-crypto` is now optional.
+
 ## 1.4.2 (2018-11-04)
 * (jareware) Add enum member for slave remotes (remotes that have been paired with other remotes)
 
