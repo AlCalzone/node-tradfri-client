@@ -42,6 +42,7 @@ whitelist: &whitelist
     - test/*
     - coverage/*
     - .npmignore
+    - dts-bundle.json
     - package.json
     - README.md
     - tsconfig.json
@@ -179,6 +180,10 @@ jobs:
       - run:
           name: Build the source files
           command: npm run build
+
+      - run:
+          name: Bundle the declaration files
+          command: npm run build:dts
 
       - persist_to_workspace:
           root: *workdir_latest

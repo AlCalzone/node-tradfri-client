@@ -1,0 +1,7 @@
+{
+	"main": "build/index.d.ts",
+	"out": "./index.d.ts",
+	"name": "node-tradfri-client",
+	"removeSource": true,
+	"outputAsModuleFolder": true
+}
