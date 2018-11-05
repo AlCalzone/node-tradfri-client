@@ -5,125 +5,31 @@ import { CoapClient as coap, CoapResponse, ConnectionResult, RequestMethod } fro
 // load internal modules
 import { wait } from "alcalzone-shared/async";
 import { createDeferredPromise, DeferredPromise } from "alcalzone-shared/deferred-promise";
-import { Overwrite as Merge } from "alcalzone-shared/types";
 import { Accessory, AccessoryTypes } from "./lib/accessory";
 import { except } from "./lib/array-extensions";
 import { endpoints as coapEndpoints, GatewayEndpoints } from "./lib/endpoints";
+import { AllEventCallbacks, AllEvents, ConnectionWatcherEvents } from "./lib/events";
 import { GatewayDetails, UpdatePriority } from "./lib/gatewayDetails";
 import { Group, GroupInfo, GroupOperation } from "./lib/group";
 import { IPSOObject, IPSOOptions } from "./lib/ipsoObject";
 import { LightOperation } from "./lib/light";
 import { log, LoggerFunction, setCustomLogger } from "./lib/logger";
-import { Notification } from "./lib/notification";
-import { FirmwareUpdateNotification, GatewayRebootReason, NotificationTypes, RebootNotification } from "./lib/notification";
+import { FirmwareUpdateNotification, GatewayRebootReason, Notification, NotificationTypes, RebootNotification } from "./lib/notification";
 import { composeObject, entries } from "./lib/object-polyfill";
 import { OperationProvider } from "./lib/operation-provider";
 import { PlugOperation } from "./lib/plug";
 import { Scene } from "./lib/scene";
 import { TradfriError, TradfriErrorCodes } from "./lib/tradfri-error";
-import { ConnectionEventCallbacks, ConnectionEvents, ConnectionWatcher, ConnectionWatcherOptions } from "./lib/watcher";
+import { ConnectionWatcher, ConnectionWatcherOptions } from "./lib/watcher";
 
 export type ObserveResourceCallback = (resp: CoapResponse) => void;
 export type ObserveDevicesCallback = (addedDevices: Accessory[], removedDevices: Accessory[]) => void;
 
-export type DeviceUpdatedCallback = (device: Accessory) => void;
-export type DeviceRemovedCallback = (instanceId: number) => void;
-export type GroupUpdatedCallback = (group: Group) => void;
-export type GroupRemovedCallback = (instanceId: number) => void;
-export type SceneUpdatedCallback = (groupId: number, scene: Scene) => void;
-export type SceneRemovedCallback = (groupId: number, instanceId: number) => void;
-export type ErrorCallback = (e: Error) => void;
-export type ConnectionFailedCallback = (attempt: number, maxAttempts: number) => void;
-export type GatewayUpdatedCallback = (gateway: GatewayDetails) => void;
-
-export interface ObservableEventCallbacks {
-	"device updated": DeviceUpdatedCallback;
-	"device removed": DeviceRemovedCallback;
-	"group updated": GroupUpdatedCallback;
-	"group removed": GroupRemovedCallback;
-	"scene updated": SceneUpdatedCallback;
-	"scene removed": SceneRemovedCallback;
-	"gateway updated": GatewayUpdatedCallback;
-	"error": ErrorCallback;
-}
-
-export type ObservableEvents = keyof ObservableEventCallbacks;
-
-export type RebootNotificationCallback = (reason: keyof typeof GatewayRebootReason) => void;
-export type FirmwareUpdateNotificationCallback = (releaseNotes: string, priority: keyof typeof UpdatePriority) => void;
-export type InternetConnectivityChangedCallback = (connected: boolean) => void;
-
-export interface NotificationEventCallbacks {
-	"rebooting": RebootNotificationCallback;
-	"internet connectivity changed": FirmwareUpdateNotificationCallback;
-	"firmware update available": InternetConnectivityChangedCallback;
-}
-export type NotificationEvents = keyof NotificationEventCallbacks;
-
-export interface InitialConnectionEventCallbacks {
-	"connection failed": ConnectionFailedCallback;
-}
-
-export type AllEventCallbacks = Merge<
-	Merge<ObservableEventCallbacks, NotificationEventCallbacks>,
-	Merge<ConnectionEventCallbacks, InitialConnectionEventCallbacks>
->;
-export type AllEvents = keyof AllEventCallbacks;
-
-// tslint:disable:unified-signatures
 export interface TradfriClient {
 	on<TEvent extends AllEvents, TCb = AllEventCallbacks[TEvent]>(event: TEvent, callback: TCb): this;
-
 	removeListener<TEvent extends AllEvents, TCb = AllEventCallbacks[TEvent]>(event: TEvent, callback: TCb): this;
-
-	// // default events
-	// on(event: "device updated", callback: DeviceUpdatedCallback): this;
-	// on(event: "device removed", callback: DeviceRemovedCallback): this;
-	// on(event: "group updated", callback: GroupUpdatedCallback): this;
-	// on(event: "group removed", callback: GroupRemovedCallback): this;
-	// on(event: "scene updated", callback: SceneUpdatedCallback): this;
-	// on(event: "scene removed", callback: SceneRemovedCallback): this;
-	// on(event: "gateway updated", callback: GatewayUpdatedCallback): this;
-	// on(event: "error", callback: ErrorCallback): this;
-	// // connection events => is there a nicer way than copy & paste?
-	// on(event: "ping succeeded", callback: () => void): this;
-	// on(event: "ping failed", callback: PingFailedCallback): this;
-	// on(event: "connection alive", callback: () => void): this;
-	// on(event: "connection failed", callback: ConnectionFailedCallback): this;
-	// on(event: "connection lost", callback: () => void): this;
-	// on(event: "gateway offline", callback: () => void): this;
-	// on(event: "reconnecting", callback: ReconnectingCallback): this;
-	// on(event: "give up", callback: () => void): this;
-	// // notification events
-	// on(event: "rebooting", callback: RebootNotificationCallback): this;
-	// on(event: "firmware update available", callback: FirmwareUpdateNotificationCallback): this;
-	// on(event: "internet connectivity changed", callback: InternetConnectivityChangedCallback): this;
-
-	// removeListener(event: "device updated", callback: DeviceUpdatedCallback): this;
-	// removeListener(event: "device removed", callback: DeviceRemovedCallback): this;
-	// removeListener(event: "group updated", callback: GroupUpdatedCallback): this;
-	// removeListener(event: "group removed", callback: GroupRemovedCallback): this;
-	// removeListener(event: "scene updated", callback: SceneUpdatedCallback): this;
-	// removeListener(event: "scene removed", callback: SceneRemovedCallback): this;
-	// removeListener(event: "gateway updated", callback: GatewayUpdatedCallback): this;
-	// removeListener(event: "error", callback: ErrorCallback): this;
-	// // connection events => is there a nicer way than copy & paste?
-	// removeListener(event: "ping succeeded", callback: () => void): this;
-	// removeListener(event: "ping failed", callback: PingFailedCallback): this;
-	// removeListener(event: "connection alive", callback: () => void): this;
-	// removeListener(event: "connection failed", callback: ConnectionFailedCallback): this;
-	// removeListener(event: "connection lost", callback: () => void): this;
-	// removeListener(event: "gateway offline", callback: () => void): this;
-	// removeListener(event: "reconnecting", callback: ReconnectingCallback): this;
-	// removeListener(event: "give up", callback: () => void): this;
-	// // notification events
-	// removeListener(event: "rebooting", callback: RebootNotificationCallback): this;
-	// removeListener(event: "firmware update available", callback: FirmwareUpdateNotificationCallback): this;
-	// removeListener(event: "internet connectivity changed", callback: InternetConnectivityChangedCallback): this;
-
 	removeAllListeners(event?: AllEvents): this;
 }
-// tslint:enable:unified-signatures
 
 export interface TradfriOptions {
 	/** Callback for a custom logger function. */
@@ -181,7 +87,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 				this.watcher = new ConnectionWatcher(this, watcherOptions);
 
 				// in the first iteration of this feature, just pass all events through
-				const eventNames: ConnectionEvents[] = [
+				const eventNames: ConnectionWatcherEvents[] = [
 					"ping succeeded", "ping failed",
 					"connection alive", "connection lost",
 					"gateway offline",

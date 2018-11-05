@@ -1,53 +1,16 @@
 /// <reference types="node" />
 import { EventEmitter } from "events";
 import { CoapResponse, RequestMethod } from "node-coap-client";
-import { Overwrite as Merge } from "alcalzone-shared/types";
 import { Accessory } from "./lib/accessory";
-import { GatewayDetails, UpdatePriority } from "./lib/gatewayDetails";
+import { AllEventCallbacks, AllEvents } from "./lib/events";
 import { Group, GroupInfo, GroupOperation } from "./lib/group";
 import { LightOperation } from "./lib/light";
 import { LoggerFunction } from "./lib/logger";
-import { GatewayRebootReason } from "./lib/notification";
 import { OperationProvider } from "./lib/operation-provider";
 import { PlugOperation } from "./lib/plug";
-import { Scene } from "./lib/scene";
-import { ConnectionEventCallbacks, ConnectionWatcherOptions } from "./lib/watcher";
+import { ConnectionWatcherOptions } from "./lib/watcher";
 export declare type ObserveResourceCallback = (resp: CoapResponse) => void;
 export declare type ObserveDevicesCallback = (addedDevices: Accessory[], removedDevices: Accessory[]) => void;
-export declare type DeviceUpdatedCallback = (device: Accessory) => void;
-export declare type DeviceRemovedCallback = (instanceId: number) => void;
-export declare type GroupUpdatedCallback = (group: Group) => void;
-export declare type GroupRemovedCallback = (instanceId: number) => void;
-export declare type SceneUpdatedCallback = (groupId: number, scene: Scene) => void;
-export declare type SceneRemovedCallback = (groupId: number, instanceId: number) => void;
-export declare type ErrorCallback = (e: Error) => void;
-export declare type ConnectionFailedCallback = (attempt: number, maxAttempts: number) => void;
-export declare type GatewayUpdatedCallback = (gateway: GatewayDetails) => void;
-export interface ObservableEventCallbacks {
-    "device updated": DeviceUpdatedCallback;
-    "device removed": DeviceRemovedCallback;
-    "group updated": GroupUpdatedCallback;
-    "group removed": GroupRemovedCallback;
-    "scene updated": SceneUpdatedCallback;
-    "scene removed": SceneRemovedCallback;
-    "gateway updated": GatewayUpdatedCallback;
-    "error": ErrorCallback;
-}
-export declare type ObservableEvents = keyof ObservableEventCallbacks;
-export declare type RebootNotificationCallback = (reason: keyof typeof GatewayRebootReason) => void;
-export declare type FirmwareUpdateNotificationCallback = (releaseNotes: string, priority: keyof typeof UpdatePriority) => void;
-export declare type InternetConnectivityChangedCallback = (connected: boolean) => void;
-export interface NotificationEventCallbacks {
-    "rebooting": RebootNotificationCallback;
-    "internet connectivity changed": FirmwareUpdateNotificationCallback;
-    "firmware update available": InternetConnectivityChangedCallback;
-}
-export declare type NotificationEvents = keyof NotificationEventCallbacks;
-export interface InitialConnectionEventCallbacks {
-    "connection failed": ConnectionFailedCallback;
-}
-export declare type AllEventCallbacks = Merge<Merge<ObservableEventCallbacks, NotificationEventCallbacks>, Merge<ConnectionEventCallbacks, InitialConnectionEventCallbacks>>;
-export declare type AllEvents = keyof AllEventCallbacks;
 export interface TradfriClient {
     on<TEvent extends AllEvents, TCb = AllEventCallbacks[TEvent]>(event: TEvent, callback: TCb): this;
     removeListener<TEvent extends AllEvents, TCb = AllEventCallbacks[TEvent]>(event: TEvent, callback: TCb): this;

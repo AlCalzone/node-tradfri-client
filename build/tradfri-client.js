@@ -21,7 +21,6 @@ const gatewayDetails_1 = require("./lib/gatewayDetails");
 const group_1 = require("./lib/group");
 const logger_1 = require("./lib/logger");
 const notification_1 = require("./lib/notification");
-const notification_2 = require("./lib/notification");
 const object_polyfill_1 = require("./lib/object-polyfill");
 const scene_1 = require("./lib/scene");
 const tradfri_error_1 = require("./lib/tradfri-error");
@@ -690,14 +689,14 @@ class TradfriClient extends events_1.EventEmitter {
             for (const not of notifications) {
                 const notification = new notification_1.Notification().parse(not);
                 switch (notification.event) {
-                    case notification_2.NotificationTypes.Reboot:
-                        this.emit("rebooting", notification_2.GatewayRebootReason[notification.details.reason]);
+                    case notification_1.NotificationTypes.Reboot:
+                        this.emit("rebooting", notification_1.GatewayRebootReason[notification.details.reason]);
                         break;
-                    case notification_2.NotificationTypes.LossOfInternetConnectivity:
+                    case notification_1.NotificationTypes.LossOfInternetConnectivity:
                         // the notification stands for connection loss, but we report if it's available
                         this.emit("internet connectivity changed", !notification.isActive);
                         break;
-                    case notification_2.NotificationTypes.NewFirmwareAvailable: {
+                    case notification_1.NotificationTypes.NewFirmwareAvailable: {
                         const details = notification.details;
                         this.emit("firmware update available", details.releaseNotes, gatewayDetails_1.UpdatePriority[details.priority]);
                         break;

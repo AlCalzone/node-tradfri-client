@@ -19,7 +19,6 @@ export {
 	DeviceRemovedCallback, DeviceUpdatedCallback,
 	ErrorCallback,
 	GroupRemovedCallback, GroupUpdatedCallback,
-	ObserveDevicesCallback, ObserveResourceCallback,
 	SceneRemovedCallback, SceneUpdatedCallback,
-	TradfriClient,
-} from "./tradfri-client";
+} from "./lib/events";
+export { ObserveDevicesCallback, ObserveResourceCallback, TradfriClient } from "./tradfri-client";

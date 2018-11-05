@@ -1,6 +1,6 @@
-import { Overwrite } from "alcalzone-shared/types";
 import { EventEmitter } from "events";
 import { TradfriClient } from "..";
+import { ConnectionWatcherEventCallbacks, ConnectionWatcherEvents } from "./events";
 import { log } from "./logger";
 
 /** Configures options for connection watching and automatic reconnection */
@@ -74,57 +74,11 @@ function checkOptions(opts: Partial<ConnectionWatcherOptions>) {
 	}
 }
 
-export type ConnectionEvents =
-	"ping succeeded" | "ping failed" |
-	"connection alive" | "connection lost" |
-	"gateway offline" |
-	"reconnecting" |
-	"give up"
-	;
-
-export type PingFailedCallback = (failedPingCount: number) => void;
-export type ReconnectingCallback = (reconnectAttempt: number, maximumReconnects: number) => void;
-
-export type ConnectionEventCallbacks = Overwrite<{[K in ConnectionEvents]: () => void }, {
-	"ping failed": PingFailedCallback;
-	"reconnecting": ReconnectingCallback;
-}>;
-
-// tslint:disable:unified-signatures
 export interface ConnectionWatcher {
-	on<TEvent extends ConnectionEvents, TCb = ConnectionEventCallbacks[TEvent]>(event: TEvent, callback: TCb): this;
-
-	removeListener<TEvent extends ConnectionEvents, TCb = ConnectionEventCallbacks[TEvent]>(event: TEvent, callback: TCb): this;
-
-	// on(event: "ping succeeded", callback: () => void): this;
-	// on(event: "ping failed", callback: PingFailedCallback): this;
-	// on(event: "connection alive", callback: () => void): this;
-	// on(event: "connection lost", callback: () => void): this;
-	// on(event: "gateway offline", callback: () => void): this;
-	// on(event: "reconnecting", callback: ReconnectingCallback): this;
-	// on(event: "give up", callback: () => void): this;
-	// on(event: ConnectionEvents, callback: (...args: any[]) => void): this;
-
-	// once(event: "ping succeeded", callback: () => void): this;
-	// once(event: "ping failed", callback: PingFailedCallback): this;
-	// once(event: "connection alive", callback: () => void): this;
-	// once(event: "connection lost", callback: () => void): this;
-	// once(event: "gateway offline", callback: () => void): this;
-	// once(event: "reconnecting", callback: ReconnectingCallback): this;
-	// once(event: "give up", callback: () => void): this;
-	// once(event: ConnectionEvents, callback: (...args: any[]) => void): this;
-
-	// removeListener(event: "ping succeeded", callback: () => void): this;
-	// removeListener(event: "ping failed", callback: PingFailedCallback): this;
-	// removeListener(event: "connection alive", callback: () => void): this;
-	// removeListener(event: "connection lost", callback: () => void): this;
-	// removeListener(event: "gateway offline", callback: () => void): this;
-	// removeListener(event: "reconnecting", callback: ReconnectingCallback): this;
-	// removeListener(event: "give up", callback: () => void): this;
-
-	removeAllListeners(event?: ConnectionEvents): this;
+	on<TEvent extends ConnectionWatcherEvents, TCb = ConnectionWatcherEventCallbacks[TEvent]>(event: TEvent, callback: TCb): this;
+	removeListener<TEvent extends ConnectionWatcherEvents, TCb = ConnectionWatcherEventCallbacks[TEvent]>(event: TEvent, callback: TCb): this;
+	removeAllListeners(event?: ConnectionWatcherEvents): this;
 }
-// tslint:enable:unified-signatures
 
 /**
  * Watches the connection of a TradfriClient and notifies about changes in the connection state

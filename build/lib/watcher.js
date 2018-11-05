@@ -47,7 +47,6 @@ function checkOptions(opts) {
         throw new Error("The maximum number of connection attempts must be at least 1");
     }
 }
-// tslint:enable:unified-signatures
 /**
  * Watches the connection of a TradfriClient and notifies about changes in the connection state
  */

@@ -1,7 +1,7 @@
 /// <reference types="node" />
-import { Overwrite } from "alcalzone-shared/types";
 import { EventEmitter } from "events";
 import { TradfriClient } from "..";
+import { ConnectionWatcherEventCallbacks, ConnectionWatcherEvents } from "./events";
 /** Configures options for connection watching and automatic reconnection */
 export interface ConnectionWatcherOptions {
     /** The interval in ms between consecutive pings */
@@ -29,19 +29,10 @@ export interface ConnectionWatcherOptions {
      */
     failedConnectionBackoffFactor: number;
 }
-export declare type ConnectionEvents = "ping succeeded" | "ping failed" | "connection alive" | "connection lost" | "gateway offline" | "reconnecting" | "give up";
-export declare type PingFailedCallback = (failedPingCount: number) => void;
-export declare type ReconnectingCallback = (reconnectAttempt: number, maximumReconnects: number) => void;
-export declare type ConnectionEventCallbacks = Overwrite<{
-    [K in ConnectionEvents]: () => void;
-}, {
-    "ping failed": PingFailedCallback;
-    "reconnecting": ReconnectingCallback;
-}>;
 export interface ConnectionWatcher {
-    on<TEvent extends ConnectionEvents, TCb = ConnectionEventCallbacks[TEvent]>(event: TEvent, callback: TCb): this;
-    removeListener<TEvent extends ConnectionEvents, TCb = ConnectionEventCallbacks[TEvent]>(event: TEvent, callback: TCb): this;
-    removeAllListeners(event?: ConnectionEvents): this;
+    on<TEvent extends ConnectionWatcherEvents, TCb = ConnectionWatcherEventCallbacks[TEvent]>(event: TEvent, callback: TCb): this;
+    removeListener<TEvent extends ConnectionWatcherEvents, TCb = ConnectionWatcherEventCallbacks[TEvent]>(event: TEvent, callback: TCb): this;
+    removeAllListeners(event?: ConnectionWatcherEvents): this;
 }
 /**
  * Watches the connection of a TradfriClient and notifies about changes in the connection state
