@@ -20,15 +20,13 @@
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
 		"strictPropertyInitialization": true,
-		"strictNullChecks": true,
-		"skipLibCheck": true // false chokes on errors in node_modules/**/.d.ts
+		"strictNullChecks": true
 	},
 	"include": [
 		"src/**/*.ts"
 	],
 	"exclude": [
 		"src/**/*.test.ts",
-		"build/**",
-		"node_modules/**/*.ts"
+		"build/**"
 	]
 }

@@ -3,6 +3,12 @@
     "extends": [
         "tslint:recommended"
     ],
+    "linterOptions": {
+        "exclude": [
+            "node_modules/**",
+            "**/*.d.ts"
+        ]
+    },
     "rules": {
         "indent": [true, "tabs", 4],
         "object-literal-sort-keys": false,
