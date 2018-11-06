@@ -1,5 +1,8 @@
 # Changelog
 
+## __WORK IN PROGRESS__
+* (AlCalzone) Bundle declaration files before publishing on npm
+
 ## 1.4.3 (2018-11-04)
 * (AlCalzone) Rework installation procedure. `node-aead-crypto` is now optional.
 
