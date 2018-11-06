@@ -16,3 +16,4 @@ coverage/
 maintenance/
 .travis.yml
 .circleci/
+dts-bundle.json
