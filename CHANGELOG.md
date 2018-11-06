@@ -1,6 +1,6 @@
 # Changelog
 
-## __WORK IN PROGRESS__
+## 1.5.0-alpha.0 (2018-11-06)
 * (AlCalzone) Bundle declaration files before publishing on npm
 
 ## 1.4.3 (2018-11-04)
