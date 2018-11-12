@@ -1,7 +1,8 @@
 # Changelog
 
-## 1.5.0-alpha.0 (2018-11-06)
+## __WORK IN PROGRESS__
 * (AlCalzone) Bundle declaration files before publishing on npm
+* (AlCalzone) Update `shared-utils` dependency to fix compile errors
 
 ## 1.4.3 (2018-11-04)
 * (AlCalzone) Rework installation procedure. `node-aead-crypto` is now optional.
