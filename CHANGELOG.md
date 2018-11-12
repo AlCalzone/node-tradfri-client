@@ -1,6 +1,6 @@
 # Changelog
 
-## __WORK IN PROGRESS__
+## 1.5.0 (2018-11-12)
 * (AlCalzone) Bundle declaration files before publishing on npm
 * (AlCalzone) Update `shared-utils` dependency to fix compile errors
 
