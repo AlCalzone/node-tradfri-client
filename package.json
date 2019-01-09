@@ -82,7 +82,7 @@
     "coveralls": "node_modules/.bin/nyc report --reporter=text-lcov | coveralls -v",
     "show-coverage": "npm run coverage && start ./coverage/index.html",
     "lint:ts": "tslint \"src/**/*.ts\"",
-    "lint:wotan": "wotan",
+    "lint:wotan": "wotan -e 'node_modules/**'",
     "lint": "npm run lint:ts && npm run lint:wotan",
     "release": "node --require ts-node/register maintenance/release.ts"
   },
