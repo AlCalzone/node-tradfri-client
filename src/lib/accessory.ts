@@ -1,3 +1,6 @@
+// wotan-disable no-useless-predicate
+// Until I'm sure that the properties may be nullable, we have to allow these "useless" checks
+
 import { DeviceInfo } from "./deviceInfo";
 import { IPSODevice } from "./ipsoDevice";
 import { deserializeWith, ipsoKey } from "./ipsoObject";

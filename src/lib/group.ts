@@ -15,7 +15,7 @@ export class Group extends IPSODevice {
 	// so they are definitely assigned!
 
 	@ipsoKey("5850")
-	@required((me: Group, ref: Group) => ref != null && me.sceneId !== ref.sceneId) // force on/off to be present if sceneId is
+	@required((me: Group, ref?: Group) => ref != null && me.sceneId !== ref.sceneId) // force on/off to be present if sceneId is
 	public onOff!: boolean; // <bool>
 
 	@ipsoKey("5851")
@@ -43,7 +43,7 @@ export class Group extends IPSODevice {
 	@ipsoKey("5712")
 	// force transition time to be present if brightness is
 	// all other properties don't support the transition time
-	@required((me: Group, ref: Group) => ref != null && me.dimmer !== ref.dimmer)
+	@required((me: Group, ref?: Group) => ref != null && me.dimmer !== ref.dimmer)
 	@serializeWith(serializers.transitionTime, {neverSkip: true})
 	@deserializeWith(deserializers.transitionTime, {neverSkip: true})
 	public transitionTime!: number; // <float>

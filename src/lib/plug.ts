@@ -1,3 +1,6 @@
+// wotan-disable no-useless-predicate
+// Until I'm sure that the properties may be nullable, we have to allow these "useless" checks
+
 import { clamp } from "alcalzone-shared/math";
 import { Accessory } from "./accessory";
 import { deserializers, serializers } from "./conversions";
