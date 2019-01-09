@@ -1,7 +1,7 @@
 /// <reference types="reflect-metadata" />
 
+import { entries } from "alcalzone-shared/objects";
 import { log } from "./logger";
-import { entries } from "./object-polyfill";
 import { OperationProvider } from "./operation-provider";
 
 // ===========================================================
@@ -234,7 +234,7 @@ function getDeserializer<T extends IPSOObject>(target: T, property: string /*| k
  * Finds the design type for a given property
  */
 // tslint:disable-next-line:ban-types
-function getPropertyType<T extends IPSOObject>(target: T, property: string /* | keyof T*/): Function {
+function getPropertyType<T extends IPSOObject>(target: T, property: string /* | keyof T*/): Function | undefined {
 	return Reflect.getMetadata("design:type", target, property);
 }
 

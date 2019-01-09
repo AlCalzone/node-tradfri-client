@@ -69,7 +69,7 @@ export class Plug extends IPSODevice {
 	}
 
 	public clone(): this {
-		const ret = super.clone(this._accessory) as this;
+		const ret = super.clone(this._accessory);
 		ret._modelName = this._modelName;
 		return ret;
 	}

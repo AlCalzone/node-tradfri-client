@@ -75,8 +75,8 @@ function checkOptions(opts: Partial<ConnectionWatcherOptions>) {
 }
 
 export interface ConnectionWatcher {
-	on<TEvent extends ConnectionWatcherEvents, TCb = ConnectionWatcherEventCallbacks[TEvent]>(event: TEvent, callback: TCb): this;
-	removeListener<TEvent extends ConnectionWatcherEvents, TCb = ConnectionWatcherEventCallbacks[TEvent]>(event: TEvent, callback: TCb): this;
+	on<TEvent extends ConnectionWatcherEvents>(event: TEvent, callback: ConnectionWatcherEventCallbacks[TEvent]): this;
+	removeListener<TEvent extends ConnectionWatcherEvents>(event: TEvent, callback: ConnectionWatcherEventCallbacks[TEvent]): this;
 	removeAllListeners(event?: ConnectionWatcherEvents): this;
 }
 

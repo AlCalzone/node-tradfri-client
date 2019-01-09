@@ -5,6 +5,7 @@
 import { assert, expect } from "chai";
 import { SinonFakeTimers, spy, stub, useFakeTimers } from "sinon";
 
+import { wait } from "alcalzone-shared/async";
 import { createDeferredPromise, DeferredPromise } from "alcalzone-shared/deferred-promise";
 import { padStart } from "alcalzone-shared/strings";
 import { CoapClient as coap, CoapResponse } from "node-coap-client";
@@ -459,12 +460,14 @@ describe("tradfri-client => observing devices => ", () => {
 		});
 
 		it(`when a device is removed, on("device removed") should be called with its id`, async () => {
-
 			const leSpy = spy();
 			tradfri.on("device removed", leSpy);
 
 			const devices = [65537, 65538];
 			await callbacks.observeDevices(createResponse(devices));
+
+			// The callback is called on the next tick, so wait to avoid the test failing because of a timing issue
+			await wait(1);
 
 			fakeCoap.observe.should.not.have.been.called;
 			leSpy.should.have.been.calledOnce;
@@ -1022,6 +1025,9 @@ describe("tradfri-client => observing groups => ", () => {
 
 			const groups = [123456, 123457];
 			await callbacks.observeGroups(createResponse(groups));
+
+			// The callback is called on the next tick, so wait to avoid the test failing because of a timing issue
+			await wait(1);
 
 			fakeCoap.observe.should.not.have.been.called;
 			leSpy.should.have.been.calledOnce;

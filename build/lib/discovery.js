@@ -51,8 +51,7 @@ function discoverGateway(timeout = 10000) {
             const host = srvRecord.data.target;
             const { version } = parseTXTRecord(txtRecord.data);
             const addresses = aRecords.map(a => a.data);
-            if (timer != null)
-                clearTimeout(timer);
+            clearTimeout(timer);
             mdns.destroy();
             resolve({
                 name, host, version, addresses,
@@ -71,8 +70,7 @@ function discoverGateway(timeout = 10000) {
         mdns.initServer();
         if (typeof timeout === "number" && timeout > 0) {
             timer = setTimeout(() => {
-                if (mdns != null)
-                    mdns.destroy();
+                mdns.destroy();
                 resolve(null);
             }, timeout);
         }

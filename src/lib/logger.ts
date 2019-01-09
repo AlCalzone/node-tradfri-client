@@ -3,7 +3,7 @@ const _debug = debugPackage("node-tradfri-client");
 
 export type LoggerFunction = (message: string, severity?: "info" | "warn" | "debug" | "error" | "silly") => void;
 
-let customLogger: LoggerFunction;
+let customLogger: LoggerFunction | undefined;
 export function setCustomLogger(logger: LoggerFunction): void {
 	customLogger = logger;
 }
