@@ -171,7 +171,7 @@ function rgbFromString(rgb: string) {
 // ===========================
 // RGB serializers
 // interpolate hue from [0..360] to [0..COLOR_MAX]
-const hue_out: PropertyTransformKernel = (value, light: Light) => {
+const hue_out: PropertyTransformKernel = (value, light?: Light) => {
 	if (light != null && light.spectrum !== "rgb") return null; // hue is not supported
 
 	value = clamp(value, 0, 360);
@@ -184,7 +184,7 @@ const hue_in: PropertyTransformKernel = (value /*, light: Light*/) => {
 };
 
 // interpolate saturation from [0..100%] to [0..COLOR_MAX]
-const saturation_out: PropertyTransformKernel = (value, light: Light) => {
+const saturation_out: PropertyTransformKernel = (value, light?: Light) => {
 	if (light != null && light.spectrum !== "rgb") return null; // hue is not supported
 
 	value = clamp(value, 0, 100);

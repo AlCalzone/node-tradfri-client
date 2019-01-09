@@ -70,6 +70,8 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		optionsOrLogger?: LoggerFunction | Partial<TradfriOptions>,
 	) {
 		super();
+		// This avoids bugs when JS users don't pass a string
+		// wotan-disable-next-line no-useless-predicate
 		if (typeof hostname !== "string") throw new Error("The hostname must be a string.");
 		this.requestBase = `coaps://${hostname}:5684/`;
 
@@ -387,7 +389,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		// so errors don't fall through the gaps
 		await this.observeResource(
 			coapEndpoints.devices,
-			(resp) => this.observeDevices_callback(resp),
+			(resp) => void this.observeDevices_callback(resp),
 		);
 		return this.observeDevicesPromise;
 	}

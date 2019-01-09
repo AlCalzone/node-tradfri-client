@@ -446,7 +446,7 @@ export class IPSOObject {
 		// serialize the old values
 		const serialized = this.serialize();
 		// and parse them back
-		return (ret as IPSOObject).parse(serialized) as this;
+		return ret.parse(serialized);
 	}
 
 	private isSerializedObjectEmpty(obj: Record<string, any>): boolean {

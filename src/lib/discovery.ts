@@ -61,7 +61,7 @@ export function discoverGateway(timeout: number | false = 10000): Promise<Discov
 			const { version } = parseTXTRecord(txtRecord.data);
 			const addresses = aRecords.map(a => a.data);
 
-			if (timer != null) clearTimeout(timer);
+			clearTimeout(timer);
 			mdns.destroy();
 			resolve({
 				name, host, version, addresses,
@@ -84,7 +84,7 @@ export function discoverGateway(timeout: number | false = 10000): Promise<Discov
 
 		if (typeof timeout === "number" && timeout > 0) {
 			timer = setTimeout(() => {
-				if (mdns != null) mdns.destroy();
+				mdns.destroy();
 				resolve(null);
 			}, timeout);
 		}
