@@ -7,12 +7,12 @@ require("reflect-metadata");
 import { assert, expect } from "chai";
 import { spy, stub } from "sinon";
 
+import { entries } from "alcalzone-shared/objects";
 import { TradfriClient } from "..";
 import { createNetworkMock } from "../../test/mocks";
 import { Accessory } from "./accessory";
 import { IPSOObject } from "./ipsoObject";
 import { Light, LightOperation, Spectrum } from "./light";
-import { entries } from "./object-polyfill";
 import { MAX_COLOR, predefinedColors, whiteSpectrumHex } from "./predefined-colors";
 
 function buildAccessory(modelName: string, spectrum: Spectrum) {

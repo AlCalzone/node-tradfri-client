@@ -1,3 +1,6 @@
+// wotan-disable no-useless-predicate
+// Until I'm sure that the properties may be nullable, we have to allow these "useless" checks
+
 import { clamp } from "alcalzone-shared/math";
 import { Accessory } from "./accessory";
 import { conversions, deserializers, serializers } from "./conversions";
@@ -51,12 +54,12 @@ export class Light extends IPSODevice {
 	@ipsoKey("5707")
 	@serializeWith(serializers.hue)
 	@deserializeWith(deserializers.hue)
-	@required((me: Light, ref: Light) => ref != null && me.saturation !== ref.saturation) // force hue to be present if saturation is
+	@required((me: Light, ref?: Light) => ref != null && me.saturation !== ref.saturation) // force hue to be present if saturation is
 	public hue!: number; // 0-360
 	@ipsoKey("5708")
 	@serializeWith(serializers.saturation)
 	@deserializeWith(deserializers.saturation)
-	@required((me: Light, ref: Light) => ref != null && me.hue !== ref.hue) // force saturation to be present if hue is
+	@required((me: Light, ref?: Light) => ref != null && me.hue !== ref.hue) // force saturation to be present if hue is
 	public saturation!: number; // 0-100%
 
 	@ipsoKey("5709")
@@ -77,7 +80,7 @@ export class Light extends IPSODevice {
 	// not sure what it does, as it is not in the IKEA app yet
 	/** @internal */
 	@ipsoKey("5717")
-	public UNKNOWN1!: any;
+	public UNKNOWN1: any;
 
 	@ipsoKey("5712")
 	@required()
@@ -120,7 +123,7 @@ export class Light extends IPSODevice {
 	}
 
 	public clone(): this {
-		const ret = super.clone(this._accessory) as this;
+		const ret = super.clone(this._accessory);
 		ret._modelName = this._modelName;
 		return ret;
 	}
@@ -335,8 +338,8 @@ const rgbRegex = /^[0-9A-Fa-f]{6}$/;
  * Creates a proxy for an RGB lamp,
  * which converts RGB color to CIE xy
  */
-function createRGBProxy<T extends Light>(raw: boolean = false) {
-	function get(me: T, key: PropertyKey) {
+function createRGBProxy(raw: boolean = false) {
+	function get(me: Light, key: PropertyKey) {
 		switch (key) {
 			case "color": {
 				if (typeof me.color === "string" && rgbRegex.test(me.color)) {
@@ -348,10 +351,10 @@ function createRGBProxy<T extends Light>(raw: boolean = false) {
 					return conversions.rgbToString(r, g, b);
 				}
 			}
-			default: return me[key as keyof T];
+			default: return me[key as keyof Light];
 		}
 	}
-	function set(me: T, key: PropertyKey, value: any) {
+	function set(me: Light, key: PropertyKey, value: any) {
 		switch (key) {
 			case "color": {
 				if (predefinedColors.has(value)) {
@@ -381,7 +384,7 @@ function createRGBProxy<T extends Light>(raw: boolean = false) {
 				}
 				break;
 			}
-			default: me[key as keyof T] = value;
+			default: (me as any)[key] = value;
 		}
 		return true;
 	}

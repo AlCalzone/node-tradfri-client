@@ -1,3 +1,6 @@
+// wotan-disable no-useless-predicate
+// Until I'm sure that the properties may be nullable, we have to allow these "useless" checks
+
 import { clamp } from "alcalzone-shared/math";
 import { Accessory } from "./accessory";
 import { deserializers, serializers } from "./conversions";
@@ -69,7 +72,7 @@ export class Plug extends IPSODevice {
 	}
 
 	public clone(): this {
-		const ret = super.clone(this._accessory) as this;
+		const ret = super.clone(this._accessory);
 		ret._modelName = this._modelName;
 		return ret;
 	}

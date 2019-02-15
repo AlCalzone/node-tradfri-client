@@ -14,6 +14,7 @@ const node_coap_client_1 = require("node-coap-client");
 // load internal modules
 const async_1 = require("alcalzone-shared/async");
 const deferred_promise_1 = require("alcalzone-shared/deferred-promise");
+const objects_1 = require("alcalzone-shared/objects");
 const accessory_1 = require("./lib/accessory");
 const array_extensions_1 = require("./lib/array-extensions");
 const endpoints_1 = require("./lib/endpoints");
@@ -21,7 +22,6 @@ const gatewayDetails_1 = require("./lib/gatewayDetails");
 const group_1 = require("./lib/group");
 const logger_1 = require("./lib/logger");
 const notification_1 = require("./lib/notification");
-const object_polyfill_1 = require("./lib/object-polyfill");
 const scene_1 = require("./lib/scene");
 const tradfri_error_1 = require("./lib/tradfri-error");
 const watcher_1 = require("./lib/watcher");
@@ -40,6 +40,8 @@ class TradfriClient extends events_1.EventEmitter {
         this.ipsoOptions = {};
         /** A dictionary of the observer callbacks. Used to restore it after a soft reset */
         this.rememberedObserveCallbacks = new Map();
+        // This avoids bugs when JS users don't pass a string
+        // wotan-disable-next-line no-useless-predicate
         if (typeof hostname !== "string")
             throw new Error("The hostname must be a string.");
         this.requestBase = `coaps://${hostname}:5684/`;
@@ -289,7 +291,7 @@ class TradfriClient extends events_1.EventEmitter {
                     if (!groupsAndScenesRestored) {
                         // restore all group and scene observers (with a new callback)
                         logger_1.log("restoring groups and scene observers", "debug");
-                        yield this.observeGroupsAndScenes;
+                        yield this.observeGroupsAndScenes();
                         groupsAndScenesRestored = true;
                     }
                 }
@@ -310,9 +312,14 @@ class TradfriClient extends events_1.EventEmitter {
             if (this.isObserving(endpoints_1.endpoints.devices))
                 return;
             this.observeDevicesPromise = deferred_promise_1.createDeferredPromise();
-            // although we return another promise, await the observeResource promise
-            // so errors don't fall through the gaps
-            yield this.observeResource(endpoints_1.endpoints.devices, (resp) => this.observeDevices_callback(resp));
+            // We have a timing problem here, as the observeGatewayPromise might be
+            // rejected in the callback and set to null. Therefore return it before
+            // starting the observation
+            void this.observeResource(endpoints_1.endpoints.devices, (resp) => void this.observeDevices_callback(resp)).catch(e => {
+                // pass errors through
+                if (!!this.observeDevicesPromise)
+                    this.observeDevicesPromise.reject(e);
+            });
             return this.observeDevicesPromise;
         });
     }
@@ -346,7 +353,7 @@ class TradfriClient extends events_1.EventEmitter {
                             }
                         }
                         else {
-                            this.observeDevicesPromise.reject(`The device with the id ${id} could not be observed`);
+                            this.observeDevicesPromise.reject(new Error(`The device with the id ${id} could not be observed`));
                             this.observeDevicesPromise = undefined;
                         }
                     }
@@ -404,9 +411,14 @@ class TradfriClient extends events_1.EventEmitter {
             if (this.isObserving(endpoints_1.endpoints.groups))
                 return;
             this.observeGroupsPromise = deferred_promise_1.createDeferredPromise();
-            // although we return another promise, await the observeResource promise
-            // so errors don't fall through the gaps
-            yield this.observeResource(endpoints_1.endpoints.groups, (resp) => this.observeGroups_callback(resp));
+            // We have a timing problem here, as the observeGatewayPromise might be
+            // rejected in the callback and set to null. Therefore return it before
+            // starting the observation
+            void this.observeResource(endpoints_1.endpoints.groups, (resp) => void this.observeGroups_callback(resp)).catch(e => {
+                // pass errors through
+                if (!!this.observeGroupsPromise)
+                    this.observeGroupsPromise.reject(e);
+            });
             return this.observeGroupsPromise;
         });
     }
@@ -459,7 +471,7 @@ class TradfriClient extends events_1.EventEmitter {
                             }
                         }
                         else {
-                            this.observeGroupsPromise.reject(`The group with the id ${id} could not be observed`);
+                            this.observeGroupsPromise.reject(new Error(`The group with the id ${id} could not be observed`));
                             this.observeGroupsPromise = undefined;
                         }
                     }
@@ -522,7 +534,7 @@ class TradfriClient extends events_1.EventEmitter {
         // notify all listeners about the update
         this.emit("group updated", group.link(this));
         // load scene information
-        this.observeResource(`${endpoints_1.endpoints.scenes}/${instanceId}`, (resp) => this.observeScenes_callback(instanceId, resp));
+        this.observeResource(`${endpoints_1.endpoints.scenes}/${instanceId}`, (resp) => void this.observeScenes_callback(instanceId, resp));
         return true;
     }
     // gets called whenever "get /15005/<groupId>" updates
@@ -559,7 +571,7 @@ class TradfriClient extends events_1.EventEmitter {
                         }
                         else {
                             if (!!scenePromise)
-                                scenePromise.reject(`The scene with the id ${id} could not be observed`);
+                                scenePromise.reject(new Error(`The scene with the id ${id} could not be observed`));
                         }
                     }
                 };
@@ -610,7 +622,7 @@ class TradfriClient extends events_1.EventEmitter {
             // We have a timing problem here, as the observeGatewayPromise might be
             // rejected in the callback and set to null. Therefore return it before
             // starting the observation
-            this.observeResource(endpoints_1.endpoints.gateway(endpoints_1.GatewayEndpoints.Details), (resp) => this.observeGateway_callback(resp)).catch(e => {
+            void this.observeResource(endpoints_1.endpoints.gateway(endpoints_1.GatewayEndpoints.Details), (resp) => void this.observeGateway_callback(resp)).catch(e => {
                 // pass errors through
                 if (!!this.observeGatewayPromise)
                     this.observeGatewayPromise.reject(e);
@@ -626,7 +638,7 @@ class TradfriClient extends events_1.EventEmitter {
                 if (!this.handleNonSuccessfulResponse(response, `observeGateway()`, false)) {
                     logger_1.log(`  => not successful`);
                     if (this.observeGatewayPromise != null) {
-                        this.observeGatewayPromise.reject(`The gateway could not be observed`);
+                        this.observeGatewayPromise.reject(new Error(`The gateway could not be observed`));
                         this.observeGatewayPromise = undefined;
                     }
                     return;
@@ -662,7 +674,7 @@ class TradfriClient extends events_1.EventEmitter {
             // We have a timing problem here, as the observeNotificationsPromise might be
             // rejected in the callback and set to null. Therefore return it before
             // starting the observation
-            this.observeResource(endpoints_1.endpoints.notifications, (resp) => this.observeNotifications_callback(resp)).catch(e => {
+            void this.observeResource(endpoints_1.endpoints.notifications, (resp) => void this.observeNotifications_callback(resp)).catch(e => {
                 // pass errors through
                 if (!!this.observeNotificationsPromise)
                     this.observeNotificationsPromise.reject(e);
@@ -678,7 +690,7 @@ class TradfriClient extends events_1.EventEmitter {
                 if (!this.handleNonSuccessfulResponse(response, `observeNotifications()`, false)) {
                     logger_1.log(`  => not successful`);
                     if (this.observeNotificationsPromise != null) {
-                        this.observeNotificationsPromise.reject(`The notifications could not be observed`);
+                        this.observeNotificationsPromise.reject(new Error(`The notifications could not be observed`));
                         this.observeNotificationsPromise = undefined;
                     }
                     return;
@@ -785,6 +797,7 @@ class TradfriClient extends events_1.EventEmitter {
             logger_1.log(`updateResource(${path}) > comparing ${JSON.stringify(newObj)} with the reference ${JSON.stringify(reference)}`, "debug");
             const serializedObj = newObj.serialize(reference);
             // If the serialized object contains no properties, we don't need to send anything
+            // wotan-disable-next-line no-useless-predicate
             if (!serializedObj || Object.keys(serializedObj).length === 0) {
                 logger_1.log(`updateResource(${path}) > empty object, not sending any payload`, "debug");
                 return false;
@@ -809,7 +822,7 @@ class TradfriClient extends events_1.EventEmitter {
         const reference = group.clone();
         if (force) {
             // to force the properties being sent, we need to reset them on the reference
-            const inverseOperation = object_polyfill_1.composeObject(object_polyfill_1.entries(operation)
+            const inverseOperation = objects_1.composeObject(objects_1.entries(operation)
                 .map(([key, value]) => {
                 switch (typeof value) {
                     case "number": return [key, Number.NaN];
@@ -877,6 +890,7 @@ class TradfriClient extends events_1.EventEmitter {
     swallowInternalCoapRejections(promise) {
         // We use the conventional promise pattern here so we can opt to never
         // resolve the promise in case we want to redirect it into an emitted error event
+        // wotan-disable-next-line async-function-assignability
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             try {
                 // try to resolve the promise normally
@@ -931,7 +945,7 @@ function parsePayload(response) {
         return null;
     switch (response.format) {
         case 0: // text/plain
-        case null: // assume text/plain
+        case null: /* wotan-disable-line */ // assume text/plain
             return response.payload.toString("utf-8");
         case 50: // application/json
             const json = response.payload.toString("utf-8");

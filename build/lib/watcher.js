@@ -70,7 +70,7 @@ class ConnectionWatcher extends events_1.EventEmitter {
         if (this.pingTimer != null)
             throw new Error("The connection watcher is already running");
         this.isActive = true;
-        this.pingTimer = setTimeout(() => this.pingThread(), this._options.pingInterval);
+        this.pingTimer = setTimeout(() => void this.pingThread(), this._options.pingInterval);
     }
     /** Stops watching the connection */
     stop() {
@@ -94,8 +94,8 @@ class ConnectionWatcher extends events_1.EventEmitter {
                     this.emit("connection alive");
                     // also restore the observers if necessary
                     if (this.resetAttempts > 0) {
-                        this.client.restoreObservers().catch(() => { });
                         // don't await or we might get stuck when the promise gets dropped
+                        void this.client.restoreObservers().catch(() => { });
                     }
                 }
                 // reset all counters because the connection is good again
@@ -146,7 +146,7 @@ class ConnectionWatcher extends events_1.EventEmitter {
             if (this.isActive) {
                 const nextTimeout = Math.round(this._options.pingInterval * Math.pow(this._options.failedPingBackoffFactor, Math.min(5, this.failedPingCount)));
                 logger_1.log("setting next timeout in " + nextTimeout, "debug");
-                this.pingTimer = setTimeout(() => this.pingThread(), nextTimeout);
+                this.pingTimer = setTimeout(() => void this.pingThread(), nextTimeout);
             }
         });
     }

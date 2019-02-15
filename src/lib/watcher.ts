@@ -75,8 +75,8 @@ function checkOptions(opts: Partial<ConnectionWatcherOptions>) {
 }
 
 export interface ConnectionWatcher {
-	on<TEvent extends ConnectionWatcherEvents, TCb = ConnectionWatcherEventCallbacks[TEvent]>(event: TEvent, callback: TCb): this;
-	removeListener<TEvent extends ConnectionWatcherEvents, TCb = ConnectionWatcherEventCallbacks[TEvent]>(event: TEvent, callback: TCb): this;
+	on<TEvent extends ConnectionWatcherEvents>(event: TEvent, callback: ConnectionWatcherEventCallbacks[TEvent]): this;
+	removeListener<TEvent extends ConnectionWatcherEvents>(event: TEvent, callback: ConnectionWatcherEventCallbacks[TEvent]): this;
 	removeAllListeners(event?: ConnectionWatcherEvents): this;
 }
 
@@ -92,7 +92,10 @@ export class ConnectionWatcher extends EventEmitter {
 		super();
 		if (options == null) options = {};
 		checkOptions(options);
-		this._options = Object.assign({}, defaultOptions, options);
+		this._options = {
+			...defaultOptions,
+			...options,
+		};
 	}
 
 	private _options: ConnectionWatcherOptions;
@@ -105,7 +108,7 @@ export class ConnectionWatcher extends EventEmitter {
 	public start() {
 		if (this.pingTimer != null) throw new Error("The connection watcher is already running");
 		this.isActive = true;
-		this.pingTimer = setTimeout(() => this.pingThread(), this._options.pingInterval);
+		this.pingTimer = setTimeout(() => void this.pingThread(), this._options.pingInterval);
 	}
 
 	private isActive: boolean | undefined;
@@ -137,8 +140,8 @@ export class ConnectionWatcher extends EventEmitter {
 				this.emit("connection alive");
 				// also restore the observers if necessary
 				if (this.resetAttempts > 0) {
-					this.client.restoreObservers().catch(() => { /* doesn't matter, will be handled by the next ping */ });
 					// don't await or we might get stuck when the promise gets dropped
+					void this.client.restoreObservers().catch(() => { /* doesn't matter, will be handled by the next ping */ });
 				}
 			}
 			// reset all counters because the connection is good again
@@ -190,7 +193,7 @@ export class ConnectionWatcher extends EventEmitter {
 		if (this.isActive) {
 			const nextTimeout = Math.round(this._options.pingInterval * this._options.failedPingBackoffFactor ** Math.min(5, this.failedPingCount));
 			log("setting next timeout in " + nextTimeout, "debug");
-			this.pingTimer = setTimeout(() => this.pingThread(), nextTimeout);
+			this.pingTimer = setTimeout(() => void this.pingThread(), nextTimeout);
 		}
 	}
 }

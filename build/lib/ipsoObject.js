@@ -10,8 +10,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const objects_1 = require("alcalzone-shared/objects");
 const logger_1 = require("./logger");
-const object_polyfill_1 = require("./object-polyfill");
 // ===========================================================
 // define decorators so we can define all properties type-safe
 // tslint:disable:variable-name
@@ -234,7 +234,7 @@ class IPSOObject {
      * Reads this instance's properties from the given object
      */
     parse(obj) {
-        for (const [key, value] of object_polyfill_1.entries(obj)) {
+        for (const [key, value] of objects_1.entries(obj)) {
             let deserializer = getDeserializer(this, key);
             // key might be ipso key or property name
             let propName; // keyof this | string;
@@ -287,7 +287,7 @@ class IPSOObject {
      * Overrides this object's properties with those from another partial one
      */
     merge(obj, allProperties = false) {
-        for (const [key, value] of object_polyfill_1.entries(obj)) {
+        for (const [key, value] of objects_1.entries(obj)) {
             if (allProperties || this.hasOwnProperty(key)) {
                 // we can't be sure that this has a property `key`
                 this[key] = value;

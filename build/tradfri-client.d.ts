@@ -12,8 +12,8 @@ import { ConnectionWatcherOptions } from "./lib/watcher";
 export declare type ObserveResourceCallback = (resp: CoapResponse) => void;
 export declare type ObserveDevicesCallback = (addedDevices: Accessory[], removedDevices: Accessory[]) => void;
 export interface TradfriClient {
-    on<TEvent extends AllEvents, TCb = AllEventCallbacks[TEvent]>(event: TEvent, callback: TCb): this;
-    removeListener<TEvent extends AllEvents, TCb = AllEventCallbacks[TEvent]>(event: TEvent, callback: TCb): this;
+    on<TEvent extends AllEvents>(event: TEvent, callback: AllEventCallbacks[TEvent]): this;
+    removeListener<TEvent extends AllEvents>(event: TEvent, callback: AllEventCallbacks[TEvent]): this;
     removeAllListeners(event?: AllEvents): this;
 }
 export interface TradfriOptions {
