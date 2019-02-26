@@ -1,6 +1,7 @@
 // wotan-disable no-useless-predicate
 // Until I'm sure that the properties may be nullable, we have to allow these "useless" checks
 
+import { Blind } from "./blind";
 import { DeviceInfo } from "./deviceInfo";
 import { IPSODevice } from "./ipsoDevice";
 import { deserializeWith, ipsoKey } from "./ipsoObject";
@@ -24,6 +25,8 @@ export enum AccessoryTypes {
 	plug = 3,
 	/** A motion sensor (currently unsupported) */
 	motionSensor = 4,
+	/** A smart blind */
+	blind = 5, // TODO: This is a guess. Double-check when the blinds are out
 }
 
 export class Accessory extends IPSODevice {
@@ -61,6 +64,10 @@ export class Accessory extends IPSODevice {
 	@ipsoKey("15009")
 	@deserializeWith(/* istanbul ignore next */ (obj, me: Accessory) => new IPSODevice(me.options).parse(obj))
 	public switchList!: IPSODevice[]; // <[Switch]> // seems unsupported atm.
+
+	@ipsoKey("15015")
+	@deserializeWith((obj, me: Accessory) => new Blind(me.options, me).parse(obj))
+	public blindList!: Blind[];
 
 	@ipsoKey("9054")
 	public otaUpdateState: number = 0; // boolean?
@@ -103,6 +110,12 @@ export class Accessory extends IPSODevice {
 				swtch.link(client);
 			}
 		}
+		/* istanbul ignore next */
+		if (this.blindList != null) {
+			for (const blind of this.blindList) {
+				blind.link(client);
+			}
+		}
 		return this;
 	}
 
@@ -125,6 +138,10 @@ export class Accessory extends IPSODevice {
 		/* istanbul ignore next */
 		if (this.switchList != null) {
 			this.switchList = this.switchList.map(swtch => swtch.fixBuggedProperties());
+		}
+		/* istanbul ignore next */
+		if (this.blindList != null) {
+			this.blindList = this.blindList.map(blind => blind.fixBuggedProperties());
 		}
 		return this;
 	}

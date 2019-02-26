@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const blind_1 = require("./blind");
 const deviceInfo_1 = require("./deviceInfo");
 const ipsoDevice_1 = require("./ipsoDevice");
 const ipsoObject_1 = require("./ipsoObject");
@@ -33,6 +34,8 @@ var AccessoryTypes;
     AccessoryTypes[AccessoryTypes["plug"] = 3] = "plug";
     /** A motion sensor (currently unsupported) */
     AccessoryTypes[AccessoryTypes["motionSensor"] = 4] = "motionSensor";
+    /** A smart blind */
+    AccessoryTypes[AccessoryTypes["blind"] = 5] = "blind";
 })(AccessoryTypes = exports.AccessoryTypes || (exports.AccessoryTypes = {}));
 class Accessory extends ipsoDevice_1.IPSODevice {
     constructor() {
@@ -74,6 +77,12 @@ class Accessory extends ipsoDevice_1.IPSODevice {
                 swtch.link(client);
             }
         }
+        /* istanbul ignore next */
+        if (this.blindList != null) {
+            for (const blind of this.blindList) {
+                blind.link(client);
+            }
+        }
         return this;
     }
     /**
@@ -95,6 +104,10 @@ class Accessory extends ipsoDevice_1.IPSODevice {
         /* istanbul ignore next */
         if (this.switchList != null) {
             this.switchList = this.switchList.map(swtch => swtch.fixBuggedProperties());
+        }
+        /* istanbul ignore next */
+        if (this.blindList != null) {
+            this.blindList = this.blindList.map(blind => blind.fixBuggedProperties());
         }
         return this;
     }
@@ -136,6 +149,11 @@ __decorate([
     ipsoObject_1.deserializeWith(/* istanbul ignore next */ (obj, me) => new ipsoDevice_1.IPSODevice(me.options).parse(obj)),
     __metadata("design:type", Array)
 ], Accessory.prototype, "switchList", void 0);
+__decorate([
+    ipsoObject_1.ipsoKey("15015"),
+    ipsoObject_1.deserializeWith((obj, me) => new blind_1.Blind(me.options, me).parse(obj)),
+    __metadata("design:type", Array)
+], Accessory.prototype, "blindList", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("9054"),
     __metadata("design:type", Number)

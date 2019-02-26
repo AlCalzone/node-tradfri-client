@@ -20,6 +20,7 @@
 		"stripInternal": true,
 		"target": "es2015",
 		"watch": false, // true breaks circleci
+		"skipLibCheck": true, // Skip checking node_modules
 
 		"noImplicitAny": true,
 		"noImplicitThis": true,
@@ -33,6 +34,7 @@
 	],
 	"exclude": [
 		"src/**/*.test.ts",
-		"build/**"
+		"build/**",
+		"node_modules/"
 	]
 }

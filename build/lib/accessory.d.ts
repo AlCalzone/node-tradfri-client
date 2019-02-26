@@ -1,3 +1,4 @@
+import { Blind } from "./blind";
 import { DeviceInfo } from "./deviceInfo";
 import { IPSODevice } from "./ipsoDevice";
 import { Light } from "./light";
@@ -16,7 +17,9 @@ export declare enum AccessoryTypes {
     /** A smart plug */
     plug = 3,
     /** A motion sensor (currently unsupported) */
-    motionSensor = 4
+    motionSensor = 4,
+    /** A smart blind */
+    blind = 5
 }
 export declare class Accessory extends IPSODevice {
     type: AccessoryTypes;
@@ -27,6 +30,7 @@ export declare class Accessory extends IPSODevice {
     plugList: Plug[];
     sensorList: Sensor[];
     switchList: IPSODevice[];
+    blindList: Blind[];
     otaUpdateState: number;
     /**
      * Fixes property values that are known to be bugged

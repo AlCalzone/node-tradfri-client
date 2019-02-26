@@ -8,6 +8,7 @@ import { createDeferredPromise, DeferredPromise } from "alcalzone-shared/deferre
 import { composeObject, entries } from "alcalzone-shared/objects";
 import { Accessory, AccessoryTypes } from "./lib/accessory";
 import { except } from "./lib/array-extensions";
+import { BlindOperation } from "./lib/blind";
 import { endpoints as coapEndpoints, GatewayEndpoints } from "./lib/endpoints";
 import { AllEventCallbacks, AllEvents, ConnectionWatcherEvents } from "./lib/events";
 import { GatewayDetails, UpdatePriority } from "./lib/gatewayDetails";
@@ -1054,6 +1055,27 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		const reference = accessory.clone();
 		const newAccessory = reference.clone();
 		newAccessory.plugList[0].merge(operation);
+
+		return this.updateResource(
+			`${coapEndpoints.devices}/${accessory.instanceId}`,
+			newAccessory, reference,
+		);
+	}
+
+	/**
+	 * Sets some properties on a blind
+	 * @param accessory The parent accessory of the blind
+	 * @param operation The properties to be set
+	 * @returns true if a request was sent, false otherwise
+	 */
+	public operateBlind(accessory: Accessory, operation: BlindOperation): Promise<boolean> {
+		if (accessory.type !== AccessoryTypes.blind) {
+			throw new Error("The parameter accessory must be a blind!");
+		}
+
+		const reference = accessory.clone();
+		const newAccessory = reference.clone();
+		newAccessory.blindList[0].merge(operation);
 
 		return this.updateResource(
 			`${coapEndpoints.devices}/${accessory.instanceId}`,

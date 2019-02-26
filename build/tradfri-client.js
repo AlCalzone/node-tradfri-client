@@ -865,6 +865,21 @@ class TradfriClient extends events_1.EventEmitter {
         return this.updateResource(`${endpoints_1.endpoints.devices}/${accessory.instanceId}`, newAccessory, reference);
     }
     /**
+     * Sets some properties on a blind
+     * @param accessory The parent accessory of the blind
+     * @param operation The properties to be set
+     * @returns true if a request was sent, false otherwise
+     */
+    operateBlind(accessory, operation) {
+        if (accessory.type !== accessory_1.AccessoryTypes.blind) {
+            throw new Error("The parameter accessory must be a blind!");
+        }
+        const reference = accessory.clone();
+        const newAccessory = reference.clone();
+        newAccessory.blindList[0].merge(operation);
+        return this.updateResource(`${endpoints_1.endpoints.devices}/${accessory.instanceId}`, newAccessory, reference);
+    }
+    /**
      * Sends a custom request to a resource
      * @param path The path of the resource
      * @param method The method of the request
