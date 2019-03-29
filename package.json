@@ -55,7 +55,7 @@
     "nyc": "^13.0.1",
     "proxyquire": "^2.0.1",
     "rimraf": "^2.6.2",
-    "semver": "^5.5.0",
+    "semver": "^6.0.0",
     "sinon": "^5.0.2",
     "sinon-chai": "^3.0.0",
     "source-map-support": "^0.5.5",
