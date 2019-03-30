@@ -112,7 +112,7 @@ export function createNetworkMock(
 	function createStubs() {
 		fakeCoap.observe = stub(coap, "observe")
 			.callsFake((path: string, method, cb) => {
-				rememberCallback(path, cb);
+				rememberCallback(path, cb as any);
 				return Promise.resolve();
 			});
 		if (mockOptions && mockOptions.interceptRequestResponse) {
