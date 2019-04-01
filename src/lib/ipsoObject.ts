@@ -438,9 +438,7 @@ export class IPSOObject {
 	 */
 	public clone(...constructorArgs: any[]): this {
 		// create a new instance of the same object as this
-		interface Constructable<T> {
-			new(options?: IPSOOptions, ...constructorArgs: any[]): T;
-		}
+		type Constructable<T> = new(options?: IPSOOptions, ...constructorArgs: any[]) => T;
 		const constructor = this.constructor as Constructable<this>;
 		const ret = new constructor(this.options, ...constructorArgs);
 		// serialize the old values
