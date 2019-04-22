@@ -52,7 +52,7 @@
     "coveralls": "^3.0.0",
     "dts-bundle": "^0.7.3",
     "mocha": "^6.0.2",
-    "nyc": "^13.0.1",
+    "nyc": "^14.0.0",
     "proxyquire": "^2.0.1",
     "rimraf": "^2.6.2",
     "semver": "^6.0.0",
