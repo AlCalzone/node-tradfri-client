@@ -367,6 +367,13 @@ tradfri.observeGroupsAndScenes(): Promise<void>;
 ```
 you can set up an observer for all groups and their scenes, which will call the callbacks for `"group updated"`, `"group removed"`, `"scene updated"` and `"scene removed"` on updates. Stopping this observer is possible by calling `stopObservingGroups()`.
 
+**NOTE:** Keep in mind that, due to the gateway only reporting changes to every single bulb, switching a group on or off does**not**result in a callback! 
+
+A 'group update' callback does occur when you:
+* rename it,
+* remove or add devices to it, or
+* redefine scene(s).  
+
 ### Observing the gateway details
 Using
 ```TS
