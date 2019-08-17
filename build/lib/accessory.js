@@ -35,7 +35,7 @@ var AccessoryTypes;
     /** A motion sensor (currently unsupported) */
     AccessoryTypes[AccessoryTypes["motionSensor"] = 4] = "motionSensor";
     /** A smart blind */
-    AccessoryTypes[AccessoryTypes["blind"] = 5] = "blind";
+    AccessoryTypes[AccessoryTypes["blind"] = 7] = "blind";
 })(AccessoryTypes = exports.AccessoryTypes || (exports.AccessoryTypes = {}));
 class Accessory extends ipsoDevice_1.IPSODevice {
     constructor() {
