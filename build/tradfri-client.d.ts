@@ -9,6 +9,7 @@ import { LoggerFunction } from "./lib/logger";
 import { OperationProvider } from "./lib/operation-provider";
 import { PlugOperation } from "./lib/plug";
 import { ConnectionWatcherOptions } from "./lib/watcher";
+import { BlindOperation } from "./lib/blind";
 export declare type ObserveResourceCallback = (resp: CoapResponse) => void;
 export declare type ObserveDevicesCallback = (addedDevices: Accessory[], removedDevices: Accessory[]) => void;
 export interface TradfriClient {
@@ -192,6 +193,13 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
      * @returns true if a request was sent, false otherwise
      */
     operatePlug(accessory: Accessory, operation: PlugOperation): Promise<boolean>;
+    /**
+     * Sets some properties on a blind
+     * @param accessory The parent accessory of the blind
+     * @param operation The properties to be set
+     * @returns true if a request was sent, false otherwise
+     */
+    operateBlind(accessory: Accessory, operation: BlindOperation): Promise<boolean>;
     /**
      * Sends a custom request to a resource
      * @param path The path of the resource

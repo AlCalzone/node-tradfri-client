@@ -1,5 +1,3 @@
-//
-
 // Reflect-polyfill laden
 // tslint:disable-next-line:no-var-requires
 require("reflect-metadata");
@@ -200,7 +198,7 @@ describe("ipso/plug => simplified API => ", () => {
 	const plugAcc = new Accessory().parse(buildAccessory()).link(tradfri);
 	const plug = plugAcc.plugList[0];
 
-	describe("the methods should send the correct payload (all spectrums) =>", () => {
+	describe("the methods should send the correct payload =>", () => {
 
 		it("turnOn() when the plug is off", async () => {
 			plug.onOff = false;

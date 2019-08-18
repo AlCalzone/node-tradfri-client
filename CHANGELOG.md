@@ -1,5 +1,8 @@
 # Changelog
 
+## __WORK IN PROGRESS__
+* (AlCalzone) Add experimental support for blinds. This is expected to be buggy since I had to guess a couple of times.
+
 ## 1.5.0 (2018-11-12)
 * (AlCalzone) Bundle declaration files before publishing on npm
 * (AlCalzone) Update `shared-utils` dependency to fix compile errors
