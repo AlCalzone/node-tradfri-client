@@ -26,7 +26,7 @@ export enum AccessoryTypes {
 	/** A motion sensor (currently unsupported) */
 	motionSensor = 4,
 	/** A smart blind */
-	blind = 5, // TODO: This is a guess. Double-check when the blinds are out
+	blind = 7,
 }
 
 export class Accessory extends IPSODevice {

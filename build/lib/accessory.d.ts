@@ -19,7 +19,7 @@ export declare enum AccessoryTypes {
     /** A motion sensor (currently unsupported) */
     motionSensor = 4,
     /** A smart blind */
-    blind = 5
+    blind = 7
 }
 export declare class Accessory extends IPSODevice {
     type: AccessoryTypes;
