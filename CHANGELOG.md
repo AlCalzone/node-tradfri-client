@@ -1,6 +1,6 @@
 # Changelog
 
-## __WORK IN PROGRESS__
+## 1.6.0 (2019-08-18)
 * (AlCalzone & petergp) Add support for blinds. Thanks @petergp for filling in the blanks!
 
 ## 1.5.0 (2018-11-12)
