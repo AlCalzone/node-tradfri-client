@@ -62,7 +62,7 @@
     "ts-node": "^8.0.3",
     "tslint": "^5.11.0",
     "typescript": "^3.5.3",
-    "yargs": "^13.2.2"
+    "yargs": "^14.0.0"
   },
   "dependencies": {
     "alcalzone-shared": "^2.0.0",
