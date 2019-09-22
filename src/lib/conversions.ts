@@ -220,12 +220,22 @@ const brightness_in: PropertyTransformKernel = (value) => {
 	return roundTo(value, 1);
 };
 
+// ===========================
+// BLIND POSITION conversions
+
+// The gateway expects 0 to be open and 100 to be closed
+// we do the opposite
+const position_out: PropertyTransformKernel = val => 100 - val;
+// the sent value is in 10ths of seconds, we're working with seconds
+const position_in: PropertyTransformKernel = position_out;
+
 export const serializers = {
 	transitionTime: transitionTime_out,
 	hue: hue_out,
 	saturation: saturation_out,
 	brightness: brightness_out,
 	colorTemperature: colorTemperature_out,
+	position: position_out,
 };
 
 export const deserializers = {
@@ -234,6 +244,7 @@ export const deserializers = {
 	saturation: saturation_in,
 	brightness: brightness_in,
 	colorTemperature: colorTemperature_in,
+	position: position_in,
 };
 
 export const conversions = {

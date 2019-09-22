@@ -218,12 +218,20 @@ const brightness_in = (value) => {
     value = value / 254 * 100;
     return math_1.roundTo(value, 1);
 };
+// ===========================
+// BLIND POSITION conversions
+// The gateway expects 0 to be open and 100 to be closed
+// we do the opposite
+const position_out = val => 100 - val;
+// the sent value is in 10ths of seconds, we're working with seconds
+const position_in = position_out;
 exports.serializers = {
     transitionTime: transitionTime_out,
     hue: hue_out,
     saturation: saturation_out,
     brightness: brightness_out,
     colorTemperature: colorTemperature_out,
+    position: position_out,
 };
 exports.deserializers = {
     transitionTime: transitionTime_in,
@@ -231,6 +239,7 @@ exports.deserializers = {
     saturation: saturation_in,
     brightness: brightness_in,
     colorTemperature: colorTemperature_in,
+    position: position_in,
 };
 exports.conversions = {
     // rgbFromCIExyY,

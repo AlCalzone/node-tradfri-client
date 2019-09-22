@@ -12,6 +12,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const math_1 = require("alcalzone-shared/math");
+const conversions_1 = require("./conversions");
 const accessory_1 = require("./accessory");
 const ipsoDevice_1 = require("./ipsoDevice");
 const ipsoObject_1 = require("./ipsoObject");
@@ -72,11 +73,11 @@ class Blind extends ipsoDevice_1.IPSODevice {
     }
     /** Open these blinds */
     open() {
-        return this.operateBlind({ position: 0 });
+        return this.operateBlind({ position: 100 });
     }
     /** Close these blinds */
     close() {
-        return this.operateBlind({ position: 100 });
+        return this.operateBlind({ position: 0 });
     }
     operateBlind(operation) {
         this.ensureLink();
@@ -107,6 +108,8 @@ __decorate([
 ], Blind.prototype, "_accessory", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("5536"),
+    ipsoObject_1.serializeWith(conversions_1.serializers.position),
+    ipsoObject_1.deserializeWith(conversions_1.deserializers.position),
     __metadata("design:type", Number)
 ], Blind.prototype, "position", void 0);
 exports.Blind = Blind;

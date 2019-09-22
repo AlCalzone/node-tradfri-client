@@ -2,9 +2,10 @@
 // Until I'm sure that the properties may be nullable, we have to allow these "useless" checks
 
 import { clamp } from "alcalzone-shared/math";
+import { deserializers, serializers } from "./conversions";
 import { Accessory } from "./accessory";
 import { IPSODevice } from "./ipsoDevice";
-import { doNotSerialize, ipsoKey, IPSOOptions } from "./ipsoObject";
+import { doNotSerialize, ipsoKey, IPSOOptions, serializeWith, deserializeWith } from "./ipsoObject";
 
 export type BlindOperation = Partial<Pick<Blind,
 	"position"
@@ -36,6 +37,8 @@ export class Blind extends IPSODevice {
 	@doNotSerialize private _accessory: Accessory | undefined;
 
 	@ipsoKey("5536")
+	@serializeWith(serializers.position)
+	@deserializeWith(deserializers.position)
 	public position: number = 0.0; // <float>
 
 	/**
@@ -82,12 +85,12 @@ export class Blind extends IPSODevice {
 
 	/** Open these blinds */
 	public open(): Promise<boolean> {
-		return this.operateBlind({ position: 0 });
+		return this.operateBlind({ position: 100 });
 	}
 
 	/** Close these blinds */
 	public close(): Promise<boolean> {
-		return this.operateBlind({ position: 100 });
+		return this.operateBlind({ position: 0 });
 	}
 
 	private operateBlind(operation: BlindOperation): Promise<boolean> {

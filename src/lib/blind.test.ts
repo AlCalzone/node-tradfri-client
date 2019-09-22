@@ -21,13 +21,13 @@ function buildAccessory() {
 			1: "FYRTUR smart blind", // TODO: find out the correct name
 			2: "",
 			3: "1.4.020", // TODO
-			6: 1,
+			6: 1
 		},
 		15015: [
 			{
 				5536: 27.4,
-				9003: 0,
-			},
+				9003: 0
+			}
 		],
 		5750: 7,
 		9001: "Smart blind",
@@ -35,10 +35,9 @@ function buildAccessory() {
 		9003: 65541,
 		9019: 1,
 		9020: 1540211625,
-		9054: 0,
+		9054: 0
 	};
 	return attributes;
-
 }
 
 function assertPayload(actual: any, expected: {}, message?: string) {
@@ -47,7 +46,6 @@ function assertPayload(actual: any, expected: {}, message?: string) {
 }
 
 describe("ipso/blind => basic functionality =>", () => {
-
 	// setup feature table
 	interface Device {
 		name: string;
@@ -56,7 +54,11 @@ describe("ipso/blind => basic functionality =>", () => {
 	}
 	const deviceTable = new Map<string, Device>();
 	function add(name: string, switchable: boolean, dimmable: boolean) {
-		deviceTable.set(name, { name, isDimmable: dimmable, isSwitchable: switchable });
+		deviceTable.set(name, {
+			name,
+			isDimmable: dimmable,
+			isSwitchable: switchable
+		});
 	}
 
 	// The only known blind so far
@@ -67,16 +69,21 @@ describe("ipso/blind => basic functionality =>", () => {
 			const acc = new Accessory().parse(buildAccessory());
 			const blind = acc.blindList[0];
 
-			expect(blind.isSwitchable).to.equal(device.isSwitchable, `${device.name} should ${device.isSwitchable ? "" : "not "}be switchable`);
-			expect(blind.isDimmable).to.equal(device.isDimmable, `${device.name} should ${device.isDimmable ? "" : "not "}be dimmable`);
+			expect(blind.isSwitchable).to.equal(
+				device.isSwitchable,
+				`${device.name} should ${
+					device.isSwitchable ? "" : "not "
+				}be switchable`
+			);
+			expect(blind.isDimmable).to.equal(
+				device.isDimmable,
+				`${device.name} should ${device.isDimmable ? "" : "not "}be dimmable`
+			);
 		}
 	});
 
 	it(`the payload to set the position to 100 should be correct`, () => {
-		const parsed = new Accessory()
-			.parse(buildAccessory())
-			.createProxy()
-			;
+		const parsed = new Accessory().parse(buildAccessory()).createProxy();
 		parsed.blindList[0].position = 0;
 		const original = parsed.clone();
 		const blind = parsed.blindList[0];
@@ -84,15 +91,13 @@ describe("ipso/blind => basic functionality =>", () => {
 		blind.position = 100;
 		const serialized = parsed.serialize(original);
 		expect(serialized).to.deep.equal({
-			15015: [{ 5536: 100 }],
+			// Our 100 equals the gateway's 0
+			15015: [{ 5536: 0 }]
 		});
 	});
 
 	it(`the payload to set the position to 0 should be correct`, () => {
-		const parsed = new Accessory()
-			.parse(buildAccessory())
-			.createProxy()
-			;
+		const parsed = new Accessory().parse(buildAccessory()).createProxy();
 		parsed.blindList[0].position = 100;
 		const original = parsed.clone();
 		const blind = parsed.blindList[0];
@@ -100,7 +105,8 @@ describe("ipso/blind => basic functionality =>", () => {
 		blind.position = 0;
 		const serialized = parsed.serialize(original);
 		expect(serialized).to.deep.equal({
-			15015: [{ 5536: 0 }],
+			// Our 0 equals the gateway's 100
+			15015: [{ 5536: 100 }]
 		});
 	});
 
@@ -112,11 +118,9 @@ describe("ipso/blind => basic functionality =>", () => {
 		expect(blind).to.deep.equal(clone);
 		expect(blind).to.not.equal(clone);
 	});
-
 });
 
 describe("ipso/blind => simplified API => ", () => {
-
 	// Setup a fresh mock
 	const {
 		tradfri,
@@ -125,15 +129,13 @@ describe("ipso/blind => simplified API => ", () => {
 		callbacks,
 		createStubs,
 		restoreStubs,
-		resetStubHistory,
+		resetStubHistory
 	} = createNetworkMock();
 	before(createStubs);
 	after(restoreStubs);
 	afterEach(resetStubHistory);
 
-	const apiMethods = [
-		"open", "close", "setPosition",
-	];
+	const apiMethods = ["open", "close", "setPosition"];
 
 	describe("all methods should fail when no client instance has been linked", () => {
 		// Create a new blind without a linked client instance
@@ -161,35 +163,40 @@ describe("ipso/blind => simplified API => ", () => {
 	const blind = blindAcc.blindList[0];
 
 	describe("the methods should send the correct payload =>", () => {
-
 		it("open() when the blinds are down", async () => {
-			blind.position = 100;
+			blind.position = 0;
 			await blind.open().should.become(true);
 			assertPayload(fakeCoap.request.getCall(0).args[2], {
-				15015: [{
-					5536: 0,
-				}],
+				15015: [
+					{
+						// The gateway interprets 0 as open, we as closed
+						5536: 0
+					}
+				]
 			});
 		});
 
 		it("open() when the blinds are completely open", async () => {
-			blind.position = 0;
+			blind.position = 100;
 			await blind.open().should.become(false);
 			fakeCoap.request.should.not.have.been.called;
 		});
 
 		it("close() when the blinds are open", async () => {
-			blind.position = 0;
+			blind.position = 100;
 			await blind.close().should.become(true);
 			assertPayload(fakeCoap.request.getCall(0).args[2], {
-				15015: [{
-					5536: 100,
-				}],
+				15015: [
+					{
+						// The gateway interprets 100 as closed, we as open
+						5536: 100
+					}
+				]
 			});
 		});
 
 		it("close() when the blinds are completely closed", async () => {
-			blind.position = 100;
+			blind.position = 0;
 			await blind.close().should.become(false);
 			fakeCoap.request.should.not.have.been.called;
 		});
@@ -198,12 +205,12 @@ describe("ipso/blind => simplified API => ", () => {
 			blind.position = 0;
 			await blind.setPosition(47.9).should.become(true);
 			assertPayload(fakeCoap.request.getCall(0).args[2], {
-				15015: [{
-					5536: 47.9,
-				}],
+				15015: [
+					{
+						5536: 100 - 47.9
+					}
+				]
 			});
 		});
-
 	});
-
 });

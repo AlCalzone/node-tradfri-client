@@ -1,5 +1,8 @@
 # Changelog
 
+## __WORK IN PROGRESS__
+* (AlCalzone) BREAKING: The position of blinds has been inverted. 0 now means closed, 100 means open.
+
 ## 1.6.2 (2019-09-22)
 * (AlCalzone) Restore v1.6.0 behavior of blinds
 
