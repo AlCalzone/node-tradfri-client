@@ -157,6 +157,16 @@ describe("ipso/group => simplified API => ", () => {
 			}
 		});
 
+		it("setPosition()", async () => {
+			for (const prevState of [0, 50, 100]) {
+				group.position = prevState;
+				await group.setPosition(100).should.become(true);
+				assertPayload(fakeCoap.request.getCall(fakeCoap.request.callCount - 1).args[2], {
+					5536: 0,
+				});
+			}
+		});
+
 		it("activateScene() when the scene is NOT the active one", async () => {
 			// with the scene ID
 			await group.activateScene(123456).should.become(true);

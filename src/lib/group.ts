@@ -23,6 +23,11 @@ export class Group extends IPSODevice {
 	@deserializeWith(deserializers.brightness)
 	public dimmer!: number; // <int> [0..100]
 
+	@ipsoKey("5536")
+	@serializeWith(serializers.position)
+	@deserializeWith(deserializers.position)
+	public position!: number; // <int> [0..100]
+
 	@ipsoKey("9039")
 	public sceneId!: number;
 
@@ -116,9 +121,22 @@ export class Group extends IPSODevice {
 		}, transitionTime);
 	}
 
+	/**
+	 * Sets all blinds to the given position
+	 * @returns true if a request was sent, false otherwise
+	 */
+	public setPosition(value: number): Promise<boolean> {
+		this.ensureLink();
+
+		value = clamp(value, 0, 100);
+		return this.operateGroup({
+			position: value,
+		});
+	}
+
 }
 
-export type GroupOperation = Partial<Pick<Group, "onOff" | "dimmer" | "sceneId" | "transitionTime">>;
+export type GroupOperation = Partial<Pick<Group, "onOff" | "dimmer" | "position" | "sceneId" | "transitionTime">>;
 
 interface AccessoryLink {
 	15002: {

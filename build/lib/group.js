@@ -75,6 +75,17 @@ class Group extends ipsoDevice_1.IPSODevice {
             dimmer: value,
         }, transitionTime);
     }
+    /**
+     * Sets all blinds to the given position
+     * @returns true if a request was sent, false otherwise
+     */
+    setPosition(value) {
+        this.ensureLink();
+        value = math_1.clamp(value, 0, 100);
+        return this.operateGroup({
+            position: value,
+        });
+    }
 }
 __decorate([
     ipsoObject_1.ipsoKey("5850"),
@@ -88,6 +99,12 @@ __decorate([
     ipsoObject_1.deserializeWith(conversions_1.deserializers.brightness),
     __metadata("design:type", Number)
 ], Group.prototype, "dimmer", void 0);
+__decorate([
+    ipsoObject_1.ipsoKey("5536"),
+    ipsoObject_1.serializeWith(conversions_1.serializers.position),
+    ipsoObject_1.deserializeWith(conversions_1.deserializers.position),
+    __metadata("design:type", Number)
+], Group.prototype, "position", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("9039"),
     __metadata("design:type", Number)
