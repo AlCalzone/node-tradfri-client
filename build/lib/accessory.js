@@ -34,6 +34,8 @@ var AccessoryTypes;
     AccessoryTypes[AccessoryTypes["plug"] = 3] = "plug";
     /** A motion sensor (currently unsupported) */
     AccessoryTypes[AccessoryTypes["motionSensor"] = 4] = "motionSensor";
+    /** A signal repeater */
+    AccessoryTypes[AccessoryTypes["signalRepeater"] = 6] = "signalRepeater";
     /** A smart blind */
     AccessoryTypes[AccessoryTypes["blind"] = 7] = "blind";
 })(AccessoryTypes = exports.AccessoryTypes || (exports.AccessoryTypes = {}));
@@ -149,6 +151,11 @@ __decorate([
     ipsoObject_1.deserializeWith(/* istanbul ignore next */ (obj, me) => new ipsoDevice_1.IPSODevice(me.options).parse(obj)),
     __metadata("design:type", Array)
 ], Accessory.prototype, "switchList", void 0);
+__decorate([
+    ipsoObject_1.ipsoKey("15014"),
+    ipsoObject_1.deserializeWith(/* istanbul ignore next */ (obj, me) => new ipsoDevice_1.IPSODevice(me.options).parse(obj)),
+    __metadata("design:type", Array)
+], Accessory.prototype, "repeaterList", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("15015"),
     ipsoObject_1.deserializeWith((obj, me) => new blind_1.Blind(me.options, me).parse(obj)),

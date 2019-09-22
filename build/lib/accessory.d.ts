@@ -18,6 +18,8 @@ export declare enum AccessoryTypes {
     plug = 3,
     /** A motion sensor (currently unsupported) */
     motionSensor = 4,
+    /** A signal repeater */
+    signalRepeater = 6,
     /** A smart blind */
     blind = 7
 }
@@ -30,6 +32,7 @@ export declare class Accessory extends IPSODevice {
     plugList: Plug[];
     sensorList: Sensor[];
     switchList: IPSODevice[];
+    repeaterList: IPSODevice[];
     blindList: Blind[];
     otaUpdateState: number;
     /**

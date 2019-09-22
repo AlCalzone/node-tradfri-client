@@ -25,6 +25,8 @@ export enum AccessoryTypes {
 	plug = 3,
 	/** A motion sensor (currently unsupported) */
 	motionSensor = 4,
+	/** A signal repeater */
+	signalRepeater = 6,
 	/** A smart blind */
 	blind = 7,
 }
@@ -65,6 +67,10 @@ export class Accessory extends IPSODevice {
 	@deserializeWith(/* istanbul ignore next */ (obj, me: Accessory) => new IPSODevice(me.options).parse(obj))
 	public switchList!: IPSODevice[]; // <[Switch]> // seems unsupported atm.
 
+	@ipsoKey("15014")
+	@deserializeWith(/* istanbul ignore next */ (obj, me: Accessory) => new IPSODevice(me.options).parse(obj))
+	public repeaterList!: IPSODevice[]; // This is present on signal repeaters but without any data
+
 	@ipsoKey("15015")
 	@deserializeWith((obj, me: Accessory) => new Blind(me.options, me).parse(obj))
 	public blindList!: Blind[];
@@ -72,8 +78,8 @@ export class Accessory extends IPSODevice {
 	@ipsoKey("9054")
 	public otaUpdateState: number = 0; // boolean?
 
-	// TODO: This property is reported by the gateway, but not in
-	// the IKEA app as of version 1.7.0
+	// TODO: This property is reported by the gateway and signal repeaters, but not in
+	// the IKEA app as of version 1.10.1
 	// It seems to be some kind of hash, find out what it does
 	// e.g. "9084":" 6c ba 7f 97 47 8e 75 88 10 20 29 30 60 a9 3b 7d"
 	/** @internal */
