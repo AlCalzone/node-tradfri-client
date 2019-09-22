@@ -99,7 +99,7 @@ export class Blind extends IPSODevice {
 	}
 
 	/**
-	 * Changes this plug's "brightness". Any value > 0 turns the plug on, 0 turns it off.
+	 * Sets this blind's position. 0 is closed, 100 is open.
 	 * @returns true if a request was sent, false otherwise
 	 */
 	public setPosition(value: number): Promise<boolean> {
