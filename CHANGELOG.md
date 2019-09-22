@@ -1,10 +1,8 @@
 # Changelog
 
-## __WORK IN PROGRESS__
-* (AlCalzone) Add the `position` property and `setPosition` method to `Group`
-
 ## 2.0.0 (2019-09-22)
 * (AlCalzone) BREAKING: The position of blinds has been inverted. 0 now means closed, 100 means open.
+* (AlCalzone) Add the `position` property and `setPosition` method to `Group`
 
 ## 1.6.2 (2019-09-22)
 * (AlCalzone) Restore v1.6.0 behavior of blinds
