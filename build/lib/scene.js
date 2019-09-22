@@ -9,10 +9,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const blindSetting_1 = require("./blindSetting");
 const ipsoDevice_1 = require("./ipsoDevice");
 const ipsoObject_1 = require("./ipsoObject");
 const lightSetting_1 = require("./lightSetting");
-const blindSetting_1 = require("./blindSetting");
 class Scene extends ipsoDevice_1.IPSODevice {
     constructor() {
         super(...arguments);

@@ -2,10 +2,10 @@
 // Until I'm sure that the properties may be nullable, we have to allow these "useless" checks
 
 import { clamp } from "alcalzone-shared/math";
-import { deserializers, serializers } from "./conversions";
 import { Accessory } from "./accessory";
+import { deserializers, serializers } from "./conversions";
 import { IPSODevice } from "./ipsoDevice";
-import { doNotSerialize, ipsoKey, IPSOOptions, serializeWith, deserializeWith } from "./ipsoObject";
+import { deserializeWith, doNotSerialize, ipsoKey, IPSOOptions, serializeWith } from "./ipsoObject";
 
 export type BlindOperation = Partial<Pick<Blind,
 	"position"

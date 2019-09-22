@@ -1,7 +1,7 @@
+import { BlindSetting } from "./blindSetting";
 import { IPSODevice } from "./ipsoDevice";
 import { deserializeWith, ipsoKey } from "./ipsoObject";
 import { LightSetting } from "./lightSetting";
-import { BlindSetting } from "./blindSetting";
 
 export class Scene extends IPSODevice {
 

@@ -21,13 +21,13 @@ function buildAccessory() {
 			1: "FYRTUR smart blind", // TODO: find out the correct name
 			2: "",
 			3: "1.4.020", // TODO
-			6: 1
+			6: 1,
 		},
 		15015: [
 			{
 				5536: 27.4,
-				9003: 0
-			}
+				9003: 0,
+			},
 		],
 		5750: 7,
 		9001: "Smart blind",
@@ -35,7 +35,7 @@ function buildAccessory() {
 		9003: 65541,
 		9019: 1,
 		9020: 1540211625,
-		9054: 0
+		9054: 0,
 	};
 	return attributes;
 }
@@ -57,7 +57,7 @@ describe("ipso/blind => basic functionality =>", () => {
 		deviceTable.set(name, {
 			name,
 			isDimmable: dimmable,
-			isSwitchable: switchable
+			isSwitchable: switchable,
 		});
 	}
 
@@ -73,11 +73,11 @@ describe("ipso/blind => basic functionality =>", () => {
 				device.isSwitchable,
 				`${device.name} should ${
 					device.isSwitchable ? "" : "not "
-				}be switchable`
+				}be switchable`,
 			);
 			expect(blind.isDimmable).to.equal(
 				device.isDimmable,
-				`${device.name} should ${device.isDimmable ? "" : "not "}be dimmable`
+				`${device.name} should ${device.isDimmable ? "" : "not "}be dimmable`,
 			);
 		}
 	});
@@ -92,7 +92,7 @@ describe("ipso/blind => basic functionality =>", () => {
 		const serialized = parsed.serialize(original);
 		expect(serialized).to.deep.equal({
 			// Our 100 equals the gateway's 0
-			15015: [{ 5536: 0 }]
+			15015: [{ 5536: 0 }],
 		});
 	});
 
@@ -106,7 +106,7 @@ describe("ipso/blind => basic functionality =>", () => {
 		const serialized = parsed.serialize(original);
 		expect(serialized).to.deep.equal({
 			// Our 0 equals the gateway's 100
-			15015: [{ 5536: 100 }]
+			15015: [{ 5536: 100 }],
 		});
 	});
 
@@ -129,7 +129,7 @@ describe("ipso/blind => simplified API => ", () => {
 		callbacks,
 		createStubs,
 		restoreStubs,
-		resetStubHistory
+		resetStubHistory,
 	} = createNetworkMock();
 	before(createStubs);
 	after(restoreStubs);
@@ -170,9 +170,9 @@ describe("ipso/blind => simplified API => ", () => {
 				15015: [
 					{
 						// The gateway interprets 0 as open, we as closed
-						5536: 0
-					}
-				]
+						5536: 0,
+					},
+				],
 			});
 		});
 
@@ -189,9 +189,9 @@ describe("ipso/blind => simplified API => ", () => {
 				15015: [
 					{
 						// The gateway interprets 100 as closed, we as open
-						5536: 100
-					}
-				]
+						5536: 100,
+					},
+				],
 			});
 		});
 
@@ -207,9 +207,9 @@ describe("ipso/blind => simplified API => ", () => {
 			assertPayload(fakeCoap.request.getCall(0).args[2], {
 				15015: [
 					{
-						5536: 100 - 47.9
-					}
-				]
+						5536: 100 - 47.9,
+					},
+				],
 			});
 		});
 	});
