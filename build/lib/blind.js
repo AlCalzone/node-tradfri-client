@@ -72,11 +72,11 @@ class Blind extends ipsoDevice_1.IPSODevice {
     }
     /** Open these blinds */
     open() {
-        return this.operateBlind({ position: 0 });
+        return this.operateBlind({ position: 100 }); // TODO: is this the right way around?
     }
     /** Close these blinds */
     close() {
-        return this.operateBlind({ position: 100 });
+        return this.operateBlind({ position: 0 }); // TODO: is this the right way around?
     }
     operateBlind(operation) {
         this.ensureLink();

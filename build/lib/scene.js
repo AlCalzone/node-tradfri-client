@@ -12,15 +12,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const ipsoDevice_1 = require("./ipsoDevice");
 const ipsoObject_1 = require("./ipsoObject");
 const lightSetting_1 = require("./lightSetting");
+const blindSetting_1 = require("./blindSetting");
 class Scene extends ipsoDevice_1.IPSODevice {
     constructor() {
         super(...arguments);
         this.isActive = false; // <bool>
         this.isPredefined = true; // <bool>
         // Plugs can be part of a scene but we need to find out how they are included
-        // I currently believe, they are part of this, as LightSettings are a superset
+        // I currently believe that they are part of this, as LightSettings are a superset
         // of the available settings for plugs.
         this.lightSettings = [];
+        this.blindSettings = [];
         this.sceneIndex = 0; // <int>
         this.useCurrentLightSettings = false; // <bool>
     }
@@ -38,6 +40,11 @@ __decorate([
     ipsoObject_1.deserializeWith(obj => new lightSetting_1.LightSetting().parse(obj)),
     __metadata("design:type", Array)
 ], Scene.prototype, "lightSettings", void 0);
+__decorate([
+    ipsoObject_1.ipsoKey("15016"),
+    ipsoObject_1.deserializeWith(obj => new blindSetting_1.BlindSetting().parse(obj)),
+    __metadata("design:type", Array)
+], Scene.prototype, "blindSettings", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("9057"),
     __metadata("design:type", Number)

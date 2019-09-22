@@ -2,6 +2,7 @@
 import { EventEmitter } from "events";
 import { CoapResponse, RequestMethod } from "node-coap-client";
 import { Accessory } from "./lib/accessory";
+import { BlindOperation } from "./lib/blind";
 import { AllEventCallbacks, AllEvents } from "./lib/events";
 import { Group, GroupInfo, GroupOperation } from "./lib/group";
 import { LightOperation } from "./lib/light";
@@ -9,7 +10,6 @@ import { LoggerFunction } from "./lib/logger";
 import { OperationProvider } from "./lib/operation-provider";
 import { PlugOperation } from "./lib/plug";
 import { ConnectionWatcherOptions } from "./lib/watcher";
-import { BlindOperation } from "./lib/blind";
 export declare type ObserveResourceCallback = (resp: CoapResponse) => void;
 export declare type ObserveDevicesCallback = (addedDevices: Accessory[], removedDevices: Accessory[]) => void;
 export interface TradfriClient {
