@@ -1,5 +1,9 @@
 # Changelog
 
+## __WORK IN PROGRESS__
+* (AlCalzone) Suppress warnings for signal repeaters
+* (AlCalzone) Add blind settings to `Scene`
+
 ## 1.6.0 (2019-08-18)
 * (AlCalzone & petergp) Add support for blinds. Thanks @petergp for filling in the blanks!
 
