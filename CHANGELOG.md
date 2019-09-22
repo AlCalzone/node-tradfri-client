@@ -1,6 +1,6 @@
 # Changelog
 
-## __WORK IN PROGRESS__
+## 1.6.1 (2019-09-22)
 * (AlCalzone) Suppress warnings for signal repeaters
 * (AlCalzone) Add blind settings to `Scene`
 
