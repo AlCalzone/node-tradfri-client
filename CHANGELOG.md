@@ -1,6 +1,6 @@
 # Changelog
 
-## __WORK IN PROGRESS__
+## 1.6.2 (2019-09-22)
 * (AlCalzone) Restore v1.6.0 behavior of blinds
 
 ## 1.6.1 (2019-09-22)
