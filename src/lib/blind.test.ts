@@ -163,24 +163,8 @@ describe("ipso/blind => simplified API => ", () => {
 	describe("the methods should send the correct payload =>", () => {
 
 		it("open() when the blinds are down", async () => {
-			blind.position = 0;
+			blind.position = 100;
 			await blind.open().should.become(true);
-			assertPayload(fakeCoap.request.getCall(0).args[2], {
-				15015: [{
-					5536: 100,
-				}],
-			});
-		});
-
-		it("open() when the blinds are completely open", async () => {
-			blind.position = 100;
-			await blind.open().should.become(false);
-			fakeCoap.request.should.not.have.been.called;
-		});
-
-		it("close() when the blinds are open", async () => {
-			blind.position = 100;
-			await blind.close().should.become(true);
 			assertPayload(fakeCoap.request.getCall(0).args[2], {
 				15015: [{
 					5536: 0,
@@ -188,8 +172,24 @@ describe("ipso/blind => simplified API => ", () => {
 			});
 		});
 
-		it("close() when the blinds are completely closed", async () => {
+		it("open() when the blinds are completely open", async () => {
 			blind.position = 0;
+			await blind.open().should.become(false);
+			fakeCoap.request.should.not.have.been.called;
+		});
+
+		it("close() when the blinds are open", async () => {
+			blind.position = 0;
+			await blind.close().should.become(true);
+			assertPayload(fakeCoap.request.getCall(0).args[2], {
+				15015: [{
+					5536: 100,
+				}],
+			});
+		});
+
+		it("close() when the blinds are completely closed", async () => {
+			blind.position = 100;
 			await blind.close().should.become(false);
 			fakeCoap.request.should.not.have.been.called;
 		});

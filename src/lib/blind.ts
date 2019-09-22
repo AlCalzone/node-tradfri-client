@@ -82,12 +82,12 @@ export class Blind extends IPSODevice {
 
 	/** Open these blinds */
 	public open(): Promise<boolean> {
-		return this.operateBlind({ position: 100 }); // TODO: is this the right way around?
+		return this.operateBlind({ position: 0 });
 	}
 
 	/** Close these blinds */
 	public close(): Promise<boolean> {
-		return this.operateBlind({ position: 0 }); // TODO: is this the right way around?
+		return this.operateBlind({ position: 100 });
 	}
 
 	private operateBlind(operation: BlindOperation): Promise<boolean> {
