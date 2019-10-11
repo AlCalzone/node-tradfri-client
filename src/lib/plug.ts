@@ -133,7 +133,7 @@ export class Plug extends IPSODevice {
 		return {
 			onOff: this.onOff,
 			isDimmable: this.isDimmable,
-			isSwitchable: this.isSwitchable
+			isSwitchable: this.isSwitchable,
 		};
 	}
 }

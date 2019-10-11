@@ -112,7 +112,7 @@ export class Blind extends IPSODevice {
 		return {
 			position: this.position,
 			isSwitchable: this.isSwitchable,
-			isDimmable: this.isDimmable
+			isDimmable: this.isDimmable,
 		};
 	}
 }
