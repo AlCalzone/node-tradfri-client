@@ -106,6 +106,8 @@ class Plug extends ipsoDevice_1.IPSODevice {
     toJSON() {
         return {
             onOff: this.onOff,
+            isDimmable: this.isDimmable,
+            isSwitchable: this.isSwitchable,
         };
     }
 }

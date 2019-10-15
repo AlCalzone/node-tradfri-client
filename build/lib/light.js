@@ -218,6 +218,9 @@ class Light extends ipsoDevice_1.IPSODevice {
             colorX: this.colorX,
             colorY: this.colorY,
             hue: this.hue,
+            isDimmable: this.isDimmable,
+            isSwitchable: this.isSwitchable,
+            spectrum: this.spectrum,
             saturation: this.saturation,
             transitionTime: this.transitionTime,
         };
