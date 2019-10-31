@@ -95,6 +95,8 @@ class Blind extends ipsoDevice_1.IPSODevice {
     toJSON() {
         return {
             position: this.position,
+            isSwitchable: this.isSwitchable,
+            isDimmable: this.isDimmable,
         };
     }
 }

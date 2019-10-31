@@ -111,6 +111,8 @@ export class Blind extends IPSODevice {
 	public toJSON(): {} {
 		return {
 			position: this.position,
+			isSwitchable: this.isSwitchable,
+			isDimmable: this.isDimmable,
 		};
 	}
 }

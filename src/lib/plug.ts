@@ -132,6 +132,8 @@ export class Plug extends IPSODevice {
 	public toJSON(): {} {
 		return {
 			onOff: this.onOff,
+			isDimmable: this.isDimmable,
+			isSwitchable: this.isSwitchable,
 		};
 	}
 }
