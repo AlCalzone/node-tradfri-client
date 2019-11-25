@@ -28,12 +28,16 @@ export class Group extends IPSODevice {
 	@deserializeWith(deserializers.position)
 	public position!: number; // <int> [0..100]
 
+	// trigger is used to stop blinds
+	@ipsoKey("5523")
+	public trigger: number | undefined; // <float>
+
 	@ipsoKey("9039")
 	public sceneId!: number;
 
 	@ipsoKey("9018")
 	@deserializeWith(obj => parseAccessoryLink(obj))
-	@serializeWith(ids => toAccessoryLink(ids), {splitArrays: false})
+	@serializeWith(ids => toAccessoryLink(ids), { splitArrays: false })
 	public deviceIDs!: number[];
 
 	// TODO: This property is present in the IKEA app as of version 1.7.0
@@ -49,8 +53,8 @@ export class Group extends IPSODevice {
 	// force transition time to be present if brightness is
 	// all other properties don't support the transition time
 	@required((me: Group, ref?: Group) => ref != null && me.dimmer !== ref.dimmer)
-	@serializeWith(serializers.transitionTime, {neverSkip: true})
-	@deserializeWith(deserializers.transitionTime, {neverSkip: true})
+	@serializeWith(serializers.transitionTime, { neverSkip: true })
+	@deserializeWith(deserializers.transitionTime, { neverSkip: true })
 	public transitionTime!: number; // <float>
 
 	// =================================
@@ -113,8 +117,6 @@ export class Group extends IPSODevice {
 	 * @returns true if a request was sent, false otherwise
 	 */
 	public setBrightness(value: number, transitionTime?: number): Promise<boolean> {
-		this.ensureLink();
-
 		value = clamp(value, 0, 100);
 		return this.operateGroup({
 			dimmer: value,
@@ -126,17 +128,25 @@ export class Group extends IPSODevice {
 	 * @returns true if a request was sent, false otherwise
 	 */
 	public setPosition(value: number): Promise<boolean> {
-		this.ensureLink();
-
 		value = clamp(value, 0, 100);
 		return this.operateGroup({
 			position: value,
 		});
 	}
 
+	/**
+	 * Stops all moving blinds
+	 * @returns true if a request was sent, false otherwise
+	 */
+	public stopBlinds(): Promise<boolean> {
+		return this.operateGroup({
+			trigger: 0.0,
+		});
+	}
+
 }
 
-export type GroupOperation = Partial<Pick<Group, "onOff" | "dimmer" | "position" | "sceneId" | "transitionTime">>;
+export type GroupOperation = Partial<Pick<Group, "onOff" | "dimmer" | "position" | "trigger" | "sceneId" | "transitionTime">>;
 
 interface AccessoryLink {
 	15002: {

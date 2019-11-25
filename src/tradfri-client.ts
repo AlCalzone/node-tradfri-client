@@ -5,7 +5,6 @@ import { CoapClient as coap, CoapResponse, ConnectionResult, RequestMethod } fro
 // load internal modules
 import { wait } from "alcalzone-shared/async";
 import { createDeferredPromise, DeferredPromise } from "alcalzone-shared/deferred-promise";
-import { composeObject, entries } from "alcalzone-shared/objects";
 import { Accessory, AccessoryTypes } from "./lib/accessory";
 import { except } from "./lib/array-extensions";
 import { BlindOperation } from "./lib/blind";
@@ -21,6 +20,7 @@ import { OperationProvider } from "./lib/operation-provider";
 import { PlugOperation } from "./lib/plug";
 import { Scene } from "./lib/scene";
 import { TradfriError, TradfriErrorCodes } from "./lib/tradfri-error";
+import { invertOperation } from "./lib/utils";
 import { ConnectionWatcher, ConnectionWatcherOptions } from "./lib/watcher";
 
 export type ObserveResourceCallback = (resp: CoapResponse) => void;
@@ -992,7 +992,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 * Sets some properties on a group
 	 * @param group The group to be updated
 	 * @param operation The properties to be set
-	 * @param force If the provided properties must be sent in any case
+	 * @param force Include all properties of operation in the payload, even if the values are unchanged
 	 * @returns true if a request was sent, false otherwise
 	 */
 	public operateGroup(group: Group, operation: GroupOperation, force: boolean = false): Promise<boolean> {
@@ -1001,17 +1001,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		const reference = group.clone();
 		if (force) {
 			// to force the properties being sent, we need to reset them on the reference
-			const inverseOperation = composeObject<number | boolean>(
-				entries(operation)
-					.map(([key, value]) => {
-						switch (typeof value) {
-							case "number": return [key, Number.NaN] as [string, number];
-							case "boolean": return [key, !value] as [string, boolean];
-							default: return [key, null] as [string, any];
-						}
-					}),
-			);
-			reference.merge(inverseOperation, true);
+			reference.merge(invertOperation(operation), true);
 		}
 
 		return this.updateResource(
@@ -1024,16 +1014,21 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 * Sets some properties on a lightbulb
 	 * @param accessory The parent accessory of the lightbulb
 	 * @param operation The properties to be set
+	 * @param force Include all properties of operation in the payload, even if the values are unchanged
 	 * @returns true if a request was sent, false otherwise
 	 */
-	public operateLight(accessory: Accessory, operation: LightOperation): Promise<boolean> {
+	public operateLight(accessory: Accessory, operation: LightOperation, force: boolean = false): Promise<boolean> {
 		if (accessory.type !== AccessoryTypes.lightbulb) {
 			throw new Error("The parameter accessory must be a lightbulb!");
 		}
 
-		const reference = accessory.clone();
-		const newAccessory = reference.clone();
+		const newAccessory = accessory.clone();
 		newAccessory.lightList[0].merge(operation);
+		const reference = accessory.clone();
+		if (force) {
+			// to force the properties being sent, we need to reset them on the reference
+			reference.lightList[0].merge(invertOperation(operation), true);
+		}
 
 		return this.updateResource(
 			`${coapEndpoints.devices}/${accessory.instanceId}`,
@@ -1045,16 +1040,21 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 * Sets some properties on a plug
 	 * @param accessory The parent accessory of the plug
 	 * @param operation The properties to be set
+	 * @param force Include all properties of operation in the payload, even if the values are unchanged
 	 * @returns true if a request was sent, false otherwise
 	 */
-	public operatePlug(accessory: Accessory, operation: PlugOperation): Promise<boolean> {
+	public operatePlug(accessory: Accessory, operation: PlugOperation, force: boolean = false): Promise<boolean> {
 		if (accessory.type !== AccessoryTypes.plug) {
 			throw new Error("The parameter accessory must be a plug!");
 		}
 
-		const reference = accessory.clone();
-		const newAccessory = reference.clone();
+		const newAccessory = accessory.clone();
 		newAccessory.plugList[0].merge(operation);
+		const reference = accessory.clone();
+		if (force) {
+			// to force the properties being sent, we need to reset them on the reference
+			reference.plugList[0].merge(invertOperation(operation), true);
+		}
 
 		return this.updateResource(
 			`${coapEndpoints.devices}/${accessory.instanceId}`,
@@ -1066,16 +1066,21 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 * Sets some properties on a blind
 	 * @param accessory The parent accessory of the blind
 	 * @param operation The properties to be set
+	 * @param force Include all properties of operation in the payload, even if the values are unchanged
 	 * @returns true if a request was sent, false otherwise
 	 */
-	public operateBlind(accessory: Accessory, operation: BlindOperation): Promise<boolean> {
+	public operateBlind(accessory: Accessory, operation: BlindOperation, force: boolean = false): Promise<boolean> {
 		if (accessory.type !== AccessoryTypes.blind) {
 			throw new Error("The parameter accessory must be a blind!");
 		}
 
-		const reference = accessory.clone();
-		const newAccessory = reference.clone();
+		const newAccessory = accessory.clone();
 		newAccessory.blindList[0].merge(operation);
+		const reference = accessory.clone();
+		if (force) {
+			// to force the properties being sent, we need to reset them on the reference
+			reference.blindList[0].merge(invertOperation(operation), true);
+		}
 
 		return this.updateResource(
 			`${coapEndpoints.devices}/${accessory.instanceId}`,

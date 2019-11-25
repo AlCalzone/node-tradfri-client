@@ -175,7 +175,7 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
      * Sets some properties on a group
      * @param group The group to be updated
      * @param operation The properties to be set
-     * @param force If the provided properties must be sent in any case
+     * @param force Include all properties of operation in the payload, even if the values are unchanged
      * @returns true if a request was sent, false otherwise
      */
     operateGroup(group: Group, operation: GroupOperation, force?: boolean): Promise<boolean>;
@@ -183,23 +183,26 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
      * Sets some properties on a lightbulb
      * @param accessory The parent accessory of the lightbulb
      * @param operation The properties to be set
+     * @param force Include all properties of operation in the payload, even if the values are unchanged
      * @returns true if a request was sent, false otherwise
      */
-    operateLight(accessory: Accessory, operation: LightOperation): Promise<boolean>;
+    operateLight(accessory: Accessory, operation: LightOperation, force?: boolean): Promise<boolean>;
     /**
      * Sets some properties on a plug
      * @param accessory The parent accessory of the plug
      * @param operation The properties to be set
+     * @param force Include all properties of operation in the payload, even if the values are unchanged
      * @returns true if a request was sent, false otherwise
      */
-    operatePlug(accessory: Accessory, operation: PlugOperation): Promise<boolean>;
+    operatePlug(accessory: Accessory, operation: PlugOperation, force?: boolean): Promise<boolean>;
     /**
      * Sets some properties on a blind
      * @param accessory The parent accessory of the blind
      * @param operation The properties to be set
+     * @param force Include all properties of operation in the payload, even if the values are unchanged
      * @returns true if a request was sent, false otherwise
      */
-    operateBlind(accessory: Accessory, operation: BlindOperation): Promise<boolean>;
+    operateBlind(accessory: Accessory, operation: BlindOperation, force?: boolean): Promise<boolean>;
     /**
      * Sends a custom request to a resource
      * @param path The path of the resource

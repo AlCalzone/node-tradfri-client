@@ -1,20 +1,21 @@
 import { Accessory } from "./accessory";
 import { IPSODevice } from "./ipsoDevice";
 import { IPSOOptions } from "./ipsoObject";
-export declare type BlindOperation = Partial<Pick<Blind, "position">>;
+export declare type BlindOperation = Partial<Pick<Blind, "position" | "trigger">>;
 export declare class Blind extends IPSODevice {
     constructor(options?: IPSOOptions, accessory?: Accessory);
     private _modelName;
     private _accessory;
     position: number;
+    trigger: number | undefined;
     /**
      * Returns true if the current blind is dimmable
      */
-    readonly isDimmable: boolean;
+    get isDimmable(): boolean;
     /**
      * Returns true if the current blind is switchable
      */
-    readonly isSwitchable: boolean;
+    get isSwitchable(): boolean;
     clone(): this;
     /**
      * Creates a proxy which redirects the properties to the correct internal one, does nothing now
@@ -29,6 +30,8 @@ export declare class Blind extends IPSODevice {
     open(): Promise<boolean>;
     /** Close these blinds */
     close(): Promise<boolean>;
+    /** Stops moving blinds */
+    stop(): Promise<boolean>;
     private operateBlind;
     /**
      * Sets this blind's position. 0 is closed, 100 is open.

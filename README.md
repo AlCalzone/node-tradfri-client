@@ -455,7 +455,7 @@ If the accessory object is not changed in comparison to the one on the gateway, 
 **NOTE:** To switch a light on/off or to change its properties, prefer the `operateLight` method or the specialized methods defined on the lightbulb itself.
 
 ```TS
-const requestSent = await tradfri.operateLight(accessory: Accessory, operation: LightOperation);
+const requestSent = await tradfri.operateLight(accessory: Accessory, operation: LightOperation[, force: boolean]);
 ```
 The parameter `accessory` is the device containing the lightbulb. The `operation` object contains the properties to be updated, e.g.
 ```TS
@@ -464,6 +464,7 @@ The parameter `accessory` is the device containing the lightbulb. The `operation
     transitionTime: 5,
 }
 ```
+By setting the optional third parameter (`force`) to true, the entire `operation` object will be transmitted, even if no values have changed.
 
 ### Updating a group on the gateway
 Similar to updating devices, you can update groups by calling
@@ -634,6 +635,8 @@ Similar to lightbulbs, groups provide the following methods if they were returne
 * `turnOff()` - Turns all lights off.
 * `toggle(value: boolean)` - Sets all lights' state to the given value.
 * `setBrightness(value: number [, transitionTime: number])` - Dims all lights to the given brightness.
+* `setPosition(value: number)` - Moves all blinds to the given position.
+* `stopBlinds()` - Stops all moving blinds.
 
 ### `GroupOperation`
 A GroupOperation is an object containing at least one of a `Group`'s controllable properties, which are:

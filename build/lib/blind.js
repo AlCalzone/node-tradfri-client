@@ -79,9 +79,13 @@ class Blind extends ipsoDevice_1.IPSODevice {
     close() {
         return this.operateBlind({ position: 0 });
     }
-    operateBlind(operation) {
+    /** Stops moving blinds */
+    stop() {
+        return this.operateBlind({ trigger: 0.0 }, true);
+    }
+    operateBlind(operation, force) {
         this.ensureLink();
-        return this.client.operateBlind(this._accessory, operation);
+        return this.client.operateBlind(this._accessory, operation, force);
     }
     /**
      * Sets this blind's position. 0 is closed, 100 is open.
@@ -114,4 +118,8 @@ __decorate([
     ipsoObject_1.deserializeWith(conversions_1.deserializers.position),
     __metadata("design:type", Number)
 ], Blind.prototype, "position", void 0);
+__decorate([
+    ipsoObject_1.ipsoKey("5523"),
+    __metadata("design:type", Object)
+], Blind.prototype, "trigger", void 0);
 exports.Blind = Blind;
