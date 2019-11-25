@@ -1,6 +1,6 @@
 # Changelog
 
-## __WORK_IN_PROGRESS__
+## __WORK IN PROGRESS__
 * (AlCalzone) Added a third parameter (`force`) to `operateLight`, `operatePlug` and `operateBlind` methods
 * (AlCalzone) Added `stop()` method to Blinds
 * (AlCalzone) Added `stopBlinds()` method to Groups
