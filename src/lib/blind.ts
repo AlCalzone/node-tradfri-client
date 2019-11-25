@@ -8,7 +8,7 @@ import { IPSODevice } from "./ipsoDevice";
 import { deserializeWith, doNotSerialize, ipsoKey, IPSOOptions, serializeWith } from "./ipsoObject";
 
 export type BlindOperation = Partial<Pick<Blind,
-	"position"
+	"position" | "trigger"
 >>;
 
 export class Blind extends IPSODevice {
@@ -40,6 +40,9 @@ export class Blind extends IPSODevice {
 	@serializeWith(serializers.position)
 	@deserializeWith(deserializers.position)
 	public position: number = 0.0; // <float>
+
+	@ipsoKey("5523")
+	public trigger: number = 0.0; // <float>
 
 	/**
 	 * Returns true if the current blind is dimmable
@@ -93,9 +96,14 @@ export class Blind extends IPSODevice {
 		return this.operateBlind({ position: 0 });
 	}
 
-	private operateBlind(operation: BlindOperation): Promise<boolean> {
+	/** Stops moving blinds */
+	public stop(): Promise<boolean> {
+		return this.operateBlind({ trigger: 0.0 }, true);
+	}
+
+	private operateBlind(operation: BlindOperation, force?: boolean): Promise<boolean> {
 		this.ensureLink();
-		return this.client!.operateBlind(this._accessory!, operation);
+		return this.client!.operateBlind(this._accessory!, operation, force);
 	}
 
 	/**

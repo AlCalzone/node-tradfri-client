@@ -635,6 +635,8 @@ Similar to lightbulbs, groups provide the following methods if they were returne
 * `turnOff()` - Turns all lights off.
 * `toggle(value: boolean)` - Sets all lights' state to the given value.
 * `setBrightness(value: number [, transitionTime: number])` - Dims all lights to the given brightness.
+* `setPosition(value: number)` - Moves all blinds to the given position.
+* `stopBlinds()` - Stops all moving blinds.
 
 ### `GroupOperation`
 A GroupOperation is an object containing at least one of a `Group`'s controllable properties, which are:

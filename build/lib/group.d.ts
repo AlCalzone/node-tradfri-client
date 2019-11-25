@@ -8,6 +8,7 @@ export declare class Group extends IPSODevice {
     onOff: boolean;
     dimmer: number;
     position: number;
+    trigger: number;
     sceneId: number;
     deviceIDs: number[];
     transitionTime: number;
@@ -35,5 +36,10 @@ export declare class Group extends IPSODevice {
      * @returns true if a request was sent, false otherwise
      */
     setPosition(value: number): Promise<boolean>;
+    /**
+     * Stops all moving blinds
+     * @returns true if a request was sent, false otherwise
+     */
+    stopBlinds(): Promise<boolean>;
 }
-export declare type GroupOperation = Partial<Pick<Group, "onOff" | "dimmer" | "position" | "sceneId" | "transitionTime">>;
+export declare type GroupOperation = Partial<Pick<Group, "onOff" | "dimmer" | "position" | "trigger" | "sceneId" | "transitionTime">>;

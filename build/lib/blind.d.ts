@@ -1,12 +1,13 @@
 import { Accessory } from "./accessory";
 import { IPSODevice } from "./ipsoDevice";
 import { IPSOOptions } from "./ipsoObject";
-export declare type BlindOperation = Partial<Pick<Blind, "position">>;
+export declare type BlindOperation = Partial<Pick<Blind, "position" | "trigger">>;
 export declare class Blind extends IPSODevice {
     constructor(options?: IPSOOptions, accessory?: Accessory);
     private _modelName;
     private _accessory;
     position: number;
+    trigger: number;
     /**
      * Returns true if the current blind is dimmable
      */
@@ -29,6 +30,8 @@ export declare class Blind extends IPSODevice {
     open(): Promise<boolean>;
     /** Close these blinds */
     close(): Promise<boolean>;
+    /** Stops moving blinds */
+    stop(): Promise<boolean>;
     private operateBlind;
     /**
      * Sets this blind's position. 0 is closed, 100 is open.
