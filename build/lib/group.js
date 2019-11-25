@@ -15,13 +15,6 @@ const ipsoDevice_1 = require("./ipsoDevice");
 const ipsoObject_1 = require("./ipsoObject");
 const scene_1 = require("./scene");
 class Group extends ipsoDevice_1.IPSODevice {
-    constructor() {
-        // All properties only exist after the light has been received from the gateway
-        // so they are definitely assigned!
-        super(...arguments);
-        // trigger is used to stop blinds
-        this.trigger = 0.0; // <float>
-    }
     // =================================
     // Simplified API access
     /**
@@ -121,7 +114,7 @@ __decorate([
 ], Group.prototype, "position", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("5523"),
-    __metadata("design:type", Number)
+    __metadata("design:type", Object)
 ], Group.prototype, "trigger", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("9039"),

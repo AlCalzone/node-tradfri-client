@@ -30,7 +30,7 @@ export class Group extends IPSODevice {
 
 	// trigger is used to stop blinds
 	@ipsoKey("5523")
-	public trigger: number = 0.0; // <float>
+	public trigger: number | undefined; // <float>
 
 	@ipsoKey("9039")
 	public sceneId!: number;

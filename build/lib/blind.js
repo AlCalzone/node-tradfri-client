@@ -20,7 +20,6 @@ class Blind extends ipsoDevice_1.IPSODevice {
     constructor(options, accessory) {
         super(options);
         this.position = 0.0; // <float>
-        this.trigger = 0.0; // <float>
         // In order for the simplified API to work, the
         // accessory reference must be a proxy
         if (accessory != null && !accessory.isProxy) {
@@ -121,6 +120,6 @@ __decorate([
 ], Blind.prototype, "position", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("5523"),
-    __metadata("design:type", Number)
+    __metadata("design:type", Object)
 ], Blind.prototype, "trigger", void 0);
 exports.Blind = Blind;

@@ -24,8 +24,8 @@ const logger_1 = require("./lib/logger");
 const notification_1 = require("./lib/notification");
 const scene_1 = require("./lib/scene");
 const tradfri_error_1 = require("./lib/tradfri-error");
-const watcher_1 = require("./lib/watcher");
 const utils_1 = require("./lib/utils");
+const watcher_1 = require("./lib/watcher");
 class TradfriClient extends events_1.EventEmitter {
     // tslint:enable:unified-signatures
     constructor(hostname, optionsOrLogger) {

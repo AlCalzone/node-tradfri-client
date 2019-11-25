@@ -42,7 +42,7 @@ export class Blind extends IPSODevice {
 	public position: number = 0.0; // <float>
 
 	@ipsoKey("5523")
-	public trigger: number = 0.0; // <float>
+	public trigger: number | undefined; // <float>
 
 	/**
 	 * Returns true if the current blind is dimmable

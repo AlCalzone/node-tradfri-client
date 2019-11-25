@@ -8,7 +8,7 @@ export declare class Group extends IPSODevice {
     onOff: boolean;
     dimmer: number;
     position: number;
-    trigger: number;
+    trigger: number | undefined;
     sceneId: number;
     deviceIDs: number[];
     transitionTime: number;

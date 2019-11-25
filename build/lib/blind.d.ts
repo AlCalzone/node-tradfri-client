@@ -7,7 +7,7 @@ export declare class Blind extends IPSODevice {
     private _modelName;
     private _accessory;
     position: number;
-    trigger: number;
+    trigger: number | undefined;
     /**
      * Returns true if the current blind is dimmable
      */
