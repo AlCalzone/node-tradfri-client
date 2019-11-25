@@ -22,17 +22,17 @@ export declare class Light extends IPSODevice {
     /**
      * Returns true if the current lightbulb is dimmable
      */
-    readonly isDimmable: boolean;
+    get isDimmable(): boolean;
     /**
      * Returns true if the current lightbulb is switchable
      */
-    readonly isSwitchable: boolean;
+    get isSwitchable(): boolean;
     clone(): this;
     /**
      * Returns the supported color spectrum of the lightbulb
      */
     private _spectrum;
-    readonly spectrum: Spectrum;
+    get spectrum(): Spectrum;
     /**
      * Creates a proxy which redirects the properties to the correct internal one
      */

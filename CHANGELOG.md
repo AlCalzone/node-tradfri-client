@@ -1,5 +1,8 @@
 # Changelog
 
+## __WORK_IN_PROGRESS__
+* (AlCalzone) Add a third parameter (`force`) to `operateLight`, `operatePlug` and `operateBlind` methods
+
 ## 2.0.1 (2019-09-22)
 * (AlCalzone) BREAKING: The position of blinds has been inverted. 0 now means closed, 100 means open.
 * (AlCalzone) Add the `position` property and `setPosition` method to `Group`

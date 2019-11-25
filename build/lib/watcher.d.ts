@@ -41,7 +41,7 @@ export declare class ConnectionWatcher extends EventEmitter {
     private client;
     constructor(client: TradfriClient, options?: Partial<ConnectionWatcherOptions>);
     private _options;
-    readonly options: ConnectionWatcherOptions;
+    get options(): ConnectionWatcherOptions;
     private pingTimer;
     /** Starts watching the connection */
     start(): void;

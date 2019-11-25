@@ -4,7 +4,7 @@ export declare class Notification extends IPSOObject {
     timestamp: number;
     event: NotificationTypes;
     private _details;
-    readonly details: NotificationDetails;
+    get details(): NotificationDetails;
     isActive: boolean;
     toJSON(): {
         timestamp: number;

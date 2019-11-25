@@ -10,11 +10,11 @@ export declare class Blind extends IPSODevice {
     /**
      * Returns true if the current blind is dimmable
      */
-    readonly isDimmable: boolean;
+    get isDimmable(): boolean;
     /**
      * Returns true if the current blind is switchable
      */
-    readonly isSwitchable: boolean;
+    get isSwitchable(): boolean;
     clone(): this;
     /**
      * Creates a proxy which redirects the properties to the correct internal one, does nothing now

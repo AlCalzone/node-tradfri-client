@@ -15,7 +15,6 @@ const node_coap_client_1 = require("node-coap-client");
 // load internal modules
 const async_1 = require("alcalzone-shared/async");
 const deferred_promise_1 = require("alcalzone-shared/deferred-promise");
-const objects_1 = require("alcalzone-shared/objects");
 const accessory_1 = require("./lib/accessory");
 const array_extensions_1 = require("./lib/array-extensions");
 const endpoints_1 = require("./lib/endpoints");
@@ -26,6 +25,7 @@ const notification_1 = require("./lib/notification");
 const scene_1 = require("./lib/scene");
 const tradfri_error_1 = require("./lib/tradfri-error");
 const watcher_1 = require("./lib/watcher");
+const utils_1 = require("./lib/utils");
 class TradfriClient extends events_1.EventEmitter {
     // tslint:enable:unified-signatures
     constructor(hostname, optionsOrLogger) {
@@ -815,7 +815,7 @@ class TradfriClient extends events_1.EventEmitter {
      * Sets some properties on a group
      * @param group The group to be updated
      * @param operation The properties to be set
-     * @param force If the provided properties must be sent in any case
+     * @param force Include all properties of operation in the payload, even if the values are unchanged
      * @returns true if a request was sent, false otherwise
      */
     operateGroup(group, operation, force = false) {
@@ -823,15 +823,7 @@ class TradfriClient extends events_1.EventEmitter {
         const reference = group.clone();
         if (force) {
             // to force the properties being sent, we need to reset them on the reference
-            const inverseOperation = objects_1.composeObject(objects_1.entries(operation)
-                .map(([key, value]) => {
-                switch (typeof value) {
-                    case "number": return [key, Number.NaN];
-                    case "boolean": return [key, !value];
-                    default: return [key, null];
-                }
-            }));
-            reference.merge(inverseOperation, true);
+            reference.merge(utils_1.invertOperation(operation), true);
         }
         return this.updateResource(`${endpoints_1.endpoints.groups}/${group.instanceId}`, newGroup, reference);
     }
@@ -839,45 +831,60 @@ class TradfriClient extends events_1.EventEmitter {
      * Sets some properties on a lightbulb
      * @param accessory The parent accessory of the lightbulb
      * @param operation The properties to be set
+     * @param force Include all properties of operation in the payload, even if the values are unchanged
      * @returns true if a request was sent, false otherwise
      */
-    operateLight(accessory, operation) {
+    operateLight(accessory, operation, force = false) {
         if (accessory.type !== accessory_1.AccessoryTypes.lightbulb) {
             throw new Error("The parameter accessory must be a lightbulb!");
         }
-        const reference = accessory.clone();
-        const newAccessory = reference.clone();
+        const newAccessory = accessory.clone();
         newAccessory.lightList[0].merge(operation);
+        const reference = accessory.clone();
+        if (force) {
+            // to force the properties being sent, we need to reset them on the reference
+            reference.lightList[0].merge(utils_1.invertOperation(operation), true);
+        }
         return this.updateResource(`${endpoints_1.endpoints.devices}/${accessory.instanceId}`, newAccessory, reference);
     }
     /**
      * Sets some properties on a plug
      * @param accessory The parent accessory of the plug
      * @param operation The properties to be set
+     * @param force Include all properties of operation in the payload, even if the values are unchanged
      * @returns true if a request was sent, false otherwise
      */
-    operatePlug(accessory, operation) {
+    operatePlug(accessory, operation, force = false) {
         if (accessory.type !== accessory_1.AccessoryTypes.plug) {
             throw new Error("The parameter accessory must be a plug!");
         }
-        const reference = accessory.clone();
-        const newAccessory = reference.clone();
+        const newAccessory = accessory.clone();
         newAccessory.plugList[0].merge(operation);
+        const reference = accessory.clone();
+        if (force) {
+            // to force the properties being sent, we need to reset them on the reference
+            reference.plugList[0].merge(utils_1.invertOperation(operation), true);
+        }
         return this.updateResource(`${endpoints_1.endpoints.devices}/${accessory.instanceId}`, newAccessory, reference);
     }
     /**
      * Sets some properties on a blind
      * @param accessory The parent accessory of the blind
      * @param operation The properties to be set
+     * @param force Include all properties of operation in the payload, even if the values are unchanged
      * @returns true if a request was sent, false otherwise
      */
-    operateBlind(accessory, operation) {
+    operateBlind(accessory, operation, force = false) {
         if (accessory.type !== accessory_1.AccessoryTypes.blind) {
             throw new Error("The parameter accessory must be a blind!");
         }
-        const reference = accessory.clone();
-        const newAccessory = reference.clone();
+        const newAccessory = accessory.clone();
         newAccessory.blindList[0].merge(operation);
+        const reference = accessory.clone();
+        if (force) {
+            // to force the properties being sent, we need to reset them on the reference
+            reference.blindList[0].merge(utils_1.invertOperation(operation), true);
+        }
         return this.updateResource(`${endpoints_1.endpoints.devices}/${accessory.instanceId}`, newAccessory, reference);
     }
     /**
