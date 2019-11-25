@@ -1,6 +1,6 @@
 // tslint:disable:no-unused-expression
-import { invertOperation } from "./utils";
 import { assert, expect } from "chai";
+import { invertOperation } from "./utils";
 
 describe("lib/utils => invertOperation() =>", () => {
 	it("leaves empty operations untouched", () => {
@@ -10,51 +10,51 @@ describe("lib/utils => invertOperation() =>", () => {
 	it("sets numeric properties to NaN", () => {
 		expect(
 			invertOperation({
-				foo: 5
-			})
+				foo: 5,
+			}),
 		).to.deep.equal({
-			foo: NaN
+			foo: NaN,
 		});
 	});
 
 	it("sets boolean properties to the opposite value", () => {
 		expect(
 			invertOperation({
-				bar: true
-			})
+				bar: true,
+			}),
 		).to.deep.equal({
-			bar: false
+			bar: false,
 		});
 		expect(
 			invertOperation({
-				baz: false
-			})
+				baz: false,
+			}),
 		).to.deep.equal({
-			baz: true
+			baz: true,
 		});
 	});
 
 	it("sets all other properties to null", () => {
 		expect(
 			invertOperation({
-				foo: "string"
-			})
+				foo: "string",
+			}),
 		).to.deep.equal({
-			foo: null
+			foo: null,
 		});
 		expect(
 			invertOperation({
-				foo: {}
-			})
+				foo: {},
+			}),
 		).to.deep.equal({
-			foo: null
+			foo: null,
 		});
 		expect(
 			invertOperation({
-				foo: () => {}
-			})
+				foo: () => { /* this is not empty, TSLint! */ },
+			}),
 		).to.deep.equal({
-			foo: null
+			foo: null,
 		});
 	});
 
@@ -63,12 +63,12 @@ describe("lib/utils => invertOperation() =>", () => {
 			invertOperation({
 				foo: "string",
 				bar: true,
-				baz: 8
-			})
+				baz: 8,
+			}),
 		).to.deep.equal({
 			foo: null,
 			bar: false,
-			baz: NaN
+			baz: NaN,
 		});
 	});
 });

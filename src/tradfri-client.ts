@@ -20,8 +20,8 @@ import { OperationProvider } from "./lib/operation-provider";
 import { PlugOperation } from "./lib/plug";
 import { Scene } from "./lib/scene";
 import { TradfriError, TradfriErrorCodes } from "./lib/tradfri-error";
-import { ConnectionWatcher, ConnectionWatcherOptions } from "./lib/watcher";
 import { invertOperation } from "./lib/utils";
+import { ConnectionWatcher, ConnectionWatcherOptions } from "./lib/watcher";
 
 export type ObserveResourceCallback = (resp: CoapResponse) => void;
 export type ObserveDevicesCallback = (addedDevices: Accessory[], removedDevices: Accessory[]) => void;
@@ -1001,7 +1001,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		const reference = group.clone();
 		if (force) {
 			// to force the properties being sent, we need to reset them on the reference
-			reference.merge(invertOperation(operation), true)
+			reference.merge(invertOperation(operation), true);
 		}
 
 		return this.updateResource(
@@ -1027,7 +1027,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		const reference = accessory.clone();
 		if (force) {
 			// to force the properties being sent, we need to reset them on the reference
-			reference.lightList[0].merge(invertOperation(operation), true)
+			reference.lightList[0].merge(invertOperation(operation), true);
 		}
 
 		return this.updateResource(
@@ -1053,7 +1053,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		const reference = accessory.clone();
 		if (force) {
 			// to force the properties being sent, we need to reset them on the reference
-			reference.plugList[0].merge(invertOperation(operation), true)
+			reference.plugList[0].merge(invertOperation(operation), true);
 		}
 
 		return this.updateResource(
@@ -1079,7 +1079,7 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		const reference = accessory.clone();
 		if (force) {
 			// to force the properties being sent, we need to reset them on the reference
-			reference.blindList[0].merge(invertOperation(operation), true)
+			reference.blindList[0].merge(invertOperation(operation), true);
 		}
 
 		return this.updateResource(

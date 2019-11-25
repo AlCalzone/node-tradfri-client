@@ -1,7 +1,7 @@
 import { composeObject, entries } from "alcalzone-shared/objects";
 
 export function invertOperation<T extends Record<string, any>>(
-	operation: T
+	operation: T,
 ): T {
 	return composeObject<number | boolean>(
 		entries(operation).map(([key, value]) => {
@@ -13,6 +13,6 @@ export function invertOperation<T extends Record<string, any>>(
 				default:
 					return [key, null] as [string, any];
 			}
-		})
+		}),
 	) as T;
 }
