@@ -4,11 +4,6 @@
 #
 
 # Define the used images
-node6: &node6
-  working_directory: &workdir_node6 ~/node-tradfri-client/node6
-  docker:
-    - image: circleci/node:6
-
 node8: &node8
   working_directory: &workdir_node8 ~/node-tradfri-client/node8
   docker:
@@ -18,6 +13,11 @@ node10: &node10
   working_directory: &workdir_node10 ~/node-tradfri-client/node10
   docker:
     - image: circleci/node:10
+
+node10: &node10
+  working_directory: &workdir_node10 ~/node-tradfri-client/node12
+  docker:
+    - image: circleci/node:12
 
 # use "latest" for lint and publish
 latest: &latest
@@ -57,34 +57,6 @@ whitelist: &whitelist
 version: 2
 jobs:
 # ----------------------------------------------------
-  test_node6:
-    <<: *node6
-
-    steps:
-      - checkout
-
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-          - v1-dependencies-node6-{{ checksum "package.json" }}
-
-      - run:
-          name: Remove unnecessary Dependencies
-          command: npm ls || true ; npm prune
-      - run:
-          name: Install Dependencies
-          command: npm install
-
-      - save_cache:
-          paths:
-            - node_modules
-          key: v1-dependencies-node6-{{ checksum "package.json" }}
-
-      - run:
-          name: Run component tests
-          command: npm run test:ts
-
-# ----------------------------------------------------
   test_node8:
     <<: *node8
 
@@ -94,19 +66,15 @@ jobs:
       # Download and cache dependencies
       - restore_cache:
           keys:
-          - v1-dependencies-node8-{{ checksum "package.json" }}
+          - v1-dependencies-node8-{{ checksum "package-lock.json" }}
 
       - run:
-          name: Remove unnecessary Dependencies
-          command: npm ls || true ; npm prune
-      - run:
-          name: Install Dependencies
           command: npm install
 
       - save_cache:
           paths:
             - node_modules
-          key: v1-dependencies-node8-{{ checksum "package.json" }}
+          key: v1-dependencies-node8-{{ checksum "package-lock.json" }}
 
       - run:
           name: Run component tests
@@ -122,19 +90,39 @@ jobs:
       # Download and cache dependencies
       - restore_cache:
           keys:
-          - v1-dependencies-node10-{{ checksum "package.json" }}
+          - v1-dependencies-node10-{{ checksum "package-lock.json" }}
 
       - run:
-          name: Remove unnecessary Dependencies
-          command: npm ls || true ; npm prune
-      - run:
-          name: Install Dependencies
           command: npm install
 
       - save_cache:
           paths:
             - node_modules
-          key: v1-dependencies-node10-{{ checksum "package.json" }}
+          key: v1-dependencies-node10-{{ checksum "package-lock.json" }}
+
+      - run:
+          name: Run component tests
+          command: npm run test:ts
+
+# ----------------------------------------------------
+  test_node12:
+    <<: *node12
+
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - v1-dependencies-node12-{{ checksum "package-lock.json" }}
+
+      - run:
+          command: npm install
+
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-node12-{{ checksum "package-lock.json" }}
 
       - run:
           name: Run component tests
@@ -150,19 +138,15 @@ jobs:
       # Download and cache dependencies
       - restore_cache:
           keys:
-          - v1-dependencies-latest-{{ checksum "package.json" }}
+          - v1-dependencies-latest-{{ checksum "package-lock.json" }}
 
       - run:
-          name: Remove unnecessary Dependencies
-          command: npm ls || true ; npm prune
-      - run:
-          name: Install Dependencies
           command: npm install
 
       - save_cache:
           paths:
             - node_modules
-          key: v1-dependencies-latest-{{ checksum "package.json" }}
+          key: v1-dependencies-latest-{{ checksum "package-lock.json" }}
 
       # on latest also lint the code
       - run:
@@ -245,11 +229,11 @@ workflows:
 
   test-and-deploy:
     jobs:
-      - test_node6:
-          <<: *tags_and_branches
       - test_node8:
           <<: *tags_and_branches
       - test_node10:
+          <<: *tags_and_branches
+      - test_node12:
           <<: *tags_and_branches
       - test_latest:
           <<: *tags_and_branches
@@ -262,9 +246,9 @@ workflows:
       # build only on tagged builds and if all tests succeeded
       - build:
           requires:
-            - test_node6
             - test_node8
             - test_node10
+            - test_node12
             - test_latest
           <<: *only_tags
 
