@@ -14,7 +14,7 @@ node10: &node10
   docker:
     - image: circleci/node:10
 
-node10: &node10
+node12: &node12
   working_directory: &workdir_node10 ~/node-tradfri-client/node12
   docker:
     - image: circleci/node:12
