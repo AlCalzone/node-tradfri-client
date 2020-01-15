@@ -1,6 +1,6 @@
 # Changelog
 
-## __WORK IN PROGRESS__
+## 2.1.1 (2020-01-15)
 * (AlCalzone) Update `mdns-server` dependency to handle `EADDRNOTAVAIL` during discovery
 
 ## 2.1.0 (2019-11-25)
