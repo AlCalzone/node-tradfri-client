@@ -1,5 +1,8 @@
 # Changelog
 
+## __WORK IN PROGRESS__
+* (AlCalzone) Update `mdns-server` dependency to handle `EADDRNOTAVAIL` during discovery
+
 ## 2.1.0 (2019-11-25)
 * (AlCalzone) Added a third parameter (`force`) to `operateLight`, `operatePlug` and `operateBlind` methods
 * (AlCalzone) Added `stop()` method to Blinds
