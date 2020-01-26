@@ -21,7 +21,9 @@ export declare enum AccessoryTypes {
     /** A signal repeater */
     signalRepeater = 6,
     /** A smart blind */
-    blind = 7
+    blind = 7,
+    /** Symfonisk Remote */
+    soundRemote = 8
 }
 export declare class Accessory extends IPSODevice {
     type: AccessoryTypes;

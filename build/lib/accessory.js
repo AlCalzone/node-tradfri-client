@@ -38,6 +38,8 @@ var AccessoryTypes;
     AccessoryTypes[AccessoryTypes["signalRepeater"] = 6] = "signalRepeater";
     /** A smart blind */
     AccessoryTypes[AccessoryTypes["blind"] = 7] = "blind";
+    /** Symfonisk Remote */
+    AccessoryTypes[AccessoryTypes["soundRemote"] = 8] = "soundRemote";
 })(AccessoryTypes = exports.AccessoryTypes || (exports.AccessoryTypes = {}));
 class Accessory extends ipsoDevice_1.IPSODevice {
     constructor() {

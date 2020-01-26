@@ -29,6 +29,8 @@ export enum AccessoryTypes {
 	signalRepeater = 6,
 	/** A smart blind */
 	blind = 7,
+	/** Symfonisk Remote */
+	soundRemote = 8,
 }
 
 export class Accessory extends IPSODevice {
