@@ -4,7 +4,7 @@
 	## __WORK IN PROGRESS__
 -->
 
-## __WORK IN PROGRESS__
+## 2.1.2 (2020-01-26)
 * (AlCalzone) Suppress warnings for Symfonisk sound remote
 
 ## 2.1.1 (2020-01-15)
