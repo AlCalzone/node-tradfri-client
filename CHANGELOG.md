@@ -1,4 +1,11 @@
 # Changelog
+<!--
+	Placeholder for next release:
+	## __WORK IN PROGRESS__
+-->
+
+## __WORK IN PROGRESS__
+* (AlCalzone) Suppress warnings for Symfonisk sound remote
 
 ## 2.1.1 (2020-01-15)
 * (AlCalzone) Update `mdns-server` dependency to handle `EADDRNOTAVAIL` during discovery
