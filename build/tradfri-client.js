@@ -14,6 +14,7 @@ const events_1 = require("events");
 const node_coap_client_1 = require("node-coap-client");
 // load internal modules
 const async_1 = require("alcalzone-shared/async");
+const typeguards_1 = require("alcalzone-shared/typeguards");
 const deferred_promise_1 = require("alcalzone-shared/deferred-promise");
 const accessory_1 = require("./lib/accessory");
 const array_extensions_1 = require("./lib/array-extensions");
@@ -819,6 +820,10 @@ class TradfriClient extends events_1.EventEmitter {
      * @returns true if a request was sent, false otherwise
      */
     operateGroup(group, operation, force = false) {
+        // Ensure that the operation is an object (GH #323)
+        if (!typeguards_1.isObject(operation)) {
+            throw new Error(`The parameter "operation" must be an object!`);
+        }
         const newGroup = group.clone().merge(operation, true /* all props */);
         const reference = group.clone();
         if (force) {
@@ -836,7 +841,11 @@ class TradfriClient extends events_1.EventEmitter {
      */
     operateLight(accessory, operation, force = false) {
         if (accessory.type !== accessory_1.AccessoryTypes.lightbulb) {
-            throw new Error("The parameter accessory must be a lightbulb!");
+            throw new Error(`The parameter "accessory" must be a lightbulb!`);
+        }
+        // Ensure that the operation is an object (GH #323)
+        if (!typeguards_1.isObject(operation)) {
+            throw new Error(`The parameter "operation" must be an object!`);
         }
         const newAccessory = accessory.clone();
         newAccessory.lightList[0].merge(operation);
@@ -856,7 +865,11 @@ class TradfriClient extends events_1.EventEmitter {
      */
     operatePlug(accessory, operation, force = false) {
         if (accessory.type !== accessory_1.AccessoryTypes.plug) {
-            throw new Error("The parameter accessory must be a plug!");
+            throw new Error(`The parameter "accessory" must be a plug!`);
+        }
+        // Ensure that the operation is an object (GH #323)
+        if (!typeguards_1.isObject(operation)) {
+            throw new Error(`The parameter "operation" must be an object!`);
         }
         const newAccessory = accessory.clone();
         newAccessory.plugList[0].merge(operation);
@@ -876,7 +889,11 @@ class TradfriClient extends events_1.EventEmitter {
      */
     operateBlind(accessory, operation, force = false) {
         if (accessory.type !== accessory_1.AccessoryTypes.blind) {
-            throw new Error("The parameter accessory must be a blind!");
+            throw new Error(`The parameter "accessory" must be a blind!`);
+        }
+        // Ensure that the operation is an object (GH #323)
+        if (!typeguards_1.isObject(operation)) {
+            throw new Error(`The parameter "operation" must be an object!`);
         }
         const newAccessory = accessory.clone();
         newAccessory.blindList[0].merge(operation);
