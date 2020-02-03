@@ -771,6 +771,14 @@ describe("tradfri-client => updating resources => ", () => {
 			notALight.type = AccessoryTypes.remote;
 			expect(() => tradfri.operateLight(notALight, {})).to.throw("must be a lightbulb");
 		});
+
+		it("should throw when called with a non-object operation", () => {
+			const light = new Accessory();
+			light.type = AccessoryTypes.lightbulb;
+			for (const nonObject of [null, undefined, 1, true, "", [1, 2, 3]]) {
+				expect(() => tradfri.operateLight(light, nonObject as any)).to.throw("an object");
+			}
+		});
 	});
 
 	describe("operatePlug => ", () => {
@@ -779,8 +787,31 @@ describe("tradfri-client => updating resources => ", () => {
 			notAPlug.type = AccessoryTypes.lightbulb;
 			expect(() => tradfri.operatePlug(notAPlug, {})).to.throw("must be a plug");
 		});
+
+		it("should throw when called with a non-object operation", () => {
+			const plug = new Accessory();
+			plug.type = AccessoryTypes.plug;
+			for (const nonObject of [null, undefined, 1, true, "", [1, 2, 3]]) {
+				expect(() => tradfri.operatePlug(plug, nonObject as any)).to.throw("an object");
+			}
+		});
 	});
 
+	describe("operateBlind => ", () => {
+		it("should throw when called with a non-blind accessory", () => {
+			const notABlind = new Accessory();
+			notABlind.type = AccessoryTypes.lightbulb;
+			expect(() => tradfri.operateBlind(notABlind, {})).to.throw("must be a blind");
+		});
+
+		it("should throw when called with a non-object operation", () => {
+			const blind = new Accessory();
+			blind.type = AccessoryTypes.blind;
+			for (const nonObject of [null, undefined, 1, true, "", [1, 2, 3]]) {
+				expect(() => tradfri.operateBlind(blind, nonObject as any)).to.throw("an object");
+			}
+		});
+	});
 });
 
 describe("tradfri-client => custom requests => ", () => {
