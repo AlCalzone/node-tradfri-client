@@ -4,6 +4,7 @@ import { CoapClient as coap, CoapResponse, ConnectionResult, RequestMethod } fro
 
 // load internal modules
 import { wait } from "alcalzone-shared/async";
+import { isObject } from "alcalzone-shared/typeguards";
 import { createDeferredPromise, DeferredPromise } from "alcalzone-shared/deferred-promise";
 import { Accessory, AccessoryTypes } from "./lib/accessory";
 import { except } from "./lib/array-extensions";
@@ -996,6 +997,10 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 * @returns true if a request was sent, false otherwise
 	 */
 	public operateGroup(group: Group, operation: GroupOperation, force: boolean = false): Promise<boolean> {
+		// Ensure that the operation is an object (GH #323)
+		if (!isObject(operation)) {
+			throw new Error(`The parameter "operation" must be an object!`);
+		}
 
 		const newGroup = group.clone().merge(operation, true /* all props */);
 		const reference = group.clone();
@@ -1019,7 +1024,12 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 */
 	public operateLight(accessory: Accessory, operation: LightOperation, force: boolean = false): Promise<boolean> {
 		if (accessory.type !== AccessoryTypes.lightbulb) {
-			throw new Error("The parameter accessory must be a lightbulb!");
+			throw new Error(`The parameter "accessory" must be a lightbulb!`);
+		}
+
+		// Ensure that the operation is an object (GH #323)
+		if (!isObject(operation)) {
+			throw new Error(`The parameter "operation" must be an object!`);
 		}
 
 		const newAccessory = accessory.clone();
@@ -1045,7 +1055,12 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 */
 	public operatePlug(accessory: Accessory, operation: PlugOperation, force: boolean = false): Promise<boolean> {
 		if (accessory.type !== AccessoryTypes.plug) {
-			throw new Error("The parameter accessory must be a plug!");
+			throw new Error(`The parameter "accessory" must be a plug!`);
+		}
+
+		// Ensure that the operation is an object (GH #323)
+		if (!isObject(operation)) {
+			throw new Error(`The parameter "operation" must be an object!`);
 		}
 
 		const newAccessory = accessory.clone();
@@ -1071,7 +1086,12 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	 */
 	public operateBlind(accessory: Accessory, operation: BlindOperation, force: boolean = false): Promise<boolean> {
 		if (accessory.type !== AccessoryTypes.blind) {
-			throw new Error("The parameter accessory must be a blind!");
+			throw new Error(`The parameter "accessory" must be a blind!`);
+		}
+
+		// Ensure that the operation is an object (GH #323)
+		if (!isObject(operation)) {
+			throw new Error(`The parameter "operation" must be an object!`);
 		}
 
 		const newAccessory = accessory.clone();
