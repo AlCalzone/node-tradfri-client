@@ -773,10 +773,10 @@ describe("tradfri-client => updating resources => ", () => {
 		});
 
 		it("should throw when called with a non-object operation", () => {
-			const light = new Accessory();
-			light.type = AccessoryTypes.lightbulb;
+			const acc = new Accessory();
+			acc.type = AccessoryTypes.lightbulb;
 			for (const nonObject of [null, undefined, 1, true, "", [1, 2, 3]]) {
-				expect(() => tradfri.operateLight(light, nonObject as any)).to.throw("an object");
+				expect(() => tradfri.operateLight(acc, nonObject as any)).to.throw("an object");
 			}
 		});
 	});
@@ -789,10 +789,10 @@ describe("tradfri-client => updating resources => ", () => {
 		});
 
 		it("should throw when called with a non-object operation", () => {
-			const plug = new Accessory();
-			plug.type = AccessoryTypes.plug;
+			const acc = new Accessory();
+			acc.type = AccessoryTypes.plug;
 			for (const nonObject of [null, undefined, 1, true, "", [1, 2, 3]]) {
-				expect(() => tradfri.operatePlug(plug, nonObject as any)).to.throw("an object");
+				expect(() => tradfri.operatePlug(acc, nonObject as any)).to.throw("an object");
 			}
 		});
 	});
@@ -805,10 +805,10 @@ describe("tradfri-client => updating resources => ", () => {
 		});
 
 		it("should throw when called with a non-object operation", () => {
-			const blind = new Accessory();
-			blind.type = AccessoryTypes.blind;
+			const acc = new Accessory();
+			acc.type = AccessoryTypes.blind;
 			for (const nonObject of [null, undefined, 1, true, "", [1, 2, 3]]) {
-				expect(() => tradfri.operateBlind(blind, nonObject as any)).to.throw("an object");
+				expect(() => tradfri.operateBlind(acc, nonObject as any)).to.throw("an object");
 			}
 		});
 	});
