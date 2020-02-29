@@ -4,6 +4,9 @@
 	## __WORK IN PROGRESS__
 -->
 
+## __WORK IN PROGRESS__
+* (AlCalzone) The connection watcher now tries to re-authenticate if the security code is known
+
 ## 2.1.3 (2020-02-29)
 * (AlCalzone) Expired credentials are now correctly detected
 
