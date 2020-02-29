@@ -176,13 +176,22 @@ export class ConnectionWatcher extends EventEmitter {
 							this.resetAttempts++;
 							log(`Trying to reconnect... Attempt ${this.resetAttempts} of ${this._options.maximumReconnects === Number.POSITIVE_INFINITY ? "∞" : this._options.maximumReconnects}`, "debug");
 							this.emit("reconnecting", this.resetAttempts, this._options.maximumReconnects);
-							this.client.reset(true);
+							const reconnectResult = await this.client.reconnectHandler();
+							if (!reconnectResult) {
+								// The connection cannot be re-established, give up
+								log("Cannot reconnect... giving up.", "debug");
+								this.emit("give up");
+								// increase the counter once more so this branch doesn't get hit
+								this.resetAttempts = this._options.maximumReconnects + 1;
+								return;
+							}
 						} else if (this.resetAttempts === this._options.maximumReconnects) {
 							// don't try anymore
 							log("Maximum reconnect attempts reached... giving up.", "debug");
 							this.emit("give up");
 							// increase the counter once more so this branch doesn't get hit
 							this.resetAttempts++;
+							return;
 						}
 					}
 				}

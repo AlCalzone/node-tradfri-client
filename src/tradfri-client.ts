@@ -57,6 +57,11 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 	/** Options regarding IPSO objects and serialization */
 	private ipsoOptions: IPSOOptions = {};
 
+	// Credentials for automatic re-connection
+	private securityCode: string | undefined;
+	private identity: string | undefined;
+	private psk: string | undefined;
+
 	/** Automatic connection watching */
 	private watcher: ConnectionWatcher | undefined;
 	/** A dictionary of the observer callbacks. Used to restore it after a soft reset */
@@ -186,7 +191,6 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 				;
 			throw lastFailureReason;
 		}
-
 	}
 
 	/**
@@ -207,6 +211,9 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		const result = await coap.tryToConnect(this.requestBase);
 		if (result === true) {
 			log("Connection successful", "debug");
+			// Store this information to automatically reconnect
+			this.identity = identity;
+			this.psk = psk;
 		} else {
 			log("Connection failed. Reason: " + result, "debug");
 		}
@@ -265,7 +272,36 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		const pskResponse = JSON.parse(response.payload!.toString("utf8"));
 		const psk = pskResponse["9091"];
 
+		// Remember the code to automatically reconnect
+		this.securityCode = securityCode;
+
 		return { identity, psk };
+	}
+
+	/**
+	 * @internal
+	 * This is used by the connection watcher internalle - DO NOT USE!
+	 */
+	public async reconnectHandler(): Promise<boolean> {
+		this.reset(true);
+
+		// Try to immediately reconnect
+		log(`trying to reconnect`, "debug");
+		const result = await this.tryToConnect(this.identity!, this.psk!);
+		if (result === "auth failed") {
+			if (this.securityCode) {
+				log(`invalid credentials, trying to re-authenticate`, "debug");
+				({
+					identity: this.identity,
+					psk: this.psk
+				} = await this.authenticate(this.securityCode));
+				await this.tryToConnect(this.identity, this.psk);
+			} else {
+				log(`invalid credentials, cannot reconnect`, "debug");
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/**
