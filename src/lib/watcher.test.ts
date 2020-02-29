@@ -11,7 +11,7 @@ import { createNetworkMock } from "../../test/mocks";
 import { TradfriClient } from "../tradfri-client";
 import { ConnectionWatcher, ConnectionWatcherOptions } from "./watcher";
 
-describe("connection watching => ", () => {
+describe.skip("connection watching => ", () => {
 
 	let clock: SinonFakeTimers;
 
