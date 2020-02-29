@@ -4,6 +4,9 @@
 	## __WORK IN PROGRESS__
 -->
 
+## __WORK IN PROGRESS__
+* (AlCalzone) Expired credentials are now correctly detected
+
 ## 2.1.2 (2020-01-26)
 * (AlCalzone) Suppress warnings for Symfonisk sound remote
 
