@@ -4,7 +4,7 @@
 	## __WORK IN PROGRESS__
 -->
 
-## __WORK IN PROGRESS__
+## 2.1.3 (2020-02-29)
 * (AlCalzone) Expired credentials are now correctly detected
 
 ## 2.1.2 (2020-01-26)
