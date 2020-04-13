@@ -4,7 +4,7 @@
 	## __WORK IN PROGRESS__
 -->
 
-## __WORK IN PROGRESS__
+## 2.1.5 (2020-04-13)
 * (AlCalzone) All hostnames are normalized to lowercase
 
 ## 2.1.4 (2020-02-29)
