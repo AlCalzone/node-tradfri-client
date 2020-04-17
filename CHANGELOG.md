@@ -4,7 +4,7 @@
 	## __WORK IN PROGRESS__
 -->
 
-## __WORK IN PROGRESS__
+## 2.1.6 (2020-04-17)
 * (AlCalzone) Fix `Blind.stop()` method so that the payload is always sent
 
 ## 2.1.5 (2020-04-13)
