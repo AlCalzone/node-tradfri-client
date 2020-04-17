@@ -4,6 +4,9 @@
 	## __WORK IN PROGRESS__
 -->
 
+## __WORK IN PROGRESS__
+* (AlCalzone) Fix `Blind.stop()` method so that the payload is always sent
+
 ## 2.1.5 (2020-04-13)
 * (AlCalzone) All hostnames are normalized to lowercase
 
