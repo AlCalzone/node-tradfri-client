@@ -12,12 +12,21 @@
 		"stripInternal": true,
 		"resolveJsonModule": true,
 		"target": "es2015",
-		
+
 		// this is more annoying in tests than it helps
 		"noImplicitAny": false,
 		"noUnusedLocals": false,
 		"noUnusedParameters": false,
-		"noImplicitThis": true
+		"noImplicitThis": true,
+
+		"types": [
+			"node",
+			"mocha",
+			"chai",
+			"chai-as-promised",
+			"sinon",
+			"sinon-chai"
+		]
 	},
 	"include": [
 		"test/**/*.ts",

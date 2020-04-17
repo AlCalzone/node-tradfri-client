@@ -160,6 +160,9 @@ class TradfriClient extends events_1.EventEmitter {
             const result = yield node_coap_client_1.CoapClient.tryToConnect(this.requestBase);
             if (result === true) {
                 logger_1.log("Connection successful", "debug");
+                // Store this information to automatically reconnect
+                this.identity = identity;
+                this.psk = psk;
             }
             else {
                 logger_1.log("Connection failed. Reason: " + result, "debug");
@@ -199,7 +202,36 @@ class TradfriClient extends events_1.EventEmitter {
             // TODO: check when payload is defined and when not
             const pskResponse = JSON.parse(response.payload.toString("utf8"));
             const psk = pskResponse["9091"];
+            // Remember the code to automatically reconnect
+            this.securityCode = securityCode;
             return { identity, psk };
+        });
+    }
+    /**
+     * @internal
+     * This is used by the connection watcher internalle - DO NOT USE!
+     */
+    reconnectHandler() {
+        return __awaiter(this, void 0, void 0, function* () {
+            this.reset(true);
+            // Try to immediately reconnect
+            logger_1.log(`trying to reconnect`, "debug");
+            const result = yield this.tryToConnect(this.identity, this.psk);
+            if (result === "auth failed") {
+                if (this.securityCode) {
+                    logger_1.log(`invalid credentials, trying to re-authenticate`, "debug");
+                    ({
+                        identity: this.identity,
+                        psk: this.psk
+                    } = yield this.authenticate(this.securityCode));
+                    yield this.tryToConnect(this.identity, this.psk);
+                }
+                else {
+                    logger_1.log(`invalid credentials, cannot reconnect`, "debug");
+                    return false;
+                }
+            }
+            return true;
         });
     }
     /**
@@ -896,7 +928,8 @@ class TradfriClient extends events_1.EventEmitter {
             throw new Error(`The parameter "operation" must be an object!`);
         }
         const newAccessory = accessory.clone();
-        newAccessory.blindList[0].merge(operation);
+        // Merge all properties, because trigger might not be defined
+        newAccessory.blindList[0].merge(operation, true);
         const reference = accessory.clone();
         if (force) {
             // to force the properties being sent, we need to reset them on the reference

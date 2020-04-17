@@ -4,23 +4,26 @@
 	// Weitere Informationen finden Sie unter https://go.microsoft.com/fwlink/?linkid=830387
 	"version": "0.2.0",
 	"configurations": [
-	{
-		"type": "node",
-		"request": "launch",
-		"name": "Mocha Tests",
-		"program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
-		"args": [
-			"--require", "ts-node/register",
-			"--require", "source-map-support/register",
-			"-u",
-			"tdd",
-			"--timeout",
-			"999999",
-			"--colors",
-			"${workspaceFolder}/src/**/*.test.ts"
-		],
-		"internalConsoleOptions": "openOnSessionStart"
-	},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Mocha Tests",
+			"program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+			"env":{
+				"TS_NODE_PROJECT": "tsconfig.testing.json"
+			},
+			"args": [
+				"--require", "ts-node/register",
+				"--require", "source-map-support/register",
+				"-u",
+				"bdd",
+				"--timeout",
+				"999999",
+				"--colors",
+				"${workspaceFolder}/src/**/*.test.ts"
+			],
+			"internalConsoleOptions": "openOnSessionStart"
+		},
 		{
 			"type": "node",
 			"request": "launch",

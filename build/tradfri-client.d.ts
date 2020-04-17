@@ -37,6 +37,9 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
     private requestBase;
     /** Options regarding IPSO objects and serialization */
     private ipsoOptions;
+    private securityCode;
+    private identity;
+    private psk;
     /** Automatic connection watching */
     private watcher;
     /** A dictionary of the observer callbacks. Used to restore it after a soft reset */

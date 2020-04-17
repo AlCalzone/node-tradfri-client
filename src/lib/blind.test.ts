@@ -212,5 +212,16 @@ describe("ipso/blind => simplified API => ", () => {
 				],
 			});
 		});
+
+		it("stop()", async() => {
+			await blind.stop().should.become(true);
+			assertPayload(fakeCoap.request.getCall(0).args[2], {
+				15015: [
+					{
+						5523: 0,
+					},
+				],
+			});
+		})
 	});
 });
