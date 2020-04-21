@@ -13,6 +13,7 @@
 				"TS_NODE_PROJECT": "tsconfig.testing.json"
 			},
 			"args": [
+				"--require", "test/mocha.setup.js",
 				"--require", "ts-node/register",
 				"--require", "source-map-support/register",
 				"-u",

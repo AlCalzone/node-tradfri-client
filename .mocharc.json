@@ -1,0 +1,8 @@
+{
+	"require": [
+		"./test/mocha.setup.js",
+		"ts-node/register",
+		"source-map-support/register"
+	],
+	"watch-files": ["src/**/*.test.ts"]
+}
