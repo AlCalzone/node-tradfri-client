@@ -69,7 +69,7 @@
     "alcalzone-shared": "^2.3.0",
     "debug": "^4.1.1",
     "mdns-server": "^1.0.9",
-    "node-coap-client": "^1.0.4",
+    "node-coap-client": "^1.0.8",
     "reflect-metadata": "^0.1.12"
   },
   "scripts": {
