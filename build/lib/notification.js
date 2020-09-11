@@ -9,6 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.GatewayRebootReason = exports.NotificationTypes = exports.FirmwareUpdateNotification = exports.RebootNotification = exports.Notification = void 0;
 const gatewayDetails_1 = require("./gatewayDetails");
 const ipsoObject_1 = require("./ipsoObject");
 class Notification extends ipsoObject_1.IPSOObject {

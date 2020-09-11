@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.IPSOObject = exports.doNotSerialize = exports.deserializeWith = exports.serializeWith = exports.required = exports.ipsoKey = void 0;
 const objects_1 = require("alcalzone-shared/objects");
 const logger_1 = require("./logger");
 // ===========================================================

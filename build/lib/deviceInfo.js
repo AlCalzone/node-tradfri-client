@@ -9,6 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.DeviceInfo = exports.PowerSources = void 0;
 const ipsoObject_1 = require("./ipsoObject");
 var PowerSources;
 (function (PowerSources) {

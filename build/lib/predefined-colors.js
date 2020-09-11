@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.colorTemperatureRange = exports.whiteSpectrumHex = exports.predefinedColors = exports.MAX_COLOR = void 0;
 /**
  * The maximum value of color related numbers in Tradfri
  */

@@ -1,6 +1,4 @@
 "use strict";
-// wotan-disable no-useless-predicate
-// Until I'm sure that the properties may be nullable, we have to allow these "useless" checks
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -11,6 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Plug = void 0;
 const math_1 = require("alcalzone-shared/math");
 const accessory_1 = require("./accessory");
 const conversions_1 = require("./conversions");

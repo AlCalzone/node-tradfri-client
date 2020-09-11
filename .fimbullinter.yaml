@@ -1,4 +1,0 @@
-config: .wotanrc.yaml
-exclude:
-  - "**/*.test.ts"
-project: tsconfig.json

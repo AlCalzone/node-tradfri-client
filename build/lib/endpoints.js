@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.GatewayEndpoints = exports.endpoints = void 0;
 // list of known endpoints defined on the gateway
 exports.endpoints = {
     devices: "15001",
