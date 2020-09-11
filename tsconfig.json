@@ -1,12 +1,6 @@
 {
 	"compileOnSave": true,
 	"compilerOptions": {
-		"plugins": [
-			{
-				"name": "@fimbul/mithotyn",
-				"displayErrorsAsWarnings": true
-			}
-		],
 		"declaration": true,
 		"module": "commonjs",
 		"moduleResolution": "node",

@@ -9,6 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.IPSODevice = void 0;
 const ipsoObject_1 = require("./ipsoObject");
 // common base class for all devices
 class IPSODevice extends ipsoObject_1.IPSOObject {

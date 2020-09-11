@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.discoverGateway = void 0;
 const createMDNSServer = require("mdns-server");
 function parseTXTRecord(data) {
     const ret = {};

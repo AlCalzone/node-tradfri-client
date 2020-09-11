@@ -1,6 +1,7 @@
 "use strict";
 // tslint:disable:variable-name
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.conversions = exports.deserializers = exports.serializers = void 0;
 const math_1 = require("alcalzone-shared/math");
 const strings_1 = require("alcalzone-shared/strings");
 const predefined_colors_1 = require("./predefined-colors");

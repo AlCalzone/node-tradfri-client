@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.TradfriClient = void 0;
 // load external modules
 const events_1 = require("events");
 const node_coap_client_1 = require("node-coap-client");
@@ -43,7 +44,6 @@ class TradfriClient extends events_1.EventEmitter {
         /** A dictionary of the observer callbacks. Used to restore it after a soft reset */
         this.rememberedObserveCallbacks = new Map();
         // This avoids bugs when JS users don't pass a string
-        // wotan-disable-next-line no-useless-predicate
         if (typeof hostname !== "string")
             throw new Error("The hostname must be a string.");
         this.requestBase = `coaps://${hostname}:5684/`;
@@ -831,7 +831,6 @@ class TradfriClient extends events_1.EventEmitter {
             logger_1.log(`updateResource(${path}) > comparing ${JSON.stringify(newObj)} with the reference ${JSON.stringify(reference)}`, "debug");
             const serializedObj = newObj.serialize(reference);
             // If the serialized object contains no properties, we don't need to send anything
-            // wotan-disable-next-line no-useless-predicate
             if (!serializedObj || Object.keys(serializedObj).length === 0) {
                 logger_1.log(`updateResource(${path}) > empty object, not sending any payload`, "debug");
                 return false;
@@ -963,7 +962,6 @@ class TradfriClient extends events_1.EventEmitter {
     swallowInternalCoapRejections(promise) {
         // We use the conventional promise pattern here so we can opt to never
         // resolve the promise in case we want to redirect it into an emitted error event
-        // wotan-disable-next-line async-function-assignability
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             try {
                 // try to resolve the promise normally
@@ -1018,7 +1016,7 @@ function parsePayload(response) {
         return null;
     switch (response.format) {
         case 0: // text/plain
-        case null: /* wotan-disable-line */ // assume text/plain
+        case null: // assume text/plain
             return response.payload.toString("utf-8");
         case 50: // application/json
             const json = response.payload.toString("utf-8");

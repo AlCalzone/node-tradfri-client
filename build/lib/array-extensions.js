@@ -1,6 +1,7 @@
 "use strict";
 // tslint:disable:curly
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.firstOrDefault = exports.except = void 0;
 ///
 /// Stellt Erweiterungsmethoden für Arrays bereit
 ///

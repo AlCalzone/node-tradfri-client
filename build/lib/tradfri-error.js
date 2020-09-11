@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.TradfriError = exports.TradfriErrorCodes = void 0;
 var TradfriErrorCodes;
 (function (TradfriErrorCodes) {
     TradfriErrorCodes[TradfriErrorCodes["ConnectionFailed"] = 0] = "ConnectionFailed";

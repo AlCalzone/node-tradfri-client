@@ -9,6 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Group = void 0;
 const math_1 = require("alcalzone-shared/math");
 const conversions_1 = require("./conversions");
 const ipsoDevice_1 = require("./ipsoDevice");

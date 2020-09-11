@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.log = exports.setCustomLogger = void 0;
 const debugPackage = require("debug");
 const _debug = debugPackage("node-tradfri-client");
 let customLogger;
