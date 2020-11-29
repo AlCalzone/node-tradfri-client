@@ -4,7 +4,7 @@
 	## __WORK IN PROGRESS__
 -->
 
-## __WORK IN PROGRESS__
+## 2.1.7 (2020-11-29)
 * (AlCalzone) Added new properties to `Scene`
 
 ## 2.1.6 (2020-04-17)
