@@ -1421,3 +1421,72 @@ describe("tradfri-client => gateway actions => ", () => {
 	});
 
 });
+
+describe("tradfri-client => observing groups (regression tests) => ", () => {
+
+	// Setup the mock
+	const {
+		tradfri,
+		groupsUrl,
+		scenesUrl,
+		fakeCoap,
+		callbacks,
+		createStubs,
+		restoreStubs,
+		resetStubHistory,
+	} = createNetworkMock();
+	before(createStubs);
+	after(restoreStubs);
+	afterEach(resetStubHistory);
+
+	describe("observeGroupsAndScenes => ", () => {
+		it("should not stall when a group has no scenes", async () => {
+			// remember the deferred promise as this only resolves after all responses have been received
+			const groupsAndScenesPromise = tradfri.observeGroupsAndScenes();
+
+			fakeCoap.observe.should.have.been.calledOnce;
+			fakeCoap.observe.should.have.been.calledWith(groupsUrl);
+			fakeCoap.observe.resetHistory();
+
+			const groups = [123456, 123457];
+			await callbacks.observeGroups(createResponse(groups));
+
+			// The groups endpoint should be called for each group
+			fakeCoap.observe.should.have.been.calledTwice;
+			fakeCoap.observe.should.have.been.calledWith(`${groupsUrl}/123456`);
+			fakeCoap.observe.should.have.been.calledWith(`${groupsUrl}/123457`);
+			fakeCoap.observe.resetHistory();
+
+			// now provide the faked responses so the observe process can continue with scenes
+			await callbacks.observeGroup[123456](createEmptyGroupResponse(123456));
+			await callbacks.observeGroup[123457](createEmptyGroupResponse(123457));
+
+			// The scenes endpoint should be called for each group
+			fakeCoap.observe.should.have.been.calledTwice;
+			fakeCoap.observe.should.have.been.calledWith(`${scenesUrl}/123456`);
+			fakeCoap.observe.should.have.been.calledWith(`${scenesUrl}/123457`);
+			fakeCoap.observe.resetHistory();
+
+			// provide the fake scenes so those can be observed too
+			const scenes = {
+				123456: [654321, 654322],
+				123457: [],
+			};
+			await callbacks.observeScenes[123456](createResponse(scenes[123456]));
+			await callbacks.observeScenes[123457](createResponse(scenes[123457]));
+
+			// The scene endpoint should be called for each scene
+			fakeCoap.observe.callCount.should.equal(2);
+			fakeCoap.observe.should.have.been.calledWith(`${scenesUrl}/123456/654321`);
+			fakeCoap.observe.should.have.been.calledWith(`${scenesUrl}/123456/654322`);
+			fakeCoap.observe.resetHistory();
+
+			// the scenes have to be provided aswell
+			await callbacks.observeScene["123456/654321"](createEmptySceneResponse(654321));
+			await callbacks.observeScene["123456/654322"](createEmptySceneResponse(654322));
+
+			// now the deferred promise should have resolved
+			await groupsAndScenesPromise;
+		});
+	});
+});

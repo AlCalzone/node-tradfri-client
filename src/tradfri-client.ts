@@ -717,29 +717,33 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		const addedKeys = except(newKeys, oldKeys);
 		log(`adding scenes with keys ${JSON.stringify(addedKeys)} to group ${groupId}`, "debug");
 
-		const observeScenePromises = newKeys.map(id => {
-			const handleResponse = (resp: CoapResponse) => {
-				// first, try to parse the device information
-				const result = this.observeScene_callback(groupId, id, resp);
-				// if we are still waiting to confirm the `observeDevices` call,
-				// check if we have received information about all devices
-				if (this.observeScenesPromises != null) {
-					const scenePromise = this.observeScenesPromises.get(groupId);
-					if (result) {
-						if (newKeys.every(k => k in groupInfo.scenes)) {
-							if (!!scenePromise) scenePromise.resolve();
+		if (newKeys.length > 0) {
+			const observeScenePromises = newKeys.map(id => {
+				const handleResponse = (resp: CoapResponse) => {
+					// first, try to parse the device information
+					const result = this.observeScene_callback(groupId, id, resp);
+					// if we are still waiting to confirm the `observeDevices` call,
+					// check if we have received information about all devices
+					if (this.observeScenesPromises != null) {
+						const scenePromise = this.observeScenesPromises.get(groupId);
+						if (result) {
+							if (newKeys.every(k => k in groupInfo.scenes)) {
+								if (!!scenePromise) scenePromise.resolve();
+							}
+						} else {
+							if (!!scenePromise) scenePromise.reject(new Error(`The scene with the id ${id} could not be observed`));
 						}
-					} else {
-						if (!!scenePromise) scenePromise.reject(new Error(`The scene with the id ${id} could not be observed`));
 					}
-				}
-			};
-			return this.observeResource(
-				`${coapEndpoints.scenes}/${groupId}/${id}`,
-				handleResponse,
-			);
-		});
-		await Promise.all(observeScenePromises);
+				};
+				return this.observeResource(
+					`${coapEndpoints.scenes}/${groupId}/${id}`,
+					handleResponse,
+				);
+			});
+			await Promise.all(observeScenePromises);
+		} else {
+			this.observeScenesPromises?.get(groupId)?.resolve();
+		}
 
 		const removedKeys = except(oldKeys, newKeys);
 		log(`removing scenes with keys ${JSON.stringify(removedKeys)} from group ${groupId}`, "debug");
