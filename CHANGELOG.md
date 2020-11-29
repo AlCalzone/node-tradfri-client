@@ -3,6 +3,8 @@
 	Placeholder for next release:
 	## __WORK IN PROGRESS__
 -->
+## 2.1.8 (2020-11-29)
+* (AlCalzone) `observeGroupsAndScenes()` no longer stalls when a group has no scenes
 
 ## 2.1.7 (2020-11-29)
 * (AlCalzone) Added new properties to `Scene`
