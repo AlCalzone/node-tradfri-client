@@ -3,6 +3,11 @@
 	Placeholder for next release:
 	## __WORK IN PROGRESS__
 -->
+## __WORK IN PROGRESS__
+* (AlCalzone) Add `whenPowerRestored` setting to lights
+* (AlCalzone) Add `otaImageType ` property to DeviceInfo
+* (AlCalzone) Fix `certificateProvisioned` has key 9092
+
 ## 2.1.8 (2020-11-29)
 * (AlCalzone) `observeGroupsAndScenes()` no longer stalls when a group has no scenes
 
