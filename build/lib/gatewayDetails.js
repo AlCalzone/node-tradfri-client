@@ -53,7 +53,7 @@ __decorate([
     __metadata("design:type", Boolean)
 ], GatewayDetails.prototype, "googleHomePairStatus", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9093"),
+    ipsoObject_1.ipsoKey("9092"),
     __metadata("design:type", Boolean)
 ], GatewayDetails.prototype, "certificateProvisioned", void 0);
 __decorate([
@@ -152,10 +152,6 @@ __decorate([
     ipsoObject_1.ipsoKey("9083"),
     __metadata("design:type", String)
 ], GatewayDetails.prototype, "UNKNOWN_9083", void 0);
-__decorate([
-    ipsoObject_1.ipsoKey("9092"),
-    __metadata("design:type", Number)
-], GatewayDetails.prototype, "UNKNOWN_9092", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("9106"),
     __metadata("design:type", Number)

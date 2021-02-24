@@ -9,10 +9,15 @@ import { MAX_COLOR, predefinedColors, whiteSpectrumHex } from "./predefined-colo
 // for some color conversion
 
 export type LightOperation = Partial<Pick<Light,
-	"onOff" | "dimmer" |
+	"onOff" | "dimmer" | "whenPowerRestored" |
 	"color" | "colorTemperature" | "colorX" | "colorY" | "hue" | "saturation" |
 	"transitionTime"
 	>>;
+
+export enum PowerRestoredAction {
+	TurnOn = 2,
+	RememberStatus = 4,
+}
 
 export class Light extends IPSODevice {
 
@@ -95,6 +100,9 @@ export class Light extends IPSODevice {
 
 	@ipsoKey("5850")
 	public onOff!: boolean;
+
+	@ipsoKey("5849")
+	public whenPowerRestored!: PowerRestoredAction;
 
 	@ipsoKey("5852")
 	public onTime!: number; // <int>
@@ -302,6 +310,7 @@ export class Light extends IPSODevice {
 	public toJSON(): {} {
 		return {
 			onOff: this.onOff,
+			whenPowerRestored: this.whenPowerRestored,
 			dimmer: this.dimmer,
 			color: this.color,
 			colorTemperature: this.colorTemperature,
