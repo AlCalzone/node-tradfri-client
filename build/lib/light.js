@@ -9,13 +9,18 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Light = void 0;
+exports.Light = exports.PowerRestoredAction = void 0;
 const math_1 = require("alcalzone-shared/math");
 const accessory_1 = require("./accessory");
 const conversions_1 = require("./conversions");
 const ipsoDevice_1 = require("./ipsoDevice");
 const ipsoObject_1 = require("./ipsoObject");
 const predefined_colors_1 = require("./predefined-colors");
+var PowerRestoredAction;
+(function (PowerRestoredAction) {
+    PowerRestoredAction[PowerRestoredAction["TurnOn"] = 2] = "TurnOn";
+    PowerRestoredAction[PowerRestoredAction["RememberStatus"] = 4] = "RememberStatus";
+})(PowerRestoredAction = exports.PowerRestoredAction || (exports.PowerRestoredAction = {}));
 class Light extends ipsoDevice_1.IPSODevice {
     constructor(options, accessory) {
         super(options);
@@ -211,6 +216,7 @@ class Light extends ipsoDevice_1.IPSODevice {
     toJSON() {
         return {
             onOff: this.onOff,
+            whenPowerRestored: this.whenPowerRestored,
             dimmer: this.dimmer,
             color: this.color,
             colorTemperature: this.colorTemperature,
@@ -306,6 +312,10 @@ __decorate([
     ipsoObject_1.ipsoKey("5850"),
     __metadata("design:type", Boolean)
 ], Light.prototype, "onOff", void 0);
+__decorate([
+    ipsoObject_1.ipsoKey("5849"),
+    __metadata("design:type", Number)
+], Light.prototype, "whenPowerRestored", void 0);
 __decorate([
     ipsoObject_1.ipsoKey("5852"),
     __metadata("design:type", Number)

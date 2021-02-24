@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TradfriClient = exports.discoverGateway = exports.TradfriErrorCodes = exports.TradfriError = exports.Sensor = exports.Scene = exports.Plug = exports.NotificationTypes = exports.Notification = exports.LightSetting = exports.Light = exports.IPSODevice = exports.Group = exports.GatewayDetails = exports.PowerSources = exports.DeviceInfo = exports.AccessoryTypes = exports.Accessory = void 0;
+exports.TradfriClient = exports.discoverGateway = exports.TradfriErrorCodes = exports.TradfriError = exports.Sensor = exports.Scene = exports.Plug = exports.Blind = exports.NotificationTypes = exports.Notification = exports.LightSetting = exports.PowerRestoredAction = exports.Light = exports.IPSODevice = exports.Group = exports.GatewayDetails = exports.PowerSources = exports.DeviceInfo = exports.AccessoryTypes = exports.Accessory = void 0;
 // Reflect-polyfill laden
 // tslint:disable-next-line:no-var-requires
 require("reflect-metadata");
@@ -18,11 +18,14 @@ var ipsoDevice_1 = require("./lib/ipsoDevice");
 Object.defineProperty(exports, "IPSODevice", { enumerable: true, get: function () { return ipsoDevice_1.IPSODevice; } });
 var light_1 = require("./lib/light");
 Object.defineProperty(exports, "Light", { enumerable: true, get: function () { return light_1.Light; } });
+Object.defineProperty(exports, "PowerRestoredAction", { enumerable: true, get: function () { return light_1.PowerRestoredAction; } });
 var lightSetting_1 = require("./lib/lightSetting");
 Object.defineProperty(exports, "LightSetting", { enumerable: true, get: function () { return lightSetting_1.LightSetting; } });
 var notification_1 = require("./lib/notification");
 Object.defineProperty(exports, "Notification", { enumerable: true, get: function () { return notification_1.Notification; } });
 Object.defineProperty(exports, "NotificationTypes", { enumerable: true, get: function () { return notification_1.NotificationTypes; } });
+var blind_1 = require("./lib/blind");
+Object.defineProperty(exports, "Blind", { enumerable: true, get: function () { return blind_1.Blind; } });
 var plug_1 = require("./lib/plug");
 Object.defineProperty(exports, "Plug", { enumerable: true, get: function () { return plug_1.Plug; } });
 var scene_1 = require("./lib/scene");

@@ -32,7 +32,8 @@ class DeviceInfo extends ipsoObject_1.IPSOObject {
         this.manufacturer = "";
         this.modelNumber = "";
         this.power = PowerSources.Unknown;
-        this.serialNumber = "";
+        this.otaImageType = "";
+        this.serialNumber = 0;
     }
 }
 __decorate([
@@ -56,7 +57,11 @@ __decorate([
     __metadata("design:type", Number)
 ], DeviceInfo.prototype, "power", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("2"),
+    ipsoObject_1.ipsoKey("7"),
     __metadata("design:type", String)
+], DeviceInfo.prototype, "otaImageType", void 0);
+__decorate([
+    ipsoObject_1.ipsoKey("2"),
+    __metadata("design:type", Number)
 ], DeviceInfo.prototype, "serialNumber", void 0);
 exports.DeviceInfo = DeviceInfo;

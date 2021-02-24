@@ -32,7 +32,10 @@ export class DeviceInfo extends IPSOObject {
 	@ipsoKey("6")
 	public power: PowerSources = PowerSources.Unknown;
 
+	@ipsoKey("7")
+	public otaImageType: string = "";
+
 	@ipsoKey("2")
-	public serialNumber: string = "";
+	public serialNumber: number = 0;
 
 }

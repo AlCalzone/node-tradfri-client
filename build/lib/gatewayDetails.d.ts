@@ -28,7 +28,6 @@ export declare class GatewayDetails extends IPSOObject {
     UNKNOWN_9081: string;
     UNKNOWN_9082: boolean;
     UNKNOWN_9083: string;
-    UNKNOWN_9092: number;
     UNKNOWN_9106: number;
     forceOtaUpdateCheck: string;
     name: string;

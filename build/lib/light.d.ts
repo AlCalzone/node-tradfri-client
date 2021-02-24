@@ -1,7 +1,11 @@
 import { Accessory } from "./accessory";
 import { IPSODevice } from "./ipsoDevice";
 import { IPSOOptions } from "./ipsoObject";
-export declare type LightOperation = Partial<Pick<Light, "onOff" | "dimmer" | "color" | "colorTemperature" | "colorX" | "colorY" | "hue" | "saturation" | "transitionTime">>;
+export declare type LightOperation = Partial<Pick<Light, "onOff" | "dimmer" | "whenPowerRestored" | "color" | "colorTemperature" | "colorX" | "colorY" | "hue" | "saturation" | "transitionTime">>;
+export declare enum PowerRestoredAction {
+    TurnOn = 2,
+    RememberStatus = 4
+}
 export declare class Light extends IPSODevice {
     constructor(options?: IPSOOptions, accessory?: Accessory);
     private _modelName;
@@ -16,6 +20,7 @@ export declare class Light extends IPSODevice {
     cumulativeActivePower: number;
     dimmer: number;
     onOff: boolean;
+    whenPowerRestored: PowerRestoredAction;
     onTime: number;
     powerFactor: number;
     unit: string;

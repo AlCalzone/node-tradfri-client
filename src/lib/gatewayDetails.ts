@@ -12,7 +12,7 @@ export class GatewayDetails extends IPSOObject {
 	@ipsoKey("9105")
 	public googleHomePairStatus!: boolean;
 
-	@ipsoKey("9093")
+	@ipsoKey("9092")
 	public certificateProvisioned!: boolean;
 
 	@ipsoKey("9061")
@@ -74,8 +74,6 @@ export class GatewayDetails extends IPSOObject {
 	public UNKNOWN_9082!: boolean;
 	@ipsoKey("9083")
 	public UNKNOWN_9083!: string; // some kind of serial number maybe?
-	@ipsoKey("9092")
-	public UNKNOWN_9092!: number;
 	@ipsoKey("9106")
 	public UNKNOWN_9106!: number;
 

@@ -39,7 +39,7 @@ function buildPropertyTransform(kernel, options = {}) {
 /**
  * Defines the ipso key neccessary to serialize a property to a CoAP object
  */
-exports.ipsoKey = (key) => {
+const ipsoKey = (key) => {
     return (target, property) => {
         // get the class constructor
         const constr = target.constructor;
@@ -52,6 +52,7 @@ exports.ipsoKey = (key) => {
         Reflect.defineMetadata(METADATA_ipsoKey, metadata, constr);
     };
 };
+exports.ipsoKey = ipsoKey;
 /**
  * Looks up previously stored property ipso key definitions.
  * Returns a property name if the key was given, or the key if a property name was given.
@@ -67,7 +68,7 @@ function lookupKeyOrProperty(target, keyOrProperty /*| keyof T*/) {
 /**
  * Declares that a property is required to be present in a serialized CoAP object
  */
-exports.required = (predicate = true) => {
+const required = (predicate = true) => {
     return (target, property) => {
         // get the class constructor
         const constr = target.constructor;
@@ -79,6 +80,7 @@ exports.required = (predicate = true) => {
         Reflect.defineMetadata(METADATA_required, metadata, constr);
     };
 };
+exports.required = required;
 /**
  * Checks if a property is required to be present in a serialized CoAP object
  * @param property - property name to lookup
@@ -174,7 +176,7 @@ exports.deserializeWith = deserializeWith;
 /**
  * Defines that a property will not be serialized
  */
-exports.doNotSerialize = (target, property) => {
+const doNotSerialize = (target, property) => {
     // get the class constructor
     const constr = target.constructor;
     // retrieve the current metadata
@@ -183,6 +185,7 @@ exports.doNotSerialize = (target, property) => {
     // store back to the object
     Reflect.defineMetadata(METADATA_doNotSerialize, metadata, constr);
 };
+exports.doNotSerialize = doNotSerialize;
 /**
  * Checks if a given property will be serialized or not
  */
