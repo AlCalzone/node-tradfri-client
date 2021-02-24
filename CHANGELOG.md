@@ -3,7 +3,7 @@
 	Placeholder for next release:
 	## __WORK IN PROGRESS__
 -->
-## __WORK IN PROGRESS__
+## 2.2.0 (2021-02-24)
 * (AlCalzone) Add `whenPowerRestored` setting to lights
 * (AlCalzone) Add `otaImageType ` property to DeviceInfo
 * (AlCalzone) Fix `certificateProvisioned` has key 9092
