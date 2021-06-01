@@ -50,7 +50,7 @@
     "colors": "^1.2.3",
     "coveralls": "^3.0.0",
     "dts-bundle": "^0.7.3",
-    "mocha": "^6.2.3",
+    "mocha": "^8.4.0",
     "nyc": "^15.1.0",
     "proxyquire": "^2.0.1",
     "rimraf": "^3.0.0",
