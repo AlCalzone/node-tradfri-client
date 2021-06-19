@@ -3,6 +3,9 @@
 	Placeholder for next release:
 	## __WORK IN PROGRESS__
 -->
+## __WORK IN PROGRESS__
+* (AlCalzone) Update dependencies and require Node.js 12+
+
 ## 2.2.0 (2021-02-24)
 * (AlCalzone) Add `whenPowerRestored` setting to lights
 * (AlCalzone) Add `otaImageType ` property to DeviceInfo
