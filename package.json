@@ -32,7 +32,7 @@
     "url": "https://github.com/AlCalzone/node-tradfri-client/issues"
   },
   "engines": {
-    "node": ">= 6.0.0"
+    "node": ">=12"
   },
   "devDependencies": {
     "@alcalzone/release-script": "^1.10.0",
