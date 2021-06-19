@@ -47,6 +47,7 @@ whitelist: &whitelist
     - test/*
     - coverage/*
     - .npmignore
+    - .mocharc.json
     - dts-bundle.json
     - package.json
     - README.md
