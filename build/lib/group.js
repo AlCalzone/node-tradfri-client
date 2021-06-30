@@ -54,7 +54,7 @@ class Group extends ipsoDevice_1.IPSODevice {
         const id = (sceneOrId instanceof scene_1.Scene) ? sceneOrId.instanceId : sceneOrId;
         return this.client.operateGroup(this, {
             sceneId: id,
-            onOff: true,
+            onOff: true, // this has to be true when changing a scene
         }, true);
     }
     operateGroup(operation, transitionTime) {

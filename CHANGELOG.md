@@ -3,6 +3,9 @@
 	Placeholder for next release:
 	## __WORK IN PROGRESS__
 -->
+## __WORK IN PROGRESS__
+* (AlCalzone) Workaround for a bug in IKEA gateway firmware `v1.15.x`
+
 ## 3.0.0 (2021-06-19)
 * (AlCalzone) Update dependencies and require Node.js 12+
 

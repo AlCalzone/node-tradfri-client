@@ -21,7 +21,7 @@ const defaultOptions = Object.freeze({
     maximumReconnects: Number.POSITIVE_INFINITY,
     connectionInterval: 10000,
     failedConnectionBackoffFactor: 1.5,
-    maximumConnectionAttempts: Number.POSITIVE_INFINITY,
+    maximumConnectionAttempts: Number.POSITIVE_INFINITY, // try to connect until the end of time
 });
 function checkOptions(opts) {
     if (opts.pingInterval != null && (opts.pingInterval < 1000 || opts.pingInterval > 5 * 60000)) {

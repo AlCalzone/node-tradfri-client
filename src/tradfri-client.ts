@@ -205,6 +205,10 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		coap.setSecurityParams(this.hostname, {
 			psk: { [identity]: psk },
 		});
+		// Work around a bug in IKEA gateway firmware 1.15.x
+		coap.setCompatOptions(this.hostname, {
+			resetAntiReplayWindowBeforeServerHello: true,
+		});
 
 		log(`Attempting connection. Identity = ${identity}, psk = ${psk}`, "debug");
 		const result = await coap.tryToConnect(this.requestBase);
