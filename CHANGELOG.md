@@ -3,6 +3,9 @@
 	Placeholder for next release:
 	## __WORK IN PROGRESS__
 -->
+## __WORK IN PROGRESS__
+* (AlCalzone) Workaround for a bug in IKEA gateway firmware `v1.15.x`
+
 ## 2.2.0 (2021-02-24)
 * (AlCalzone) Add `whenPowerRestored` setting to lights
 * (AlCalzone) Add `otaImageType ` property to DeviceInfo
