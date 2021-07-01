@@ -3,7 +3,7 @@
 	Placeholder for next release:
 	## __WORK IN PROGRESS__
 -->
-## __WORK IN PROGRESS__
+## 2.2.1 (2021-07-01)
 * (AlCalzone) Workaround for a bug in IKEA gateway firmware `v1.15.x`
 
 ## 2.2.0 (2021-02-24)
