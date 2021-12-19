@@ -8,7 +8,7 @@ import { assert, expect } from "chai";
 import { spy, stub } from "sinon";
 
 import { entries } from "alcalzone-shared/objects";
-import { TradfriClient } from "..";
+import { AirPurifier, FanMode, TradfriClient } from "..";
 import { createNetworkMock } from "../../test/mocks";
 import { Accessory } from "./accessory";
 import { Blind } from "./blind";
@@ -50,188 +50,135 @@ function buildAccessory() {
 	return attributes;
 }
 
-// function assertPayload(actual: any, expected: {}, message?: string) {
-// 	expect(actual).to.be.an.instanceof(Buffer, "the payload was no Buffer");
-// 	expect(JSON.parse(actual.toString())).to.deep.equal(expected, message);
-// }
+function assertPayload(actual: any, expected: {}, message?: string) {
+	expect(actual).to.be.an.instanceof(Buffer, "the payload was no Buffer");
+	expect(JSON.parse(actual.toString())).to.deep.equal(expected, message);
+}
 
-// describe("ipso/blind => basic functionality =>", () => {
-// 	// setup feature table
-// 	interface Device {
-// 		name: string;
-// 		isSwitchable: boolean;
-// 		isDimmable: boolean;
-// 	}
-// 	const deviceTable = new Map<string, Device>();
-// 	function add(name: string, switchable: boolean, dimmable: boolean) {
-// 		deviceTable.set(name, {
-// 			name,
-// 			isDimmable: dimmable,
-// 			isSwitchable: switchable,
-// 		});
-// 	}
+describe("ipso/airPurifier => basic functionality =>", () => {
+		it(`the payload to set the fan mode to auto should be correct`, () => {
+		const parsed = new Accessory().parse(buildAccessory()).createProxy();
+		parsed.airPurifierList[0].fanMode = FanMode.Off;
+		const original = parsed.clone();
+		const ap = parsed.airPurifierList[0];
 
-// 	// The only known blind so far
-// 	add("FYRTUR smart blind", false, true); // TODO: find out the correct name!
+		ap.fanMode = FanMode.Auto;
+		const serialized = parsed.serialize(original);
+		expect(serialized).to.deep.equal({
+			15025: [{ 5900: 1 }],
+		});
+	});
 
-// 	it("supported features should be detected correctly", () => {
-// 		for (const device of deviceTable.values()) {
-// 			const acc = new Accessory().parse(buildAccessory());
-// 			const blind = acc.blindList[0];
+	it("cloning an air purifier should create a deep copy of it", () => {
+		const acc = new Accessory().parse(buildAccessory());
+		const ap = acc.airPurifierList[0];
+		const clone = ap.clone();
+		// ap should be !== clone, but its properties should be identical
+		expect(ap).to.deep.equal(clone);
+		expect(ap).to.not.equal(clone);
+	});
+});
 
-// 			expect(blind.isSwitchable).to.equal(
-// 				device.isSwitchable,
-// 				`${device.name} should ${
-// 					device.isSwitchable ? "" : "not "
-// 				}be switchable`
-// 			);
-// 			expect(blind.isDimmable).to.equal(
-// 				device.isDimmable,
-// 				`${device.name} should ${device.isDimmable ? "" : "not "}be dimmable`
-// 			);
-// 		}
-// 	});
+describe("ipso/airPurifier => simplified API => ", () => {
+	// Setup a fresh mock
+	const {
+		tradfri,
+		devicesUrl,
+		fakeCoap,
+		callbacks,
+		createStubs,
+		restoreStubs,
+		resetStubHistory,
+	} = createNetworkMock();
+	before(createStubs);
+	after(restoreStubs);
+	afterEach(resetStubHistory);
 
-// 	it(`the payload to set the position to 100 should be correct`, () => {
-// 		const parsed = new Accessory().parse(buildAccessory()).createProxy();
-// 		parsed.blindList[0].position = 0;
-// 		const original = parsed.clone();
-// 		const blind = parsed.blindList[0];
+	const apiMethods = [
+		"setFanMode",
+		"setFanSpeed",
+		"setControlsLocked",
+		"setStatusLEDs",
+	];
 
-// 		blind.position = 100;
-// 		const serialized = parsed.serialize(original);
-// 		expect(serialized).to.deep.equal({
-// 			// Our 100 equals the gateway's 0
-// 			15015: [{ 5536: 0 }],
-// 		});
-// 	});
+	describe("all methods should fail when no client instance has been linked", () => {
+		// Create a new blind without a linked client instance
+		const unlinked = new AirPurifier();
+		for (const method of apiMethods) {
+			it(method, () => {
+				expect(unlinked[method].bind(unlinked)).to.throw("linked to a client");
+			});
+		}
+	});
 
-// 	it(`the payload to set the position to 0 should be correct`, () => {
-// 		const parsed = new Accessory().parse(buildAccessory()).createProxy();
-// 		parsed.blindList[0].position = 100;
-// 		const original = parsed.clone();
-// 		const blind = parsed.blindList[0];
+	describe("all methods should fail when no accessory instance has been linked", () => {
+		// Create a new blind without a linked accessory instance
+		const linked = new AirPurifier();
+		linked.link(tradfri);
 
-// 		blind.position = 0;
-// 		const serialized = parsed.serialize(original);
-// 		expect(serialized).to.deep.equal({
-// 			// Our 0 equals the gateway's 100
-// 			15015: [{ 5536: 100 }],
-// 		});
-// 	});
+		for (const method of apiMethods) {
+			it(method, () => {
+				expect(linked[method].bind(linked)).to.throw("linked to an Accessory");
+			});
+		}
+	});
 
-// 	it("cloning a blind should create a deep copy of it", () => {
-// 		const acc = new Accessory().parse(buildAccessory());
-// 		const blind = acc.blindList[0];
-// 		const clone = blind.clone();
-// 		// blind should be !== clone, but its properties should be identical
-// 		expect(blind).to.deep.equal(clone);
-// 		expect(blind).to.not.equal(clone);
-// 	});
-// });
+	const apAcc = new Accessory().parse(buildAccessory()).link(tradfri);
+	const ap = apAcc.airPurifierList[0];
 
-// describe("ipso/blind => simplified API => ", () => {
-// 	// Setup a fresh mock
-// 	const {
-// 		tradfri,
-// 		devicesUrl,
-// 		fakeCoap,
-// 		callbacks,
-// 		createStubs,
-// 		restoreStubs,
-// 		resetStubHistory,
-// 	} = createNetworkMock();
-// 	before(createStubs);
-// 	after(restoreStubs);
-// 	afterEach(resetStubHistory);
+	describe("the methods should send the correct payload =>", () => {
+		it("setFanMode(not off) when the fan is off", async () => {
+			ap.fanMode = FanMode.Off;
+			await ap.setFanMode(FanMode.Level2).should.become(true);
+			assertPayload(fakeCoap.request.getCall(0).args[2], {
+				15025: [
+					{
+						5900: FanMode.Level2,
+					},
+				],
+			});
+		});
 
-// 	const apiMethods = ["open", "close", "setPosition"];
+		it("setFanMode(off) when the fan is off", async () => {
+			ap.fanMode = FanMode.Off;
+			await ap.setFanMode(FanMode.Off).should.become(false);
+			fakeCoap.request.should.not.have.been.called;
+		});
 
-// 	describe("all methods should fail when no client instance has been linked", () => {
-// 		// Create a new blind without a linked client instance
-// 		const unlinked = new Blind();
-// 		for (const method of apiMethods) {
-// 			it(method, () => {
-// 				expect(unlinked[method].bind(unlinked)).to.throw("linked to a client");
-// 			});
-// 		}
-// 	});
+		it("setFanSpeed() ", async () => {
+			ap.fanSpeed = 0;
+			await ap.setFanSpeed(41).should.become(true);
+			assertPayload(fakeCoap.request.getCall(0).args[2], {
+				15025: [
+					{
+						5908: 40, // rounded to the nearest multiple of 5
+					},
+				],
+			});
+		});
 
-// 	describe("all methods should fail when no accessory instance has been linked", () => {
-// 		// Create a new blind without a linked accessory instance
-// 		const linked = new Blind();
-// 		linked.link(tradfri);
+		it("setControlsLocked()", async () => {
+			ap.controlsLocked = false;
+			await ap.setControlsLocked(true).should.become(true);
+			assertPayload(fakeCoap.request.getCall(0).args[2], {
+				15025: [
+					{
+						5905: 1,
+					},
+				],
+			});
+		});
 
-// 		for (const method of apiMethods) {
-// 			it(method, () => {
-// 				expect(linked[method].bind(linked)).to.throw("linked to an Accessory");
-// 			});
-// 		}
-// 	});
-
-// 	const blindAcc = new Accessory().parse(buildAccessory()).link(tradfri);
-// 	const blind = blindAcc.blindList[0];
-
-// 	describe("the methods should send the correct payload =>", () => {
-// 		it("open() when the blinds are down", async () => {
-// 			blind.position = 0;
-// 			await blind.open().should.become(true);
-// 			assertPayload(fakeCoap.request.getCall(0).args[2], {
-// 				15015: [
-// 					{
-// 						// The gateway interprets 0 as open, we as closed
-// 						5536: 0,
-// 					},
-// 				],
-// 			});
-// 		});
-
-// 		it("open() when the blinds are completely open", async () => {
-// 			blind.position = 100;
-// 			await blind.open().should.become(false);
-// 			fakeCoap.request.should.not.have.been.called;
-// 		});
-
-// 		it("close() when the blinds are open", async () => {
-// 			blind.position = 100;
-// 			await blind.close().should.become(true);
-// 			assertPayload(fakeCoap.request.getCall(0).args[2], {
-// 				15015: [
-// 					{
-// 						// The gateway interprets 100 as closed, we as open
-// 						5536: 100,
-// 					},
-// 				],
-// 			});
-// 		});
-
-// 		it("close() when the blinds are completely closed", async () => {
-// 			blind.position = 0;
-// 			await blind.close().should.become(false);
-// 			fakeCoap.request.should.not.have.been.called;
-// 		});
-
-// 		it("setPosition() ", async () => {
-// 			blind.position = 0;
-// 			await blind.setPosition(47.9).should.become(true);
-// 			assertPayload(fakeCoap.request.getCall(0).args[2], {
-// 				15015: [
-// 					{
-// 						5536: 100 - 47.9,
-// 					},
-// 				],
-// 			});
-// 		});
-
-// 		it("stop()", async () => {
-// 			await blind.stop().should.become(true);
-// 			assertPayload(fakeCoap.request.getCall(0).args[2], {
-// 				15015: [
-// 					{
-// 						5523: 0,
-// 					},
-// 				],
-// 			});
-// 		});
-// 	});
-// });
+		it("setStatusLEDs()", async () => {
+			ap.statusLEDs = false;
+			await ap.setStatusLEDs(true).should.become(true);
+			assertPayload(fakeCoap.request.getCall(0).args[2], {
+				15025: [
+					{
+						5906: 0,
+					},
+				],
+			});
+		});
+	});
+});

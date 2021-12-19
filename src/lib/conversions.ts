@@ -261,7 +261,7 @@ const boolean_inverted_out: PropertyTransformKernel = (bool: boolean) =>
 	bool ? 0 : 1;
 // the sent value is in 10ths of seconds, we're working with seconds
 const boolean_inverted_in: PropertyTransformKernel = (raw: any) =>
-	raw === 1 || raw === "true" || raw === "on" || raw === true;
+	!(raw === 1 || raw === "true" || raw === "on" || raw === true);
 
 export const serializers = {
 	transitionTime: transitionTime_out,

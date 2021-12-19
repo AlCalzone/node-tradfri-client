@@ -77,7 +77,7 @@
     "build:dts": "dts-bundle --configJson dts-bundle.json",
     "watch": "tsc --watch",
     "test:ts": "mocha src/**/*.test.ts",
-    "test": "mocha --watch",
+    "test": "npm run test:ts -- --watch",
     "coverage": "nyc npm run test:ts",
     "coveralls": "nyc report --reporter=text-lcov | coveralls -v",
     "show-coverage": "npm run coverage && start ./coverage/index.html",
