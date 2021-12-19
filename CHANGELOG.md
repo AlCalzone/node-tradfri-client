@@ -3,7 +3,7 @@
 	Placeholder for next release:
 	## __WORK IN PROGRESS__
 -->
-## __WORK IN PROGRESS__
+## 3.1.0 (2021-12-19)
 * (AlCalzone) Added support for STARKVIND air purifier
 
 ## 3.0.1 (2021-06-30)
@@ -207,4 +207,3 @@
 
 ## 0.2.0
 * (AlCalzone) first working release
-

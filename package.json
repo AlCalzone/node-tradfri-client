@@ -1,6 +1,6 @@
 {
   "name": "node-tradfri-client",
-  "version": "3.0.1",
+  "version": "3.1.0",
   "description": "Library to talk to IKEA Trådfri Gateways without external binaries",
   "keywords": [
     "coap",
@@ -35,7 +35,7 @@
     "node": ">=12"
   },
   "devDependencies": {
-    "@alcalzone/release-script": "~3.4.1",
+    "@alcalzone/release-script": "~3.4.2",
     "@alcalzone/release-script-plugin-license": "~3.4.1",
     "@types/chai": "^4.2.22",
     "@types/chai-as-promised": "^7.1.4",
