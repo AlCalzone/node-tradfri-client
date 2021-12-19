@@ -38,4 +38,7 @@ export class DeviceInfo extends IPSOObject {
 	@ipsoKey("2")
 	public serialNumber: number = 0;
 
+	@ipsoKey("8")
+	public UNKNOWN1: number = 0;
+
 }

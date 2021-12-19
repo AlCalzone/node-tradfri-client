@@ -1,3 +1,4 @@
+import { AirPurifier } from "./airPurifier";
 import { Blind } from "./blind";
 import { DeviceInfo } from "./deviceInfo";
 import { IPSODevice } from "./ipsoDevice";
@@ -28,6 +29,8 @@ export enum AccessoryTypes {
 	blind = 7,
 	/** Symfonisk Remote */
 	soundRemote = 8,
+	/** STARKVIND Air purifier */
+	airPurifier = 10,
 }
 
 export class Accessory extends IPSODevice {
@@ -73,6 +76,10 @@ export class Accessory extends IPSODevice {
 	@ipsoKey("15015")
 	@deserializeWith((obj, me: Accessory) => new Blind(me.options, me).parse(obj))
 	public blindList!: Blind[];
+
+	@ipsoKey("15025")
+	@deserializeWith((obj, me: Accessory) => new AirPurifier(me.options, me).parse(obj))
+	public airPurifierList!: AirPurifier[];
 
 	@ipsoKey("9054")
 	public otaUpdateState: number = 0; // boolean?
@@ -121,6 +128,12 @@ export class Accessory extends IPSODevice {
 				blind.link(client);
 			}
 		}
+		/* istanbul ignore next */
+		if (this.airPurifierList != null) {
+			for (const ap of this.airPurifierList) {
+				ap.link(client);
+			}
+		}
 		return this;
 	}
 
@@ -147,6 +160,9 @@ export class Accessory extends IPSODevice {
 		/* istanbul ignore next */
 		if (this.blindList != null) {
 			this.blindList = this.blindList.map(blind => blind.fixBuggedProperties());
+		}
+		if (this.airPurifierList != null) {
+			this.airPurifierList = this.airPurifierList.map(ap => ap.fixBuggedProperties());
 		}
 		return this;
 	}

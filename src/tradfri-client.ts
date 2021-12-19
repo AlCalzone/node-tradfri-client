@@ -23,6 +23,7 @@ import { Scene } from "./lib/scene";
 import { TradfriError, TradfriErrorCodes } from "./lib/tradfri-error";
 import { invertOperation } from "./lib/utils";
 import { ConnectionWatcher, ConnectionWatcherOptions } from "./lib/watcher";
+import { AirPurifierOperation } from "./lib/airPurifier";
 
 export type ObserveResourceCallback = (resp: CoapResponse) => void;
 export type ObserveDevicesCallback = (addedDevices: Accessory[], removedDevices: Accessory[]) => void;
@@ -1143,6 +1144,38 @@ export class TradfriClient extends EventEmitter implements OperationProvider {
 		if (force) {
 			// to force the properties being sent, we need to reset them on the reference
 			reference.blindList[0].merge(invertOperation(operation), true);
+		}
+
+		return this.updateResource(
+			`${coapEndpoints.devices}/${accessory.instanceId}`,
+			newAccessory, reference,
+		);
+	}
+
+	/**
+	 * Sets some properties on a airpurifier
+	 * @param accessory The parent accessory of the airpurifier
+	 * @param operation The properties to be set
+	 * @param force Include all properties of operation in the payload, even if the values are unchanged
+	 * @returns true if a request was sent, false otherwise
+	 */
+	public operateAirPurifier(accessory: Accessory, operation: AirPurifierOperation, force: boolean = false): Promise<boolean> {
+		if (accessory.type !== AccessoryTypes.airPurifier) {
+			throw new Error(`The parameter "accessory" must be an air purifier!`);
+		}
+
+		// Ensure that the operation is an object (GH #323)
+		if (!isObject(operation)) {
+			throw new Error(`The parameter "operation" must be an object!`);
+		}
+
+		const newAccessory = accessory.clone();
+		// Merge all properties, because trigger might not be defined
+		newAccessory.airPurifierList[0].merge(operation, true);
+		const reference = accessory.clone();
+		if (force) {
+			// to force the properties being sent, we need to reset them on the reference
+			reference.airPurifierList[0].merge(invertOperation(operation), true);
 		}
 
 		return this.updateResource(
