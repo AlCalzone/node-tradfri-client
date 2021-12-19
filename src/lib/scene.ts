@@ -1,3 +1,4 @@
+import { AirPurifierSetting } from "./airPurifierSetting";
 import { BlindSetting } from "./blindSetting";
 import { IPSODevice } from "./ipsoDevice";
 import { deserializeWith, doNotSerialize, ipsoKey } from "./ipsoObject";
@@ -23,6 +24,10 @@ export class Scene extends IPSODevice {
 	@ipsoKey("15021")
 	@deserializeWith(obj => new PlugSetting().parse(obj))
 	public plugSettings: PlugSetting[] = [];
+
+	@ipsoKey("15026")
+	@deserializeWith(obj => new AirPurifierSetting().parse(obj))
+	public airPurifierSettings: AirPurifierSetting[] = [];
 
 	@ipsoKey("9057")
 	public sceneIndex: number = 0; // <int>

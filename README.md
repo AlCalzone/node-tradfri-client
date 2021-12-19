@@ -532,12 +532,16 @@ The properties available on an `Accessory` are:
 * `name: string` - The name of this accessory as displayed in the app. Defaults to the model name.
 * `createdAt: number` - The unix timestamp of the creation of the device. Unknown what this is exactly.
 * `instanceId: number` - The ID under which the accessory is known to the gateway. Is used in callbacks throughout the library.
-* `type: AccessoryTypes` - The type of the accessory. Currently, the following types are supported, but only `lightbulb` and `plug` contain any meaningful information:
+* `type: AccessoryTypes` - The type of the accessory. Currently, the following types are supported, but only the ones marked with `✔` contain any meaningful information:
   * `remote (0)` - A "normal" remote
   * `slaveRemote (1)` - A remote which has been paired with another remote. You can find details [here](https://www.reddit.com/r/tradfri/comments/6x1miq) on how to achieve this configuration.
-  * `lightbulb (2)` - A lightbulb
-  * `plug (3)` - A smart plug
+  * `lightbulb (2)` - ✔ A lightbulb
+  * `plug (3)` - ✔ A smart plug
   * `motionSensor (4)` - A motion sensor
+  * `signalRepeater (6)` - A signal repeater
+  * `blind (7)` - ✔ A smart blind
+  * `soundRemote (8)` - Symfonisk Remote
+  * `airPurifier (10)` - ✔ STARKVIND Air purifier
 * `deviceInfo: DeviceInfo` - Some additional information about the device in form of a `DeviceInfo` object (see below)
 * `alive: boolean` - Whether the gateway considers this device as alive.
 * `lastSeen: number` - The unix timestamp of the last communication with the gateway.
@@ -545,6 +549,8 @@ The properties available on an `Accessory` are:
 * `plugList: Plug[]` - An array of all plugs belonging to this accessory. Is `undefined` for non-plug devices.
 * `sensorList: Sensor[]` - An array of all sensors belonging to this accessory.
 * `switchList: any[]` - An array of all switches belonging to this accessory. **Unsupported atm.**
+* `blindList: Blind[]` - An array of all smart blinds belonging to this accessory.
+* `airPurifierList: AirPurifier[]` - An array of all air purifiers belonging to this accessory.
 * `otaUpdateState: number` - Unknown. Might be a `boolean`
 
 ### `Light`
