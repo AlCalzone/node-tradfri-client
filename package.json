@@ -65,7 +65,7 @@
   },
   "dependencies": {
     "alcalzone-shared": "^4.0.1",
-    "debug": "^4.3.3",
+    "debug": "^4.3.4",
     "mdns-server": "^1.0.10",
     "node-coap-client": "^2.0.2",
     "reflect-metadata": "^0.1.13"
