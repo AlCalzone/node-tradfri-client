@@ -70,7 +70,7 @@ class Group extends ipsoDevice_1.IPSODevice {
      * @returns true if a request was sent, false otherwise
      */
     setBrightness(value, transitionTime) {
-        value = math_1.clamp(value, 0, 100);
+        value = (0, math_1.clamp)(value, 0, 100);
         return this.operateGroup({
             dimmer: value,
         }, transitionTime);
@@ -80,7 +80,7 @@ class Group extends ipsoDevice_1.IPSODevice {
      * @returns true if a request was sent, false otherwise
      */
     setPosition(value) {
-        value = math_1.clamp(value, 0, 100);
+        value = (0, math_1.clamp)(value, 0, 100);
         return this.operateGroup({
             position: value,
         });
@@ -96,49 +96,49 @@ class Group extends ipsoDevice_1.IPSODevice {
     }
 }
 __decorate([
-    ipsoObject_1.ipsoKey("5850"),
-    ipsoObject_1.required((me, ref) => ref != null && me.sceneId !== ref.sceneId) // force on/off to be present if sceneId is
+    (0, ipsoObject_1.ipsoKey)("5850"),
+    (0, ipsoObject_1.required)((me, ref) => ref != null && me.sceneId !== ref.sceneId) // force on/off to be present if sceneId is
     ,
     __metadata("design:type", Boolean)
 ], Group.prototype, "onOff", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5851"),
-    ipsoObject_1.serializeWith(conversions_1.serializers.brightness),
-    ipsoObject_1.deserializeWith(conversions_1.deserializers.brightness),
+    (0, ipsoObject_1.ipsoKey)("5851"),
+    (0, ipsoObject_1.serializeWith)(conversions_1.serializers.brightness),
+    (0, ipsoObject_1.deserializeWith)(conversions_1.deserializers.brightness),
     __metadata("design:type", Number)
 ], Group.prototype, "dimmer", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5536"),
-    ipsoObject_1.serializeWith(conversions_1.serializers.position),
-    ipsoObject_1.deserializeWith(conversions_1.deserializers.position),
+    (0, ipsoObject_1.ipsoKey)("5536"),
+    (0, ipsoObject_1.serializeWith)(conversions_1.serializers.position),
+    (0, ipsoObject_1.deserializeWith)(conversions_1.deserializers.position),
     __metadata("design:type", Number)
 ], Group.prototype, "position", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5523"),
+    (0, ipsoObject_1.ipsoKey)("5523"),
     __metadata("design:type", Object)
 ], Group.prototype, "trigger", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9039"),
+    (0, ipsoObject_1.ipsoKey)("9039"),
     __metadata("design:type", Number)
 ], Group.prototype, "sceneId", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9018"),
-    ipsoObject_1.deserializeWith(obj => parseAccessoryLink(obj)),
-    ipsoObject_1.serializeWith(ids => toAccessoryLink(ids), { splitArrays: false }),
+    (0, ipsoObject_1.ipsoKey)("9018"),
+    (0, ipsoObject_1.deserializeWith)(obj => parseAccessoryLink(obj)),
+    (0, ipsoObject_1.serializeWith)(ids => toAccessoryLink(ids), { splitArrays: false }),
     __metadata("design:type", Array)
 ], Group.prototype, "deviceIDs", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9108"),
+    (0, ipsoObject_1.ipsoKey)("9108"),
     __metadata("design:type", Number)
 ], Group.prototype, "groupType", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5712")
+    (0, ipsoObject_1.ipsoKey)("5712")
     // force transition time to be present if brightness is
     // all other properties don't support the transition time
     ,
-    ipsoObject_1.required((me, ref) => ref != null && me.dimmer !== ref.dimmer),
-    ipsoObject_1.serializeWith(conversions_1.serializers.transitionTime, { neverSkip: true }),
-    ipsoObject_1.deserializeWith(conversions_1.deserializers.transitionTime, { neverSkip: true }),
+    (0, ipsoObject_1.required)((me, ref) => ref != null && me.dimmer !== ref.dimmer),
+    (0, ipsoObject_1.serializeWith)(conversions_1.serializers.transitionTime, { neverSkip: true }),
+    (0, ipsoObject_1.deserializeWith)(conversions_1.deserializers.transitionTime, { neverSkip: true }),
     __metadata("design:type", Number)
 ], Group.prototype, "transitionTime", void 0);
 exports.Group = Group;

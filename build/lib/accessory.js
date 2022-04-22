@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Accessory = exports.AccessoryTypes = void 0;
+const airPurifier_1 = require("./airPurifier");
 const blind_1 = require("./blind");
 const deviceInfo_1 = require("./deviceInfo");
 const ipsoDevice_1 = require("./ipsoDevice");
@@ -39,6 +40,8 @@ var AccessoryTypes;
     AccessoryTypes[AccessoryTypes["blind"] = 7] = "blind";
     /** Symfonisk Remote */
     AccessoryTypes[AccessoryTypes["soundRemote"] = 8] = "soundRemote";
+    /** STARKVIND Air purifier */
+    AccessoryTypes[AccessoryTypes["airPurifier"] = 10] = "airPurifier";
 })(AccessoryTypes = exports.AccessoryTypes || (exports.AccessoryTypes = {}));
 class Accessory extends ipsoDevice_1.IPSODevice {
     constructor() {
@@ -86,6 +89,12 @@ class Accessory extends ipsoDevice_1.IPSODevice {
                 blind.link(client);
             }
         }
+        /* istanbul ignore next */
+        if (this.airPurifierList != null) {
+            for (const ap of this.airPurifierList) {
+                ap.link(client);
+            }
+        }
         return this;
     }
     /**
@@ -112,62 +121,70 @@ class Accessory extends ipsoDevice_1.IPSODevice {
         if (this.blindList != null) {
             this.blindList = this.blindList.map(blind => blind.fixBuggedProperties());
         }
+        if (this.airPurifierList != null) {
+            this.airPurifierList = this.airPurifierList.map(ap => ap.fixBuggedProperties());
+        }
         return this;
     }
 }
 __decorate([
-    ipsoObject_1.ipsoKey("5750"),
+    (0, ipsoObject_1.ipsoKey)("5750"),
     __metadata("design:type", Number)
 ], Accessory.prototype, "type", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("3"),
-    ipsoObject_1.deserializeWith((obj, me) => new deviceInfo_1.DeviceInfo(me.options).parse(obj)),
+    (0, ipsoObject_1.ipsoKey)("3"),
+    (0, ipsoObject_1.deserializeWith)((obj, me) => new deviceInfo_1.DeviceInfo(me.options).parse(obj)),
     __metadata("design:type", deviceInfo_1.DeviceInfo)
 ], Accessory.prototype, "deviceInfo", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9019"),
+    (0, ipsoObject_1.ipsoKey)("9019"),
     __metadata("design:type", Boolean)
 ], Accessory.prototype, "alive", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9020"),
+    (0, ipsoObject_1.ipsoKey)("9020"),
     __metadata("design:type", Number)
 ], Accessory.prototype, "lastSeen", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("3311"),
-    ipsoObject_1.deserializeWith((obj, me) => new light_1.Light(me.options, me).parse(obj)),
+    (0, ipsoObject_1.ipsoKey)("3311"),
+    (0, ipsoObject_1.deserializeWith)((obj, me) => new light_1.Light(me.options, me).parse(obj)),
     __metadata("design:type", Array)
 ], Accessory.prototype, "lightList", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("3312"),
-    ipsoObject_1.deserializeWith((obj, me) => new plug_1.Plug(me.options, me).parse(obj)),
+    (0, ipsoObject_1.ipsoKey)("3312"),
+    (0, ipsoObject_1.deserializeWith)((obj, me) => new plug_1.Plug(me.options, me).parse(obj)),
     __metadata("design:type", Array)
 ], Accessory.prototype, "plugList", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("3300"),
-    ipsoObject_1.deserializeWith(/* istanbul ignore next */ (obj, me) => new sensor_1.Sensor(me.options).parse(obj)),
+    (0, ipsoObject_1.ipsoKey)("3300"),
+    (0, ipsoObject_1.deserializeWith)(/* istanbul ignore next */ (obj, me) => new sensor_1.Sensor(me.options).parse(obj)),
     __metadata("design:type", Array)
 ], Accessory.prototype, "sensorList", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("15009"),
-    ipsoObject_1.deserializeWith(/* istanbul ignore next */ (obj, me) => new ipsoDevice_1.IPSODevice(me.options).parse(obj)),
+    (0, ipsoObject_1.ipsoKey)("15009"),
+    (0, ipsoObject_1.deserializeWith)(/* istanbul ignore next */ (obj, me) => new ipsoDevice_1.IPSODevice(me.options).parse(obj)),
     __metadata("design:type", Array)
 ], Accessory.prototype, "switchList", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("15014"),
-    ipsoObject_1.deserializeWith(/* istanbul ignore next */ (obj, me) => new ipsoDevice_1.IPSODevice(me.options).parse(obj)),
+    (0, ipsoObject_1.ipsoKey)("15014"),
+    (0, ipsoObject_1.deserializeWith)(/* istanbul ignore next */ (obj, me) => new ipsoDevice_1.IPSODevice(me.options).parse(obj)),
     __metadata("design:type", Array)
 ], Accessory.prototype, "repeaterList", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("15015"),
-    ipsoObject_1.deserializeWith((obj, me) => new blind_1.Blind(me.options, me).parse(obj)),
+    (0, ipsoObject_1.ipsoKey)("15015"),
+    (0, ipsoObject_1.deserializeWith)((obj, me) => new blind_1.Blind(me.options, me).parse(obj)),
     __metadata("design:type", Array)
 ], Accessory.prototype, "blindList", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9054"),
+    (0, ipsoObject_1.ipsoKey)("15025"),
+    (0, ipsoObject_1.deserializeWith)((obj, me) => new airPurifier_1.AirPurifier(me.options, me).parse(obj)),
+    __metadata("design:type", Array)
+], Accessory.prototype, "airPurifierList", void 0);
+__decorate([
+    (0, ipsoObject_1.ipsoKey)("9054"),
     __metadata("design:type", Number)
 ], Accessory.prototype, "otaUpdateState", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9084"),
+    (0, ipsoObject_1.ipsoKey)("9084"),
     __metadata("design:type", String)
 ], Accessory.prototype, "UNKNOWN1", void 0);
 exports.Accessory = Accessory;

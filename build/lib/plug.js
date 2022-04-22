@@ -98,7 +98,7 @@ class Plug extends ipsoDevice_1.IPSODevice {
      * @returns true if a request was sent, false otherwise
      */
     setBrightness(value) {
-        value = math_1.clamp(value, 0, 100);
+        value = (0, math_1.clamp)(value, 0, 100);
         return this.operatePlug({ dimmer: value });
     }
     /** Turns this object into JSON while leaving out the potential circular reference */
@@ -119,25 +119,25 @@ __decorate([
     __metadata("design:type", Object)
 ], Plug.prototype, "_accessory", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5805"),
+    (0, ipsoObject_1.ipsoKey)("5805"),
     __metadata("design:type", Number)
 ], Plug.prototype, "cumulativeActivePower", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5851"),
-    ipsoObject_1.serializeWith(conversions_1.serializers.brightness),
-    ipsoObject_1.deserializeWith(conversions_1.deserializers.brightness),
+    (0, ipsoObject_1.ipsoKey)("5851"),
+    (0, ipsoObject_1.serializeWith)(conversions_1.serializers.brightness),
+    (0, ipsoObject_1.deserializeWith)(conversions_1.deserializers.brightness),
     __metadata("design:type", Number)
 ], Plug.prototype, "dimmer", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5850"),
+    (0, ipsoObject_1.ipsoKey)("5850"),
     __metadata("design:type", Boolean)
 ], Plug.prototype, "onOff", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5852"),
+    (0, ipsoObject_1.ipsoKey)("5852"),
     __metadata("design:type", Number)
 ], Plug.prototype, "onTime", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5820"),
+    (0, ipsoObject_1.ipsoKey)("5820"),
     __metadata("design:type", Number)
 ], Plug.prototype, "powerFactor", void 0);
 exports.Plug = Plug;

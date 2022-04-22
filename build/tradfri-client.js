@@ -49,11 +49,11 @@ class TradfriClient extends events_1.EventEmitter {
         this.requestBase = `coaps://${hostname}:5684/`;
         if (typeof optionsOrLogger === "function") {
             // Legacy version: 2nd parameter is a logger
-            logger_1.setCustomLogger(optionsOrLogger);
+            (0, logger_1.setCustomLogger)(optionsOrLogger);
         }
         else if (typeof optionsOrLogger === "object") {
             if (optionsOrLogger.customLogger != null)
-                logger_1.setCustomLogger(optionsOrLogger.customLogger);
+                (0, logger_1.setCustomLogger)(optionsOrLogger.customLogger);
             if (optionsOrLogger.useRawCoAPValues === true)
                 this.ipsoOptions.skipValueSerializers = true;
             if (optionsOrLogger.watchConnection != null && optionsOrLogger.watchConnection !== false) {
@@ -92,8 +92,8 @@ class TradfriClient extends events_1.EventEmitter {
                     // If the reconnection is not enabled, we don't hit this branch,
                     // so interval and backoffFactor are defined
                     const nextTimeout = Math.round(interval * Math.pow(backoffFactor, Math.min(5, attempt - 1)));
-                    logger_1.log(`retrying connection in ${nextTimeout} ms`, "debug");
-                    yield async_1.wait(nextTimeout);
+                    (0, logger_1.log)(`retrying connection in ${nextTimeout} ms`, "debug");
+                    yield (0, async_1.wait)(nextTimeout);
                 }
                 const connectionResult = yield this.tryToConnect(identity, psk);
                 switch (connectionResult) {
@@ -160,16 +160,16 @@ class TradfriClient extends events_1.EventEmitter {
             node_coap_client_1.CoapClient.setCompatOptions(this.hostname, {
                 resetAntiReplayWindowBeforeServerHello: true,
             });
-            logger_1.log(`Attempting connection. Identity = ${identity}, psk = ${psk}`, "debug");
+            (0, logger_1.log)(`Attempting connection. Identity = ${identity}, psk = ${psk}`, "debug");
             const result = yield node_coap_client_1.CoapClient.tryToConnect(this.requestBase);
             if (result === true) {
-                logger_1.log("Connection successful", "debug");
+                (0, logger_1.log)("Connection successful", "debug");
                 // Store this information to automatically reconnect
                 this.identity = identity;
                 this.psk = psk;
             }
             else {
-                logger_1.log("Connection failed. Reason: " + result, "debug");
+                (0, logger_1.log)("Connection failed. Reason: " + result, "debug");
             }
             return result;
         });
@@ -183,7 +183,7 @@ class TradfriClient extends events_1.EventEmitter {
     authenticate(securityCode) {
         return __awaiter(this, void 0, void 0, function* () {
             // first, check try to connect with the security code
-            logger_1.log("authenticate() > trying to connect with the security code", "debug");
+            (0, logger_1.log)("authenticate() > trying to connect with the security code", "debug");
             switch (yield this.tryToConnect("Client_identity", securityCode)) {
                 case true: break; // all good
                 case "auth failed": throw new tradfri_error_1.TradfriError("The security code is wrong", tradfri_error_1.TradfriErrorCodes.AuthenticationFailed);
@@ -192,7 +192,7 @@ class TradfriClient extends events_1.EventEmitter {
             }
             // generate a new identity
             const identity = `tradfri_${Date.now()}`;
-            logger_1.log(`authenticating with identity "${identity}"`, "debug");
+            (0, logger_1.log)(`authenticating with identity "${identity}"`, "debug");
             // request creation of new PSK
             let payload = JSON.stringify({ 9090: identity });
             payload = Buffer.from(payload);
@@ -219,11 +219,11 @@ class TradfriClient extends events_1.EventEmitter {
         return __awaiter(this, void 0, void 0, function* () {
             this.reset(true);
             // Try to immediately reconnect
-            logger_1.log(`trying to reconnect`, "debug");
+            (0, logger_1.log)(`trying to reconnect`, "debug");
             const result = yield this.tryToConnect(this.identity, this.psk);
             if (result === "auth failed") {
                 if (this.securityCode) {
-                    logger_1.log(`invalid credentials, trying to re-authenticate`, "debug");
+                    (0, logger_1.log)(`invalid credentials, trying to re-authenticate`, "debug");
                     ({
                         identity: this.identity,
                         psk: this.psk
@@ -231,7 +231,7 @@ class TradfriClient extends events_1.EventEmitter {
                     yield this.tryToConnect(this.identity, this.psk);
                 }
                 else {
-                    logger_1.log(`invalid credentials, cannot reconnect`, "debug");
+                    (0, logger_1.log)(`invalid credentials, cannot reconnect`, "debug");
                     return false;
                 }
             }
@@ -310,7 +310,7 @@ class TradfriClient extends events_1.EventEmitter {
      */
     restoreObservers() {
         return __awaiter(this, void 0, void 0, function* () {
-            logger_1.log("restoring previously used observers", "debug");
+            (0, logger_1.log)("restoring previously used observers", "debug");
             let devicesRestored = false;
             const devicesPath = this.getObserverUrl(endpoints_1.endpoints.devices);
             let groupsAndScenesRestored = false;
@@ -320,7 +320,7 @@ class TradfriClient extends events_1.EventEmitter {
                 if (path.indexOf(devicesPath) > -1) {
                     if (!devicesRestored) {
                         // restore all device observers (with a new callback)
-                        logger_1.log("restoring device observers", "debug");
+                        (0, logger_1.log)("restoring device observers", "debug");
                         yield this.observeDevices();
                         devicesRestored = true;
                     }
@@ -328,14 +328,14 @@ class TradfriClient extends events_1.EventEmitter {
                 else if (path.indexOf(groupsPath) > -1 || path.indexOf(scenesPath) > -1) {
                     if (!groupsAndScenesRestored) {
                         // restore all group and scene observers (with a new callback)
-                        logger_1.log("restoring groups and scene observers", "debug");
+                        (0, logger_1.log)("restoring groups and scene observers", "debug");
                         yield this.observeGroupsAndScenes();
                         groupsAndScenesRestored = true;
                     }
                 }
                 else {
                     // restore all custom observers with the old callback
-                    logger_1.log(`restoring custom observer for path "${path}"`, "debug");
+                    (0, logger_1.log)(`restoring custom observer for path "${path}"`, "debug");
                     yield this.observeResource(path, callback);
                 }
             }
@@ -349,7 +349,7 @@ class TradfriClient extends events_1.EventEmitter {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.isObserving(endpoints_1.endpoints.devices))
                 return;
-            this.observeDevicesPromise = deferred_promise_1.createDeferredPromise();
+            this.observeDevicesPromise = (0, deferred_promise_1.createDeferredPromise)();
             // We have a timing problem here, as the observeGatewayPromise might be
             // rejected in the callback and set to null. Therefore return it before
             // starting the observation
@@ -369,14 +369,14 @@ class TradfriClient extends events_1.EventEmitter {
                     return;
             }
             const newDevices = parsePayload(response);
-            logger_1.log(`got all devices: ${JSON.stringify(newDevices)}`);
+            (0, logger_1.log)(`got all devices: ${JSON.stringify(newDevices)}`);
             // get old keys as int array
             const oldKeys = Object.keys(this.devices).map(k => +k).sort();
             // get new keys as int array
             const newKeys = newDevices.sort();
             // translate that into added and removed devices
-            const addedKeys = array_extensions_1.except(newKeys, oldKeys);
-            logger_1.log(`adding devices with keys ${JSON.stringify(addedKeys)}`, "debug");
+            const addedKeys = (0, array_extensions_1.except)(newKeys, oldKeys);
+            (0, logger_1.log)(`adding devices with keys ${JSON.stringify(addedKeys)}`, "debug");
             const observeDevicePromises = newKeys.map(id => {
                 const handleResponse = (resp) => {
                     // first, try to parse the device information
@@ -399,8 +399,8 @@ class TradfriClient extends events_1.EventEmitter {
                 return this.observeResource(`${endpoints_1.endpoints.devices}/${id}`, handleResponse);
             });
             yield Promise.all(observeDevicePromises);
-            const removedKeys = array_extensions_1.except(oldKeys, newKeys);
-            logger_1.log(`removing devices with keys ${JSON.stringify(removedKeys)}`, "debug");
+            const removedKeys = (0, array_extensions_1.except)(oldKeys, newKeys);
+            (0, logger_1.log)(`removing devices with keys ${JSON.stringify(removedKeys)}`, "debug");
             for (const id of removedKeys) {
                 // remove device from dictionary
                 delete this.devices[id];
@@ -427,7 +427,7 @@ class TradfriClient extends events_1.EventEmitter {
                 return false;
         }
         const result = parsePayload(response);
-        logger_1.log(`observeDevice > ` + JSON.stringify(result), "debug");
+        (0, logger_1.log)(`observeDevice > ` + JSON.stringify(result), "debug");
         // parse device info
         const accessory = new accessory_1.Accessory(this.ipsoOptions)
             .parse(result)
@@ -448,7 +448,7 @@ class TradfriClient extends events_1.EventEmitter {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.isObserving(endpoints_1.endpoints.groups))
                 return;
-            this.observeGroupsPromise = deferred_promise_1.createDeferredPromise();
+            this.observeGroupsPromise = (0, deferred_promise_1.createDeferredPromise)();
             // We have a timing problem here, as the observeGatewayPromise might be
             // rejected in the callback and set to null. Therefore return it before
             // starting the observation
@@ -469,17 +469,17 @@ class TradfriClient extends events_1.EventEmitter {
                     return;
             }
             const newGroups = parsePayload(response);
-            logger_1.log(`got all groups: ${JSON.stringify(newGroups)}`);
+            (0, logger_1.log)(`got all groups: ${JSON.stringify(newGroups)}`);
             // get old keys as int array
             const oldKeys = Object.keys(this.groups).map(k => +k).sort();
             // get new keys as int array
             const newKeys = newGroups.sort();
             // translate that into added and removed devices
-            const addedKeys = array_extensions_1.except(newKeys, oldKeys);
-            logger_1.log(`adding groups with keys ${JSON.stringify(addedKeys)}`, "debug");
+            const addedKeys = (0, array_extensions_1.except)(newKeys, oldKeys);
+            (0, logger_1.log)(`adding groups with keys ${JSON.stringify(addedKeys)}`, "debug");
             // create a deferred promise for each group, so we can wait for them to be fulfilled
             if (this.observeGroupsPromise != null && this.observeScenesPromises == null) {
-                this.observeScenesPromises = new Map(newKeys.map(id => [id, deferred_promise_1.createDeferredPromise()]));
+                this.observeScenesPromises = new Map(newKeys.map(id => [id, (0, deferred_promise_1.createDeferredPromise)()]));
             }
             const observeGroupPromises = newKeys.map(id => {
                 const handleResponse = (resp) => {
@@ -517,8 +517,8 @@ class TradfriClient extends events_1.EventEmitter {
                 return this.observeResource(`${endpoints_1.endpoints.groups}/${id}`, handleResponse);
             });
             yield Promise.all(observeGroupPromises);
-            const removedKeys = array_extensions_1.except(oldKeys, newKeys);
-            logger_1.log(`removing groups with keys ${JSON.stringify(removedKeys)}`, "debug");
+            const removedKeys = (0, array_extensions_1.except)(oldKeys, newKeys);
+            (0, logger_1.log)(`removing groups with keys ${JSON.stringify(removedKeys)}`, "debug");
             removedKeys.forEach((id) => {
                 // remove group from dictionary
                 delete this.groups[id];
@@ -586,14 +586,14 @@ class TradfriClient extends events_1.EventEmitter {
             }
             const groupInfo = this.groups[groupId];
             const newScenes = parsePayload(response);
-            logger_1.log(`got all scenes in group ${groupId}: ${JSON.stringify(newScenes)}`);
+            (0, logger_1.log)(`got all scenes in group ${groupId}: ${JSON.stringify(newScenes)}`);
             // get old keys as int array
             const oldKeys = Object.keys(groupInfo.scenes).map(k => +k).sort();
             // get new keys as int array
             const newKeys = newScenes.sort();
             // translate that into added and removed devices
-            const addedKeys = array_extensions_1.except(newKeys, oldKeys);
-            logger_1.log(`adding scenes with keys ${JSON.stringify(addedKeys)} to group ${groupId}`, "debug");
+            const addedKeys = (0, array_extensions_1.except)(newKeys, oldKeys);
+            (0, logger_1.log)(`adding scenes with keys ${JSON.stringify(addedKeys)} to group ${groupId}`, "debug");
             if (newKeys.length > 0) {
                 const observeScenePromises = newKeys.map(id => {
                     const handleResponse = (resp) => {
@@ -622,8 +622,8 @@ class TradfriClient extends events_1.EventEmitter {
             else {
                 (_b = (_a = this.observeScenesPromises) === null || _a === void 0 ? void 0 : _a.get(groupId)) === null || _b === void 0 ? void 0 : _b.resolve();
             }
-            const removedKeys = array_extensions_1.except(oldKeys, newKeys);
-            logger_1.log(`removing scenes with keys ${JSON.stringify(removedKeys)} from group ${groupId}`, "debug");
+            const removedKeys = (0, array_extensions_1.except)(oldKeys, newKeys);
+            (0, logger_1.log)(`removing scenes with keys ${JSON.stringify(removedKeys)} from group ${groupId}`, "debug");
             removedKeys.forEach(id => {
                 // remove scene from dictionary
                 delete groupInfo.scenes[id];
@@ -662,7 +662,7 @@ class TradfriClient extends events_1.EventEmitter {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.isObserving(endpoints_1.endpoints.gateway(endpoints_1.GatewayEndpoints.Details)))
                 return;
-            this.observeGatewayPromise = deferred_promise_1.createDeferredPromise();
+            this.observeGatewayPromise = (0, deferred_promise_1.createDeferredPromise)();
             // We have a timing problem here, as the observeGatewayPromise might be
             // rejected in the callback and set to null. Therefore return it before
             // starting the observation
@@ -676,11 +676,11 @@ class TradfriClient extends events_1.EventEmitter {
     }
     observeGateway_callback(response) {
         return __awaiter(this, void 0, void 0, function* () {
-            logger_1.log(`received response to observeGateway(): ${JSON.stringify(response, null, 4)}`);
+            (0, logger_1.log)(`received response to observeGateway(): ${JSON.stringify(response, null, 4)}`);
             // check response code
             if (response.code.toString() !== "2.05") {
                 if (!this.handleNonSuccessfulResponse(response, `observeGateway()`, false)) {
-                    logger_1.log(`  => not successful`);
+                    (0, logger_1.log)(`  => not successful`);
                     if (this.observeGatewayPromise != null) {
                         this.observeGatewayPromise.reject(new Error(`The gateway could not be observed`));
                         this.observeGatewayPromise = undefined;
@@ -688,7 +688,7 @@ class TradfriClient extends events_1.EventEmitter {
                     return;
                 }
             }
-            logger_1.log(`got gateway information`);
+            (0, logger_1.log)(`got gateway information`);
             const result = parsePayload(response);
             // parse gw info
             const gateway = new gatewayDetails_1.GatewayDetails(this.ipsoOptions)
@@ -714,7 +714,7 @@ class TradfriClient extends events_1.EventEmitter {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.isObserving(endpoints_1.endpoints.notifications))
                 return;
-            this.observeNotificationsPromise = deferred_promise_1.createDeferredPromise();
+            this.observeNotificationsPromise = (0, deferred_promise_1.createDeferredPromise)();
             // We have a timing problem here, as the observeNotificationsPromise might be
             // rejected in the callback and set to null. Therefore return it before
             // starting the observation
@@ -728,11 +728,11 @@ class TradfriClient extends events_1.EventEmitter {
     }
     observeNotifications_callback(response) {
         return __awaiter(this, void 0, void 0, function* () {
-            logger_1.log(`received response to observeNotifications(): ${JSON.stringify(response, null, 4)}`);
+            (0, logger_1.log)(`received response to observeNotifications(): ${JSON.stringify(response, null, 4)}`);
             // check response code
             if (response.code.toString() !== "2.05") {
                 if (!this.handleNonSuccessfulResponse(response, `observeNotifications()`, false)) {
-                    logger_1.log(`  => not successful`);
+                    (0, logger_1.log)(`  => not successful`);
                     if (this.observeNotificationsPromise != null) {
                         this.observeNotificationsPromise.reject(new Error(`The notifications could not be observed`));
                         this.observeNotificationsPromise = undefined;
@@ -838,16 +838,16 @@ class TradfriClient extends events_1.EventEmitter {
         return __awaiter(this, void 0, void 0, function* () {
             // ensure the ipso options were not lost on the user side
             newObj.options = this.ipsoOptions;
-            logger_1.log(`updateResource(${path}) > comparing ${JSON.stringify(newObj)} with the reference ${JSON.stringify(reference)}`, "debug");
+            (0, logger_1.log)(`updateResource(${path}) > comparing ${JSON.stringify(newObj)} with the reference ${JSON.stringify(reference)}`, "debug");
             const serializedObj = newObj.serialize(reference);
             // If the serialized object contains no properties, we don't need to send anything
             if (!serializedObj || Object.keys(serializedObj).length === 0) {
-                logger_1.log(`updateResource(${path}) > empty object, not sending any payload`, "debug");
+                (0, logger_1.log)(`updateResource(${path}) > empty object, not sending any payload`, "debug");
                 return false;
             }
             // get the payload
             let payload = JSON.stringify(serializedObj);
-            logger_1.log(`updateResource(${path}) > sending payload: ${payload}`, "debug");
+            (0, logger_1.log)(`updateResource(${path}) > sending payload: ${payload}`, "debug");
             payload = Buffer.from(payload);
             yield this.swallowInternalCoapRejections(node_coap_client_1.CoapClient.request(`${this.requestBase}${path}`, "put", payload));
             return true;
@@ -862,14 +862,14 @@ class TradfriClient extends events_1.EventEmitter {
      */
     operateGroup(group, operation, force = false) {
         // Ensure that the operation is an object (GH #323)
-        if (!typeguards_1.isObject(operation)) {
+        if (!(0, typeguards_1.isObject)(operation)) {
             throw new Error(`The parameter "operation" must be an object!`);
         }
         const newGroup = group.clone().merge(operation, true /* all props */);
         const reference = group.clone();
         if (force) {
             // to force the properties being sent, we need to reset them on the reference
-            reference.merge(utils_1.invertOperation(operation), true);
+            reference.merge((0, utils_1.invertOperation)(operation), true);
         }
         return this.updateResource(`${endpoints_1.endpoints.groups}/${group.instanceId}`, newGroup, reference);
     }
@@ -885,7 +885,7 @@ class TradfriClient extends events_1.EventEmitter {
             throw new Error(`The parameter "accessory" must be a lightbulb!`);
         }
         // Ensure that the operation is an object (GH #323)
-        if (!typeguards_1.isObject(operation)) {
+        if (!(0, typeguards_1.isObject)(operation)) {
             throw new Error(`The parameter "operation" must be an object!`);
         }
         const newAccessory = accessory.clone();
@@ -893,7 +893,7 @@ class TradfriClient extends events_1.EventEmitter {
         const reference = accessory.clone();
         if (force) {
             // to force the properties being sent, we need to reset them on the reference
-            reference.lightList[0].merge(utils_1.invertOperation(operation), true);
+            reference.lightList[0].merge((0, utils_1.invertOperation)(operation), true);
         }
         return this.updateResource(`${endpoints_1.endpoints.devices}/${accessory.instanceId}`, newAccessory, reference);
     }
@@ -909,7 +909,7 @@ class TradfriClient extends events_1.EventEmitter {
             throw new Error(`The parameter "accessory" must be a plug!`);
         }
         // Ensure that the operation is an object (GH #323)
-        if (!typeguards_1.isObject(operation)) {
+        if (!(0, typeguards_1.isObject)(operation)) {
             throw new Error(`The parameter "operation" must be an object!`);
         }
         const newAccessory = accessory.clone();
@@ -917,7 +917,7 @@ class TradfriClient extends events_1.EventEmitter {
         const reference = accessory.clone();
         if (force) {
             // to force the properties being sent, we need to reset them on the reference
-            reference.plugList[0].merge(utils_1.invertOperation(operation), true);
+            reference.plugList[0].merge((0, utils_1.invertOperation)(operation), true);
         }
         return this.updateResource(`${endpoints_1.endpoints.devices}/${accessory.instanceId}`, newAccessory, reference);
     }
@@ -933,7 +933,7 @@ class TradfriClient extends events_1.EventEmitter {
             throw new Error(`The parameter "accessory" must be a blind!`);
         }
         // Ensure that the operation is an object (GH #323)
-        if (!typeguards_1.isObject(operation)) {
+        if (!(0, typeguards_1.isObject)(operation)) {
             throw new Error(`The parameter "operation" must be an object!`);
         }
         const newAccessory = accessory.clone();
@@ -942,7 +942,32 @@ class TradfriClient extends events_1.EventEmitter {
         const reference = accessory.clone();
         if (force) {
             // to force the properties being sent, we need to reset them on the reference
-            reference.blindList[0].merge(utils_1.invertOperation(operation), true);
+            reference.blindList[0].merge((0, utils_1.invertOperation)(operation), true);
+        }
+        return this.updateResource(`${endpoints_1.endpoints.devices}/${accessory.instanceId}`, newAccessory, reference);
+    }
+    /**
+     * Sets some properties on a airpurifier
+     * @param accessory The parent accessory of the airpurifier
+     * @param operation The properties to be set
+     * @param force Include all properties of operation in the payload, even if the values are unchanged
+     * @returns true if a request was sent, false otherwise
+     */
+    operateAirPurifier(accessory, operation, force = false) {
+        if (accessory.type !== accessory_1.AccessoryTypes.airPurifier) {
+            throw new Error(`The parameter "accessory" must be an air purifier!`);
+        }
+        // Ensure that the operation is an object (GH #323)
+        if (!(0, typeguards_1.isObject)(operation)) {
+            throw new Error(`The parameter "operation" must be an object!`);
+        }
+        const newAccessory = accessory.clone();
+        // Merge all properties, because trigger might not be defined
+        newAccessory.airPurifierList[0].merge(operation, true);
+        const reference = accessory.clone();
+        if (force) {
+            // to force the properties being sent, we need to reset them on the reference
+            reference.airPurifierList[0].merge((0, utils_1.invertOperation)(operation), true);
         }
         return this.updateResource(`${endpoints_1.endpoints.devices}/${accessory.instanceId}`, newAccessory, reference);
     }
@@ -958,7 +983,7 @@ class TradfriClient extends events_1.EventEmitter {
             let jsonPayload;
             if (payload != null) {
                 jsonPayload = JSON.stringify(payload);
-                logger_1.log("sending custom payload: " + jsonPayload, "debug");
+                (0, logger_1.log)("sending custom payload: " + jsonPayload, "debug");
                 jsonPayload = Buffer.from(jsonPayload);
             }
             // wait for the CoAP response and respond to the message
@@ -1039,7 +1064,7 @@ function parsePayload(response) {
             }
         default:
             // dunno how to parse this
-            logger_1.log(`unknown CoAP response format ${response.format}`, "warn");
+            (0, logger_1.log)(`unknown CoAP response format ${response.format}`, "warn");
             return response.payload;
     }
 }

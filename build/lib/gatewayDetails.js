@@ -45,123 +45,123 @@ class GatewayDetails extends ipsoObject_1.IPSOObject {
     }
 }
 __decorate([
-    ipsoObject_1.ipsoKey("9093"),
+    (0, ipsoObject_1.ipsoKey)("9093"),
     __metadata("design:type", Boolean)
 ], GatewayDetails.prototype, "alexaPairStatus", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9105"),
+    (0, ipsoObject_1.ipsoKey)("9105"),
     __metadata("design:type", Boolean)
 ], GatewayDetails.prototype, "googleHomePairStatus", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9092"),
+    (0, ipsoObject_1.ipsoKey)("9092"),
     __metadata("design:type", Boolean)
 ], GatewayDetails.prototype, "certificateProvisioned", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9061"),
+    (0, ipsoObject_1.ipsoKey)("9061"),
     __metadata("design:type", Number)
 ], GatewayDetails.prototype, "commissioningMode", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9059"),
+    (0, ipsoObject_1.ipsoKey)("9059"),
     __metadata("design:type", Number)
 ], GatewayDetails.prototype, "utcNowUnixTimestamp", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9060"),
+    (0, ipsoObject_1.ipsoKey)("9060"),
     __metadata("design:type", String)
 ], GatewayDetails.prototype, "utcNowISODate", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9071"),
+    (0, ipsoObject_1.ipsoKey)("9071"),
     __metadata("design:type", Number)
 ], GatewayDetails.prototype, "timeSource", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9023"),
+    (0, ipsoObject_1.ipsoKey)("9023"),
     __metadata("design:type", String)
 ], GatewayDetails.prototype, "ntpServerUrl", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9029"),
+    (0, ipsoObject_1.ipsoKey)("9029"),
     __metadata("design:type", String)
 ], GatewayDetails.prototype, "version", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9062"),
+    (0, ipsoObject_1.ipsoKey)("9062"),
     __metadata("design:type", Number)
 ], GatewayDetails.prototype, "UNKNOWN_9062", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9054"),
+    (0, ipsoObject_1.ipsoKey)("9054"),
     __metadata("design:type", Boolean)
 ], GatewayDetails.prototype, "otaUpdateState", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9055"),
+    (0, ipsoObject_1.ipsoKey)("9055"),
     __metadata("design:type", Number)
 ], GatewayDetails.prototype, "updateProgress", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9066"),
+    (0, ipsoObject_1.ipsoKey)("9066"),
     __metadata("design:type", Number)
 ], GatewayDetails.prototype, "updatePriority", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9069"),
+    (0, ipsoObject_1.ipsoKey)("9069"),
     __metadata("design:type", Number)
 ], GatewayDetails.prototype, "updateAcceptedTimestamp", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9056"),
+    (0, ipsoObject_1.ipsoKey)("9056"),
     __metadata("design:type", String)
 ], GatewayDetails.prototype, "releaseNotes", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9072"),
+    (0, ipsoObject_1.ipsoKey)("9072"),
     __metadata("design:type", Number)
 ], GatewayDetails.prototype, "dstStartMonth", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9073"),
+    (0, ipsoObject_1.ipsoKey)("9073"),
     __metadata("design:type", Number)
 ], GatewayDetails.prototype, "dstStartDay", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9074"),
+    (0, ipsoObject_1.ipsoKey)("9074"),
     __metadata("design:type", Number)
 ], GatewayDetails.prototype, "dstStartHour", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9075"),
+    (0, ipsoObject_1.ipsoKey)("9075"),
     __metadata("design:type", Number)
 ], GatewayDetails.prototype, "dstStartMinute", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9076"),
+    (0, ipsoObject_1.ipsoKey)("9076"),
     __metadata("design:type", Number)
 ], GatewayDetails.prototype, "dstEndMonth", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9077"),
+    (0, ipsoObject_1.ipsoKey)("9077"),
     __metadata("design:type", Number)
 ], GatewayDetails.prototype, "dstEndDay", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9078"),
+    (0, ipsoObject_1.ipsoKey)("9078"),
     __metadata("design:type", Number)
 ], GatewayDetails.prototype, "dstEndHour", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9079"),
+    (0, ipsoObject_1.ipsoKey)("9079"),
     __metadata("design:type", Number)
 ], GatewayDetails.prototype, "dstEndMinute", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9080"),
+    (0, ipsoObject_1.ipsoKey)("9080"),
     __metadata("design:type", Number)
 ], GatewayDetails.prototype, "dstTimeOffset", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9081"),
+    (0, ipsoObject_1.ipsoKey)("9081"),
     __metadata("design:type", String)
 ], GatewayDetails.prototype, "UNKNOWN_9081", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9082"),
+    (0, ipsoObject_1.ipsoKey)("9082"),
     __metadata("design:type", Boolean)
 ], GatewayDetails.prototype, "UNKNOWN_9082", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9083"),
+    (0, ipsoObject_1.ipsoKey)("9083"),
     __metadata("design:type", String)
 ], GatewayDetails.prototype, "UNKNOWN_9083", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9106"),
+    (0, ipsoObject_1.ipsoKey)("9106"),
     __metadata("design:type", Number)
 ], GatewayDetails.prototype, "UNKNOWN_9106", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9032"),
+    (0, ipsoObject_1.ipsoKey)("9032"),
     __metadata("design:type", String)
 ], GatewayDetails.prototype, "forceOtaUpdateCheck", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9035"),
+    (0, ipsoObject_1.ipsoKey)("9035"),
     __metadata("design:type", String)
 ], GatewayDetails.prototype, "name", void 0);
 exports.GatewayDetails = GatewayDetails;

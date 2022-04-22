@@ -34,34 +34,39 @@ class DeviceInfo extends ipsoObject_1.IPSOObject {
         this.power = PowerSources.Unknown;
         this.otaImageType = "";
         this.serialNumber = 0;
+        this.UNKNOWN1 = 0;
     }
 }
 __decorate([
-    ipsoObject_1.ipsoKey("9"),
+    (0, ipsoObject_1.ipsoKey)("9"),
     __metadata("design:type", Number)
 ], DeviceInfo.prototype, "battery", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("3"),
+    (0, ipsoObject_1.ipsoKey)("3"),
     __metadata("design:type", String)
 ], DeviceInfo.prototype, "firmwareVersion", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("0"),
+    (0, ipsoObject_1.ipsoKey)("0"),
     __metadata("design:type", String)
 ], DeviceInfo.prototype, "manufacturer", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("1"),
+    (0, ipsoObject_1.ipsoKey)("1"),
     __metadata("design:type", String)
 ], DeviceInfo.prototype, "modelNumber", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("6"),
+    (0, ipsoObject_1.ipsoKey)("6"),
     __metadata("design:type", Number)
 ], DeviceInfo.prototype, "power", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("7"),
+    (0, ipsoObject_1.ipsoKey)("7"),
     __metadata("design:type", String)
 ], DeviceInfo.prototype, "otaImageType", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("2"),
+    (0, ipsoObject_1.ipsoKey)("2"),
     __metadata("design:type", Number)
 ], DeviceInfo.prototype, "serialNumber", void 0);
+__decorate([
+    (0, ipsoObject_1.ipsoKey)("8"),
+    __metadata("design:type", Number)
+], DeviceInfo.prototype, "UNKNOWN1", void 0);
 exports.DeviceInfo = DeviceInfo;

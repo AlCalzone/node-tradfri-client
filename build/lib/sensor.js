@@ -28,39 +28,39 @@ class Sensor extends ipsoDevice_1.IPSODevice {
     }
 }
 __decorate([
-    ipsoObject_1.ipsoKey("5750"),
+    (0, ipsoObject_1.ipsoKey)("5750"),
     __metadata("design:type", String)
 ], Sensor.prototype, "appType", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5751"),
+    (0, ipsoObject_1.ipsoKey)("5751"),
     __metadata("design:type", String)
 ], Sensor.prototype, "sensorType", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5601"),
+    (0, ipsoObject_1.ipsoKey)("5601"),
     __metadata("design:type", Number)
 ], Sensor.prototype, "minMeasuredValue", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5602"),
+    (0, ipsoObject_1.ipsoKey)("5602"),
     __metadata("design:type", Number)
 ], Sensor.prototype, "maxMeasuredValue", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5603"),
+    (0, ipsoObject_1.ipsoKey)("5603"),
     __metadata("design:type", Number)
 ], Sensor.prototype, "minRangeValue", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5604"),
+    (0, ipsoObject_1.ipsoKey)("5604"),
     __metadata("design:type", Number)
 ], Sensor.prototype, "maxRangeValue", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5605"),
+    (0, ipsoObject_1.ipsoKey)("5605"),
     __metadata("design:type", Boolean)
 ], Sensor.prototype, "resetMinMaxMeasureValue", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5700"),
+    (0, ipsoObject_1.ipsoKey)("5700"),
     __metadata("design:type", Number)
 ], Sensor.prototype, "sensorValue", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5701"),
+    (0, ipsoObject_1.ipsoKey)("5701"),
     __metadata("design:type", String)
 ], Sensor.prototype, "unit", void 0);
 exports.Sensor = Sensor;

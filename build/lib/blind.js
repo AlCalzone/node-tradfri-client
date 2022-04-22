@@ -91,7 +91,7 @@ class Blind extends ipsoDevice_1.IPSODevice {
      * @returns true if a request was sent, false otherwise
      */
     setPosition(value) {
-        value = math_1.clamp(value, 0, 100);
+        value = (0, math_1.clamp)(value, 0, 100);
         return this.operateBlind({ position: value });
     }
     /** Turns this object into JSON while leaving out the potential circular reference */
@@ -112,13 +112,13 @@ __decorate([
     __metadata("design:type", Object)
 ], Blind.prototype, "_accessory", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5536"),
-    ipsoObject_1.serializeWith(conversions_1.serializers.position),
-    ipsoObject_1.deserializeWith(conversions_1.deserializers.position),
+    (0, ipsoObject_1.ipsoKey)("5536"),
+    (0, ipsoObject_1.serializeWith)(conversions_1.serializers.position),
+    (0, ipsoObject_1.deserializeWith)(conversions_1.deserializers.position),
     __metadata("design:type", Number)
 ], Blind.prototype, "position", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5523"),
+    (0, ipsoObject_1.ipsoKey)("5523"),
     __metadata("design:type", Object)
 ], Blind.prototype, "trigger", void 0);
 exports.Blind = Blind;

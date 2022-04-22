@@ -21,15 +21,15 @@ class IPSODevice extends ipsoObject_1.IPSOObject {
     }
 }
 __decorate([
-    ipsoObject_1.ipsoKey("9001"),
+    (0, ipsoObject_1.ipsoKey)("9001"),
     __metadata("design:type", String)
 ], IPSODevice.prototype, "name", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9002"),
+    (0, ipsoObject_1.ipsoKey)("9002"),
     __metadata("design:type", Number)
 ], IPSODevice.prototype, "createdAt", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9003"),
+    (0, ipsoObject_1.ipsoKey)("9003"),
     __metadata("design:type", Number)
 ], IPSODevice.prototype, "instanceId", void 0);
 exports.IPSODevice = IPSODevice;

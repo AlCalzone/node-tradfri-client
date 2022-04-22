@@ -88,7 +88,7 @@ exports.required = required;
 function isRequired(target, reference, property) {
     // get the class constructor
     const constr = target.constructor;
-    logger_1.log(`${constr.name}: checking if ${property} is required...`, "silly");
+    (0, logger_1.log)(`${constr.name}: checking if ${property} is required...`, "silly");
     // retrieve the current metadata
     const metadata = Reflect.getMetadata(METADATA_required, constr) || {};
     if (metadata.hasOwnProperty(property)) {
@@ -107,7 +107,7 @@ function isRequired(target, reference, property) {
 function isAlwaysRequired(target, property) {
     // get the class constructor
     const constr = target.constructor;
-    logger_1.log(`${constr.name}: checking if ${property} is always required...`, "silly");
+    (0, logger_1.log)(`${constr.name}: checking if ${property} is always required...`, "silly");
     // retrieve the current metadata
     const metadata = Reflect.getMetadata(METADATA_required, constr) || {};
     if (metadata.hasOwnProperty(property)) {
@@ -238,7 +238,7 @@ class IPSOObject {
      * Reads this instance's properties from the given object
      */
     parse(obj) {
-        for (const [key, value] of objects_1.entries(obj)) {
+        for (const [key, value] of (0, objects_1.entries)(obj)) {
             let deserializer = getDeserializer(this, key);
             // key might be ipso key or property name
             let propName; // keyof this | string;
@@ -246,8 +246,8 @@ class IPSOObject {
                 // deserializers are defined by property name, so key is actually the key
                 propName = lookupKeyOrProperty(this, key);
                 if (!propName) {
-                    logger_1.log(`found unknown property with key ${key}`, "warn");
-                    logger_1.log(`object was: ${JSON.stringify(obj)}`, "warn");
+                    (0, logger_1.log)(`found unknown property with key ${key}`, "warn");
+                    (0, logger_1.log)(`object was: ${JSON.stringify(obj)}`, "warn");
                     continue;
                 }
                 deserializer = getDeserializer(this, propName);
@@ -276,7 +276,7 @@ class IPSOObject {
                 return transform(value, this);
             }
             else {
-                logger_1.log(`could not find deserializer for key ${propKey}`, "warn");
+                (0, logger_1.log)(`could not find deserializer for key ${propKey}`, "warn");
             }
         }
         else if (transform && (transform.neverSkip || !this.options.skipValueSerializers)) {
@@ -291,7 +291,7 @@ class IPSOObject {
      * Overrides this object's properties with those from another partial one
      */
     merge(obj, allProperties = false) {
-        for (const [key, value] of objects_1.entries(obj)) {
+        for (const [key, value] of (0, objects_1.entries)(obj)) {
             if (allProperties || this.hasOwnProperty(key)) {
                 // we can't be sure that this has a property `key`
                 this[key] = value;

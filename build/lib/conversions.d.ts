@@ -22,6 +22,8 @@ export declare const serializers: {
     brightness: PropertyTransformKernel;
     colorTemperature: PropertyTransformKernel;
     position: PropertyTransformKernel;
+    booleanInverted: PropertyTransformKernel;
+    fanSpeed: PropertyTransformKernel;
 };
 export declare const deserializers: {
     transitionTime: PropertyTransformKernel;
@@ -30,6 +32,7 @@ export declare const deserializers: {
     brightness: PropertyTransformKernel;
     colorTemperature: PropertyTransformKernel;
     position: PropertyTransformKernel;
+    booleanInverted: PropertyTransformKernel;
 };
 export declare const conversions: {
     rgbFromHSV: typeof rgbFromHSV;

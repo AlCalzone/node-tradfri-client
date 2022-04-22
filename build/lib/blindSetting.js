@@ -19,7 +19,7 @@ class BlindSetting extends ipsoDevice_1.IPSODevice {
     }
 }
 __decorate([
-    ipsoObject_1.ipsoKey("5536"),
+    (0, ipsoObject_1.ipsoKey)("5536"),
     __metadata("design:type", Number)
 ], BlindSetting.prototype, "position", void 0);
 exports.BlindSetting = BlindSetting;
