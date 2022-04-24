@@ -35,20 +35,20 @@ class Notification extends ipsoObject_1.IPSOObject {
     }
 }
 __decorate([
-    ipsoObject_1.ipsoKey("9002"),
+    (0, ipsoObject_1.ipsoKey)("9002"),
     __metadata("design:type", Number)
 ], Notification.prototype, "timestamp", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9015"),
+    (0, ipsoObject_1.ipsoKey)("9015"),
     __metadata("design:type", Number)
 ], Notification.prototype, "event", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9017"),
-    ipsoObject_1.deserializeWith(arr => parseNotificationDetails(arr), { splitArrays: false }),
+    (0, ipsoObject_1.ipsoKey)("9017"),
+    (0, ipsoObject_1.deserializeWith)(arr => parseNotificationDetails(arr), { splitArrays: false }),
     __metadata("design:type", Object)
 ], Notification.prototype, "_details", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9014"),
+    (0, ipsoObject_1.ipsoKey)("9014"),
     __metadata("design:type", Boolean)
 ], Notification.prototype, "isActive", void 0);
 exports.Notification = Notification;
@@ -61,7 +61,7 @@ class RebootNotification extends ipsoObject_1.IPSOObject {
     }
 }
 __decorate([
-    ipsoObject_1.ipsoKey("9052"),
+    (0, ipsoObject_1.ipsoKey)("9052"),
     __metadata("design:type", Number)
 ], RebootNotification.prototype, "reason", void 0);
 exports.RebootNotification = RebootNotification;
@@ -74,12 +74,12 @@ class FirmwareUpdateNotification extends ipsoObject_1.IPSOObject {
     }
 }
 __decorate([
-    ipsoObject_1.ipsoKey("9056"),
+    (0, ipsoObject_1.ipsoKey)("9056"),
     __metadata("design:type", String)
 ], FirmwareUpdateNotification.prototype, "releaseNotes", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("9066"),
-    ipsoObject_1.deserializeWith(str => parseInt(str, 10)),
+    (0, ipsoObject_1.ipsoKey)("9066"),
+    (0, ipsoObject_1.deserializeWith)(str => parseInt(str, 10)),
     __metadata("design:type", Number)
 ], FirmwareUpdateNotification.prototype, "priority", void 0);
 exports.FirmwareUpdateNotification = FirmwareUpdateNotification;

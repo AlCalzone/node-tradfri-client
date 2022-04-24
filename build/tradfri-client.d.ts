@@ -10,6 +10,7 @@ import { LoggerFunction } from "./lib/logger";
 import { OperationProvider } from "./lib/operation-provider";
 import { PlugOperation } from "./lib/plug";
 import { ConnectionWatcherOptions } from "./lib/watcher";
+import { AirPurifierOperation } from "./lib/airPurifier";
 export declare type ObserveResourceCallback = (resp: CoapResponse) => void;
 export declare type ObserveDevicesCallback = (addedDevices: Accessory[], removedDevices: Accessory[]) => void;
 export interface TradfriClient {
@@ -206,6 +207,14 @@ export declare class TradfriClient extends EventEmitter implements OperationProv
      * @returns true if a request was sent, false otherwise
      */
     operateBlind(accessory: Accessory, operation: BlindOperation, force?: boolean): Promise<boolean>;
+    /**
+     * Sets some properties on a airpurifier
+     * @param accessory The parent accessory of the airpurifier
+     * @param operation The properties to be set
+     * @param force Include all properties of operation in the payload, even if the values are unchanged
+     * @returns true if a request was sent, false otherwise
+     */
+    operateAirPurifier(accessory: Accessory, operation: AirPurifierOperation, force?: boolean): Promise<boolean>;
     /**
      * Sends a custom request to a resource
      * @param path The path of the resource

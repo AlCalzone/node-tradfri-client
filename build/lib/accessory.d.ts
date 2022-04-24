@@ -1,3 +1,4 @@
+import { AirPurifier } from "./airPurifier";
 import { Blind } from "./blind";
 import { DeviceInfo } from "./deviceInfo";
 import { IPSODevice } from "./ipsoDevice";
@@ -23,7 +24,9 @@ export declare enum AccessoryTypes {
     /** A smart blind */
     blind = 7,
     /** Symfonisk Remote */
-    soundRemote = 8
+    soundRemote = 8,
+    /** STARKVIND Air purifier */
+    airPurifier = 10
 }
 export declare class Accessory extends IPSODevice {
     type: AccessoryTypes;
@@ -36,6 +39,7 @@ export declare class Accessory extends IPSODevice {
     switchList: IPSODevice[];
     repeaterList: IPSODevice[];
     blindList: Blind[];
+    airPurifierList: AirPurifier[];
     otaUpdateState: number;
     /**
      * Fixes property values that are known to be bugged

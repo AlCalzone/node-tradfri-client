@@ -17,4 +17,5 @@ export declare class DeviceInfo extends IPSOObject {
     power: PowerSources;
     otaImageType: string;
     serialNumber: number;
+    UNKNOWN1: number;
 }

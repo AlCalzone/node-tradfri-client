@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TradfriClient = exports.discoverGateway = exports.TradfriErrorCodes = exports.TradfriError = exports.Sensor = exports.Scene = exports.Plug = exports.Blind = exports.NotificationTypes = exports.Notification = exports.LightSetting = exports.PowerRestoredAction = exports.Light = exports.IPSODevice = exports.Group = exports.GatewayDetails = exports.PowerSources = exports.DeviceInfo = exports.AccessoryTypes = exports.Accessory = void 0;
+exports.TradfriClient = exports.discoverGateway = exports.TradfriErrorCodes = exports.TradfriError = exports.Sensor = exports.Scene = exports.AirPurifierSetting = exports.FanMode = exports.AirPurifier = exports.Plug = exports.Blind = exports.NotificationTypes = exports.Notification = exports.LightSetting = exports.PowerRestoredAction = exports.Light = exports.IPSODevice = exports.Group = exports.GatewayDetails = exports.PowerSources = exports.DeviceInfo = exports.AccessoryTypes = exports.Accessory = void 0;
 // Reflect-polyfill laden
 // tslint:disable-next-line:no-var-requires
 require("reflect-metadata");
@@ -28,6 +28,11 @@ var blind_1 = require("./lib/blind");
 Object.defineProperty(exports, "Blind", { enumerable: true, get: function () { return blind_1.Blind; } });
 var plug_1 = require("./lib/plug");
 Object.defineProperty(exports, "Plug", { enumerable: true, get: function () { return plug_1.Plug; } });
+var airPurifier_1 = require("./lib/airPurifier");
+Object.defineProperty(exports, "AirPurifier", { enumerable: true, get: function () { return airPurifier_1.AirPurifier; } });
+Object.defineProperty(exports, "FanMode", { enumerable: true, get: function () { return airPurifier_1.FanMode; } });
+var airPurifierSetting_1 = require("./lib/airPurifierSetting");
+Object.defineProperty(exports, "AirPurifierSetting", { enumerable: true, get: function () { return airPurifierSetting_1.AirPurifierSetting; } });
 var scene_1 = require("./lib/scene");
 Object.defineProperty(exports, "Scene", { enumerable: true, get: function () { return scene_1.Scene; } });
 var sensor_1 = require("./lib/sensor");

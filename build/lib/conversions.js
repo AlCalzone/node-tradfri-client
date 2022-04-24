@@ -11,16 +11,16 @@ const predefined_colors_1 = require("./predefined-colors");
 const colorTemperature_out = (value) => {
     const [min, max] = predefined_colors_1.colorTemperatureRange;
     // extrapolate 0-100% to [min..max]
-    value = math_1.clamp(value, 0, 100);
-    return math_1.roundTo(min + value / 100 * (max - min), 0);
+    value = (0, math_1.clamp)(value, 0, 100);
+    return (0, math_1.roundTo)(min + (value / 100) * (max - min), 0);
 };
 // interpolate from [250..454] to [0..100%]
 const colorTemperature_in = (value) => {
     const [min, max] = predefined_colors_1.colorTemperatureRange;
     // interpolate "color percentage" from the colorTemperature range of a lightbulb
     value = (value - min) / (max - min);
-    value = math_1.clamp(value, 0, 1);
-    return math_1.roundTo(value * 100, 1);
+    value = (0, math_1.clamp)(value, 0, 1);
+    return (0, math_1.roundTo)(value * 100, 1);
 };
 // // ==========================
 // // RGB conversions
@@ -95,12 +95,12 @@ const colorTemperature_in = (value) => {
 // }
 function rgbToHSV(r, g, b) {
     // transform [0..255] => [0..1]
-    [r, g, b] = [r, g, b].map(c => c / 255);
+    [r, g, b] = [r, g, b].map((c) => c / 255);
     const max = Math.max(r, g, b);
     const min = Math.min(r, g, b);
     let h;
     let s;
-    const v = math_1.roundTo(max, 2);
+    const v = (0, math_1.roundTo)(max, 2);
     if (r === g && g === b) {
         h = 0;
     }
@@ -120,7 +120,7 @@ function rgbToHSV(r, g, b) {
         s = 0;
     }
     else {
-        s = math_1.roundTo((max - min) / max, 3);
+        s = (0, math_1.roundTo)((max - min) / max, 3);
     }
     return { h, s, v };
 }
@@ -133,7 +133,7 @@ function rgbFromHSV(h, s, v) {
     }
     else {
         const hi = Math.floor(h / 60);
-        const f = (h / 60 - hi);
+        const f = h / 60 - hi;
         const p = v * (1 - s);
         const q = v * (1 - s * f);
         const t = v * (1 - s * (1 - f));
@@ -160,11 +160,11 @@ function rgbFromHSV(h, s, v) {
         }
     }
     // transform back to [0..255] - r, g and b are defined always
-    [r, g, b] = [r, g, b].map(c => Math.round(math_1.clamp(c, 0, 1) * 255));
+    [r, g, b] = [r, g, b].map((c) => Math.round((0, math_1.clamp)(c, 0, 1) * 255));
     return { r, g, b };
 }
 function rgbToString(r, g, b) {
-    return [r, g, b].map(c => strings_1.padStart(c.toString(16), 2, "0")).join("");
+    return [r, g, b].map((c) => (0, strings_1.padStart)(c.toString(16), 2, "0")).join("");
 }
 function rgbFromString(rgb) {
     const r = parseInt(rgb.substr(0, 2), 16);
@@ -178,54 +178,73 @@ function rgbFromString(rgb) {
 const hue_out = (value, light) => {
     if (light != null && light.spectrum !== "rgb")
         return null; // hue is not supported
-    value = math_1.clamp(value, 0, 360);
-    return math_1.roundTo(value / 360 * predefined_colors_1.MAX_COLOR, 0);
+    value = (0, math_1.clamp)(value, 0, 360);
+    return (0, math_1.roundTo)((value / 360) * predefined_colors_1.MAX_COLOR, 0);
 };
 // interpolate hue from [0..COLOR_MAX] to [0..360]
 const hue_in = (value /*, light: Light*/) => {
-    value = math_1.clamp(value / predefined_colors_1.MAX_COLOR, 0, 1);
-    return math_1.roundTo(value * 360, 1);
+    value = (0, math_1.clamp)(value / predefined_colors_1.MAX_COLOR, 0, 1);
+    return (0, math_1.roundTo)(value * 360, 1);
 };
 // interpolate saturation from [0..100%] to [0..COLOR_MAX]
 const saturation_out = (value, light) => {
     if (light != null && light.spectrum !== "rgb")
         return null; // hue is not supported
-    value = math_1.clamp(value, 0, 100);
-    return math_1.roundTo(value / 100 * predefined_colors_1.MAX_COLOR, 0);
+    value = (0, math_1.clamp)(value, 0, 100);
+    return (0, math_1.roundTo)((value / 100) * predefined_colors_1.MAX_COLOR, 0);
 };
 // interpolate saturation from [0..COLOR_MAX] to [0..100%]
 const saturation_in = (value /*, light: Light*/) => {
-    value = math_1.clamp(value / predefined_colors_1.MAX_COLOR, 0, 1);
-    return math_1.roundTo(value * 100, 1);
+    value = (0, math_1.clamp)(value / predefined_colors_1.MAX_COLOR, 0, 1);
+    return (0, math_1.roundTo)(value * 100, 1);
 };
 // ===========================
 // TRANSITION TIME conversions
 // the sent value is in 10ths of seconds, we're working with seconds
-const transitionTime_out = val => val && val * 10; // "val && " avoids sending `null` if val is null for some reason
+const transitionTime_out = (val) => val && val * 10; // "val && " avoids sending `null` if val is null for some reason
 // the sent value is in 10ths of seconds, we're working with seconds
-const transitionTime_in = val => val / 10;
+const transitionTime_in = (val) => val / 10;
 // ===========================
 // BRIGHTNESS conversions
 // interpolate from [0..100%] to [0..254]
 const brightness_out = (value) => {
-    value = math_1.clamp(value, 0, 100);
-    return math_1.roundTo(value / 100 * 254, 0);
+    value = (0, math_1.clamp)(value, 0, 100);
+    return (0, math_1.roundTo)((value / 100) * 254, 0);
 };
 // interpolate from [0..254] to [0..100%]
 const brightness_in = (value) => {
-    value = math_1.clamp(value, 0, 254);
+    value = (0, math_1.clamp)(value, 0, 254);
     if (value === 0)
         return 0;
-    value = value / 254 * 100;
-    return math_1.roundTo(value, 1);
+    value = (value / 254) * 100;
+    return (0, math_1.roundTo)(value, 1);
 };
 // ===========================
 // BLIND POSITION conversions
 // The gateway expects 0 to be open and 100 to be closed
 // we do the opposite
-const position_out = val => 100 - val;
+const position_out = (val) => 100 - val;
 // the sent value is in 10ths of seconds, we're working with seconds
 const position_in = position_out;
+// ===========================
+// AIR PURIFIER conversions
+// The fan speed only accepts certain values
+const fan_speed_out = (val) => {
+    if (val === 0)
+        return 0;
+    if (val < 10)
+        return 10;
+    if (val > 50)
+        return 50;
+    // Round to the nearest multiple of 5
+    return Math.round(val / 5) * 5;
+};
+// ===========================
+// PRIMITIVE conversions
+// Some values are boolean but have an inverted meaning
+const boolean_inverted_out = (bool) => bool ? 0 : 1;
+// the sent value is in 10ths of seconds, we're working with seconds
+const boolean_inverted_in = (raw) => !(raw === 1 || raw === "true" || raw === "on" || raw === true);
 exports.serializers = {
     transitionTime: transitionTime_out,
     hue: hue_out,
@@ -233,6 +252,8 @@ exports.serializers = {
     brightness: brightness_out,
     colorTemperature: colorTemperature_out,
     position: position_out,
+    booleanInverted: boolean_inverted_out,
+    fanSpeed: fan_speed_out,
 };
 exports.deserializers = {
     transitionTime: transitionTime_in,
@@ -241,6 +262,7 @@ exports.deserializers = {
     brightness: brightness_in,
     colorTemperature: colorTemperature_in,
     position: position_in,
+    booleanInverted: boolean_inverted_in,
 };
 exports.conversions = {
     // rgbFromCIExyY,

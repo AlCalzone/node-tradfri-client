@@ -88,11 +88,11 @@ class ConnectionWatcher extends events_1.EventEmitter {
             this.connectionAlive = yield this.client.ping();
             // see if the connection state has changed
             if (this.connectionAlive) {
-                logger_1.log("ping succeeded", "debug");
+                (0, logger_1.log)("ping succeeded", "debug");
                 this.emit("ping succeeded");
                 // connection is now alive again
                 if (oldValue === false) {
-                    logger_1.log(`The connection is alive again after ${this.failedPingCount} failed pings`, "debug");
+                    (0, logger_1.log)(`The connection is alive again after ${this.failedPingCount} failed pings`, "debug");
                     this.emit("connection alive");
                     // also restore the observers if necessary
                     if (this.resetAttempts > 0) {
@@ -107,17 +107,17 @@ class ConnectionWatcher extends events_1.EventEmitter {
             }
             else {
                 this.failedPingCount++;
-                logger_1.log(`ping failed (#${this.failedPingCount})`, "debug");
+                (0, logger_1.log)(`ping failed (#${this.failedPingCount})`, "debug");
                 this.emit("ping failed", this.failedPingCount);
                 if (oldValue === true) {
-                    logger_1.log("The connection was lost", "debug");
+                    (0, logger_1.log)("The connection was lost", "debug");
                     this.emit("connection lost");
                 }
                 // connection is dead
                 if (this.failedPingCount >= this._options.failedPingCountUntilOffline) {
                     if (this.failedPingCount === this._options.failedPingCountUntilOffline) {
                         // we just reached the threshold, say the gateway is offline
-                        logger_1.log(`${this.failedPingCount} consecutive pings failed. The gateway is offline.`, "debug");
+                        (0, logger_1.log)(`${this.failedPingCount} consecutive pings failed. The gateway is offline.`, "debug");
                         this.emit("gateway offline");
                     }
                     // if we should reconnect automatically, count the offline pings
@@ -129,12 +129,12 @@ class ConnectionWatcher extends events_1.EventEmitter {
                                 // trigger a reconnect
                                 this.offlinePingCount = 0;
                                 this.resetAttempts++;
-                                logger_1.log(`Trying to reconnect... Attempt ${this.resetAttempts} of ${this._options.maximumReconnects === Number.POSITIVE_INFINITY ? "∞" : this._options.maximumReconnects}`, "debug");
+                                (0, logger_1.log)(`Trying to reconnect... Attempt ${this.resetAttempts} of ${this._options.maximumReconnects === Number.POSITIVE_INFINITY ? "∞" : this._options.maximumReconnects}`, "debug");
                                 this.emit("reconnecting", this.resetAttempts, this._options.maximumReconnects);
                                 const reconnectResult = yield this.client.reconnectHandler();
                                 if (!reconnectResult) {
                                     // The connection cannot be re-established, give up
-                                    logger_1.log("Cannot reconnect... giving up.", "debug");
+                                    (0, logger_1.log)("Cannot reconnect... giving up.", "debug");
                                     this.emit("give up");
                                     // increase the counter once more so this branch doesn't get hit
                                     this.resetAttempts = this._options.maximumReconnects + 1;
@@ -143,7 +143,7 @@ class ConnectionWatcher extends events_1.EventEmitter {
                             }
                             else if (this.resetAttempts === this._options.maximumReconnects) {
                                 // don't try anymore
-                                logger_1.log("Maximum reconnect attempts reached... giving up.", "debug");
+                                (0, logger_1.log)("Maximum reconnect attempts reached... giving up.", "debug");
                                 this.emit("give up");
                                 // increase the counter once more so this branch doesn't get hit
                                 this.resetAttempts++;
@@ -156,7 +156,7 @@ class ConnectionWatcher extends events_1.EventEmitter {
             // schedule the next ping
             if (this.isActive) {
                 const nextTimeout = Math.round(this._options.pingInterval * Math.pow(this._options.failedPingBackoffFactor, Math.min(5, this.failedPingCount)));
-                logger_1.log("setting next timeout in " + nextTimeout, "debug");
+                (0, logger_1.log)("setting next timeout in " + nextTimeout, "debug");
                 this.pingTimer = setTimeout(() => void this.pingThread(), nextTimeout);
             }
         });

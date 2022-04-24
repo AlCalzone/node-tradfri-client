@@ -27,37 +27,37 @@ class LightSetting extends ipsoDevice_1.IPSODevice {
     }
 }
 __decorate([
-    ipsoObject_1.ipsoKey("5706"),
+    (0, ipsoObject_1.ipsoKey)("5706"),
     __metadata("design:type", String)
 ], LightSetting.prototype, "color", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5707"),
+    (0, ipsoObject_1.ipsoKey)("5707"),
     __metadata("design:type", Number)
 ], LightSetting.prototype, "hue", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5708"),
+    (0, ipsoObject_1.ipsoKey)("5708"),
     __metadata("design:type", Number)
 ], LightSetting.prototype, "saturation", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5709"),
+    (0, ipsoObject_1.ipsoKey)("5709"),
     __metadata("design:type", Number)
 ], LightSetting.prototype, "colorX", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5710"),
+    (0, ipsoObject_1.ipsoKey)("5710"),
     __metadata("design:type", Number)
 ], LightSetting.prototype, "colorY", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5711"),
+    (0, ipsoObject_1.ipsoKey)("5711"),
     __metadata("design:type", Number)
 ], LightSetting.prototype, "colorTemperature", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5851"),
-    ipsoObject_1.serializeWith(conversions_1.serializers.brightness),
-    ipsoObject_1.deserializeWith(conversions_1.deserializers.brightness),
+    (0, ipsoObject_1.ipsoKey)("5851"),
+    (0, ipsoObject_1.serializeWith)(conversions_1.serializers.brightness),
+    (0, ipsoObject_1.deserializeWith)(conversions_1.deserializers.brightness),
     __metadata("design:type", Number)
 ], LightSetting.prototype, "dimmer", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5850"),
+    (0, ipsoObject_1.ipsoKey)("5850"),
     __metadata("design:type", Boolean)
 ], LightSetting.prototype, "onOff", void 0);
 exports.LightSetting = LightSetting;

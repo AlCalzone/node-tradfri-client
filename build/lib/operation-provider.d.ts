@@ -1,4 +1,5 @@
 import { Accessory } from "./accessory";
+import { AirPurifierOperation } from "./airPurifier";
 import { BlindOperation } from "./blind";
 import { Group, GroupOperation } from "./group";
 import { LightOperation } from "./light";
@@ -8,4 +9,5 @@ export interface OperationProvider {
     operateLight(accessory: Accessory, operation: LightOperation, force?: boolean): Promise<boolean>;
     operatePlug(accessory: Accessory, operation: PlugOperation, force?: boolean): Promise<boolean>;
     operateBlind(accessory: Accessory, operation: BlindOperation, force?: boolean): Promise<boolean>;
+    operateAirPurifier(accessory: Accessory, operation: AirPurifierOperation, force?: boolean): Promise<boolean>;
 }

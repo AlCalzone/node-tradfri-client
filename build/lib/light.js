@@ -139,7 +139,7 @@ class Light extends ipsoDevice_1.IPSODevice {
      */
     setBrightness(value, transitionTime) {
         this.ensureLink();
-        value = math_1.clamp(value, 0, 100);
+        value = (0, math_1.clamp)(value, 0, 100);
         return this.operateLight({
             dimmer: value,
         }, transitionTime);
@@ -181,7 +181,7 @@ class Light extends ipsoDevice_1.IPSODevice {
         this.ensureLink();
         if (this.spectrum !== "white")
             throw new Error("setColorTemperature is only available for white spectrum lightbulbs");
-        value = math_1.clamp(value, 0, 100);
+        value = (0, math_1.clamp)(value, 0, 100);
         return this.operateLight({
             colorTemperature: value,
         }, transitionTime);
@@ -194,7 +194,7 @@ class Light extends ipsoDevice_1.IPSODevice {
         this.ensureLink();
         if (this.spectrum !== "rgb")
             throw new Error("setHue is only available for RGB lightbulbs");
-        value = math_1.clamp(value, 0, 360);
+        value = (0, math_1.clamp)(value, 0, 360);
         return this.operateLight({
             hue: value,
         }, transitionTime);
@@ -207,7 +207,7 @@ class Light extends ipsoDevice_1.IPSODevice {
         this.ensureLink();
         if (this.spectrum !== "rgb")
             throw new Error("setSaturation is only available for RGB lightbulbs");
-        value = math_1.clamp(value, 0, 100);
+        value = (0, math_1.clamp)(value, 0, 100);
         return this.operateLight({
             saturation: value,
         }, transitionTime);
@@ -250,82 +250,82 @@ __decorate([
     __metadata("design:type", Object)
 ], Light.prototype, "_accessory", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5706"),
+    (0, ipsoObject_1.ipsoKey)("5706"),
     ipsoObject_1.doNotSerialize // this is done through hue/saturation
     ,
     __metadata("design:type", String)
 ], Light.prototype, "color", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5707"),
-    ipsoObject_1.serializeWith(conversions_1.serializers.hue),
-    ipsoObject_1.deserializeWith(conversions_1.deserializers.hue),
-    ipsoObject_1.required((me, ref) => ref != null && me.saturation !== ref.saturation) // force hue to be present if saturation is
+    (0, ipsoObject_1.ipsoKey)("5707"),
+    (0, ipsoObject_1.serializeWith)(conversions_1.serializers.hue),
+    (0, ipsoObject_1.deserializeWith)(conversions_1.deserializers.hue),
+    (0, ipsoObject_1.required)((me, ref) => ref != null && me.saturation !== ref.saturation) // force hue to be present if saturation is
     ,
     __metadata("design:type", Number)
 ], Light.prototype, "hue", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5708"),
-    ipsoObject_1.serializeWith(conversions_1.serializers.saturation),
-    ipsoObject_1.deserializeWith(conversions_1.deserializers.saturation),
-    ipsoObject_1.required((me, ref) => ref != null && me.hue !== ref.hue) // force saturation to be present if hue is
+    (0, ipsoObject_1.ipsoKey)("5708"),
+    (0, ipsoObject_1.serializeWith)(conversions_1.serializers.saturation),
+    (0, ipsoObject_1.deserializeWith)(conversions_1.deserializers.saturation),
+    (0, ipsoObject_1.required)((me, ref) => ref != null && me.hue !== ref.hue) // force saturation to be present if hue is
     ,
     __metadata("design:type", Number)
 ], Light.prototype, "saturation", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5709"),
+    (0, ipsoObject_1.ipsoKey)("5709"),
     ipsoObject_1.doNotSerialize,
     __metadata("design:type", Number)
 ], Light.prototype, "colorX", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5710"),
+    (0, ipsoObject_1.ipsoKey)("5710"),
     ipsoObject_1.doNotSerialize,
     __metadata("design:type", Number)
 ], Light.prototype, "colorY", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5711"),
-    ipsoObject_1.serializeWith(conversions_1.serializers.colorTemperature),
-    ipsoObject_1.deserializeWith(conversions_1.deserializers.colorTemperature),
+    (0, ipsoObject_1.ipsoKey)("5711"),
+    (0, ipsoObject_1.serializeWith)(conversions_1.serializers.colorTemperature),
+    (0, ipsoObject_1.deserializeWith)(conversions_1.deserializers.colorTemperature),
     __metadata("design:type", Number)
 ], Light.prototype, "colorTemperature", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5717"),
+    (0, ipsoObject_1.ipsoKey)("5717"),
     __metadata("design:type", Object)
 ], Light.prototype, "UNKNOWN1", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5712"),
-    ipsoObject_1.required(),
-    ipsoObject_1.serializeWith(conversions_1.serializers.transitionTime, { neverSkip: true }),
-    ipsoObject_1.deserializeWith(conversions_1.deserializers.transitionTime, { neverSkip: true }),
+    (0, ipsoObject_1.ipsoKey)("5712"),
+    (0, ipsoObject_1.required)(),
+    (0, ipsoObject_1.serializeWith)(conversions_1.serializers.transitionTime, { neverSkip: true }),
+    (0, ipsoObject_1.deserializeWith)(conversions_1.deserializers.transitionTime, { neverSkip: true }),
     __metadata("design:type", Number)
 ], Light.prototype, "transitionTime", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5805"),
+    (0, ipsoObject_1.ipsoKey)("5805"),
     __metadata("design:type", Number)
 ], Light.prototype, "cumulativeActivePower", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5851"),
-    ipsoObject_1.serializeWith(conversions_1.serializers.brightness),
-    ipsoObject_1.deserializeWith(conversions_1.deserializers.brightness),
+    (0, ipsoObject_1.ipsoKey)("5851"),
+    (0, ipsoObject_1.serializeWith)(conversions_1.serializers.brightness),
+    (0, ipsoObject_1.deserializeWith)(conversions_1.deserializers.brightness),
     __metadata("design:type", Number)
 ], Light.prototype, "dimmer", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5850"),
+    (0, ipsoObject_1.ipsoKey)("5850"),
     __metadata("design:type", Boolean)
 ], Light.prototype, "onOff", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5849"),
+    (0, ipsoObject_1.ipsoKey)("5849"),
     __metadata("design:type", Number)
 ], Light.prototype, "whenPowerRestored", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5852"),
+    (0, ipsoObject_1.ipsoKey)("5852"),
     __metadata("design:type", Number)
 ], Light.prototype, "onTime", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5820"),
+    (0, ipsoObject_1.ipsoKey)("5820"),
     __metadata("design:type", Number)
 ], Light.prototype, "powerFactor", void 0);
 __decorate([
-    ipsoObject_1.ipsoKey("5701"),
+    (0, ipsoObject_1.ipsoKey)("5701"),
     __metadata("design:type", String)
 ], Light.prototype, "unit", void 0);
 exports.Light = Light;
