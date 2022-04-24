@@ -3,6 +3,9 @@
 	Placeholder for next release:
 	## __WORK IN PROGRESS__
 -->
+## 3.1.1 (2022-04-24)
+* (AlCalzone) Update `mdns-server` dependency to support auto-disovery on Node.js 18
+
 ## 3.1.0 (2021-12-19)
 * (AlCalzone) Added support for STARKVIND air purifier
 
