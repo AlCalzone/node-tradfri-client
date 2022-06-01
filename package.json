@@ -35,7 +35,7 @@
     "node": ">=12"
   },
   "devDependencies": {
-    "@alcalzone/release-script": "~3.5.8",
+    "@alcalzone/release-script": "~3.5.9",
     "@alcalzone/release-script-plugin-license": "~3.5.9",
     "@types/chai": "^4.3.1",
     "@types/chai-as-promised": "^7.1.5",
