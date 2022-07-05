@@ -28,7 +28,7 @@ export interface PropertyTransform extends PropertyTransformKernel {
  */
 function buildPropertyTransform(
 	kernel: PropertyTransformKernel,
-	options: { splitArrays?: boolean, neverSkip?: boolean} = {},
+	options: { splitArrays?: boolean, neverSkip?: boolean } = {},
 ): PropertyTransform {
 
 	if (options.splitArrays == null) options.splitArrays = true;
@@ -90,12 +90,12 @@ export const required = (predicate: boolean | RequiredPredicate = true): Propert
  * Checks if a property is required to be present in a serialized CoAP object
  * @param property - property name to lookup
  */
-function isRequired<T extends IPSOObject>(target: T, reference: T | undefined, property: keyof T): boolean {
+function isRequired<T extends IPSOObject>(target: T, reference: T | undefined, property: Extract<keyof T, string>): boolean {
 	// get the class constructor
 	const constr = target.constructor;
 	log(`${constr.name}: checking if ${property} is required...`, "silly");
 	// retrieve the current metadata
-	const metadata: {[prop: string]: boolean | RequiredPredicate} = Reflect.getMetadata(METADATA_required, constr) || {};
+	const metadata: { [prop: string]: boolean | RequiredPredicate } = Reflect.getMetadata(METADATA_required, constr) || {};
 	if (metadata.hasOwnProperty(property)) {
 		const ret = metadata[property as keyof typeof metadata];
 		if (typeof ret === "boolean") return ret;
@@ -109,12 +109,12 @@ function isRequired<T extends IPSOObject>(target: T, reference: T | undefined, p
  * In contrast to `isRequired`, this leaves out properties that depend on others.
  * @param property - property name to lookup
  */
-function isAlwaysRequired<T extends IPSOObject>(target: T, property: keyof T): boolean {
+function isAlwaysRequired<T extends IPSOObject>(target: T, property: Extract<keyof T, string>): boolean {
 	// get the class constructor
 	const constr = target.constructor;
 	log(`${constr.name}: checking if ${property} is always required...`, "silly");
 	// retrieve the current metadata
-	const metadata: {[prop: string]: boolean | RequiredPredicate} = Reflect.getMetadata(METADATA_required, constr) || {};
+	const metadata: { [prop: string]: boolean | RequiredPredicate } = Reflect.getMetadata(METADATA_required, constr) || {};
 	if (metadata.hasOwnProperty(property)) {
 		const ret = metadata[property as keyof typeof metadata];
 		if (typeof ret === "boolean") return ret;
@@ -127,7 +127,7 @@ function isAlwaysRequired<T extends IPSOObject>(target: T, property: keyof T): b
  * @param kernel The transformation to apply during serialization
  * @param options Some options regarding the behavior of the property transform
  */
-export function serializeWith(kernel: PropertyTransformKernel, options?: { splitArrays?: boolean, neverSkip?: boolean}): PropertyDecorator {
+export function serializeWith(kernel: PropertyTransformKernel, options?: { splitArrays?: boolean, neverSkip?: boolean }): PropertyDecorator {
 	const transform = buildPropertyTransform(kernel, options);
 	return <T extends IPSOObject>(target: T, property: keyof T | string) => {
 		// get the class constructor
@@ -143,7 +143,7 @@ export function serializeWith(kernel: PropertyTransformKernel, options?: { split
 
 // default serializers should not be skipped
 const defaultSerializers: Record<string, PropertyTransform> = {
-	Boolean: buildPropertyTransform((bool: boolean) => bool ? 1 : 0, {neverSkip: true}),
+	Boolean: buildPropertyTransform((bool: boolean) => bool ? 1 : 0, { neverSkip: true }),
 };
 
 /**
@@ -167,7 +167,7 @@ function getSerializer<T extends IPSOObject>(target: T, property: string /* | ke
  * @param kernel The transformation to apply during deserialization
  * @param options Options for deserialisation
  */
-export function deserializeWith(kernel: PropertyTransformKernel, options?: { splitArrays?: boolean, neverSkip?: boolean}): PropertyDecorator {
+export function deserializeWith(kernel: PropertyTransformKernel, options?: { splitArrays?: boolean, neverSkip?: boolean }): PropertyDecorator {
 	const transform = buildPropertyTransform(kernel, options);
 	return <T extends IPSOObject>(target: T, property: keyof T | string) => {
 		// get the class constructor
@@ -203,12 +203,12 @@ function isSerializable<T extends IPSOObject>(target: T, property: keyof T): boo
 	// retrieve the current metadata
 	const metadata = Reflect.getMetadata(METADATA_doNotSerialize, constr) || {};
 	// if doNotSerialize is defined, don't serialize!
-	return ! metadata.hasOwnProperty(property);
+	return !metadata.hasOwnProperty(property);
 }
 
 // default deserializers should not be skipped
 const defaultDeserializers: Record<string, PropertyTransform> = {
-	Boolean: buildPropertyTransform((raw: any) => raw === 1 || raw === "true" || raw === "on" || raw === true, {neverSkip: true}),
+	Boolean: buildPropertyTransform((raw: any) => raw === 1 || raw === "true" || raw === "on" || raw === true, { neverSkip: true }),
 };
 
 /**
@@ -355,7 +355,7 @@ export class IPSOObject {
 
 		const ret: Record<string, any> = {};
 
-		const serializeValue = (propName: keyof this, value: any, refValue: any, transform?: PropertyTransform) => {
+		const serializeValue = (propName: Extract<keyof this, string>, value: any, refValue: any, transform?: PropertyTransform) => {
 			const _required = isRequired(this, reference, propName);
 			let _ret = value;
 			if (value instanceof IPSOObject) {
@@ -438,7 +438,7 @@ export class IPSOObject {
 	 */
 	public clone(...constructorArgs: any[]): this {
 		// create a new instance of the same object as this
-		type Constructable<T> = new(options?: IPSOOptions, ...constructorArgs: any[]) => T;
+		type Constructable<T> = new (options?: IPSOOptions, ...constructorArgs: any[]) => T;
 		const constructor = this.constructor as Constructable<this>;
 		const ret = new constructor(this.options, ...constructorArgs);
 		// serialize the old values
@@ -450,7 +450,7 @@ export class IPSOObject {
 	private isSerializedObjectEmpty(obj: Record<string, any>): boolean {
 		// Prüfen, ob eine nicht-benötigte Eigenschaft angegeben ist. => nicht leer
 		for (const key of Object.keys(obj)) {
-			const propName = lookupKeyOrProperty(this, key) as keyof this;
+			const propName = lookupKeyOrProperty(this, key) as Extract<keyof this, string>;
 			if (!isAlwaysRequired(this, propName)) {
 				return false;
 			}
