@@ -3,6 +3,9 @@
 	Placeholder for next release:
 	## __WORK IN PROGRESS__
 -->
+## __WORK IN PROGRESS__
+* (AlCalzone) Updated the `node-coap-client` dependency for proper Electron support
+
 ## 3.1.1 (2022-04-24)
 * (AlCalzone) Update `mdns-server` dependency to support auto-disovery on Node.js 18
 
