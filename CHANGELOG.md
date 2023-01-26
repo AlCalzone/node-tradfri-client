@@ -3,7 +3,7 @@
 	Placeholder for next release:
 	## __WORK IN PROGRESS__
 -->
-## __WORK IN PROGRESS__
+## 3.2.0 (2023-01-26)
 * (AlCalzone) Updated the `node-coap-client` dependency for proper Electron support
 
 ## 3.1.1 (2022-04-24)
