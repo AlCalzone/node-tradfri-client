@@ -67,8 +67,8 @@ export type InternetConnectivityChangedCallback = (connected: boolean) => void;
 
 export interface NotificationEventCallbacks {
 	"rebooting": RebootNotificationCallback;
-	"internet connectivity changed": FirmwareUpdateNotificationCallback;
-	"firmware update available": InternetConnectivityChangedCallback;
+	"internet connectivity changed": InternetConnectivityChangedCallback;
+	"firmware update available": FirmwareUpdateNotificationCallback;
 }
 export type NotificationEvents = keyof NotificationEventCallbacks;
 
