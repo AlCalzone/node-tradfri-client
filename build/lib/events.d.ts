@@ -42,8 +42,8 @@ export declare type FirmwareUpdateNotificationCallback = (releaseNotes: string, 
 export declare type InternetConnectivityChangedCallback = (connected: boolean) => void;
 export interface NotificationEventCallbacks {
     "rebooting": RebootNotificationCallback;
-    "internet connectivity changed": FirmwareUpdateNotificationCallback;
-    "firmware update available": InternetConnectivityChangedCallback;
+    "internet connectivity changed": InternetConnectivityChangedCallback;
+    "firmware update available": FirmwareUpdateNotificationCallback;
 }
 export declare type NotificationEvents = keyof NotificationEventCallbacks;
 export declare type AllEventCallbacks = Merge<Merge<ObservableEventCallbacks, NotificationEventCallbacks>, Merge<ConnectionWatcherEventCallbacks, ConnectionEventCallbacks>>;
